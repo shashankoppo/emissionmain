@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id       String @id @default(uuid())
+  email    String @unique
+  password String
+  name     String
+  role     String @default("admin")
+}
+
+model Product {
+  id               String   @id @default(uuid())
+  name             String
+  slug             String   @unique
+  category         String
+  subcategory      String
+  description      String
+  shortDescription String
+  price            Decimal
+  wholesalePrice   Decimal
+  retailPrice      Decimal?
+  images           String   @default("[]")
+  features         String   @default("[]")
+  specifications   String   @default("{}")
+  inStock          Boolean  @default(true)
+  moq              Int      @default(1)
+  availableSizes   String   @default("[]")
+  availableColors  String   @default("[]")
+  allowsEmbroidery Boolean  @default(false)
+  gstPercentage    Decimal  @default(18)
+  shippingIncluded Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  
+  variants         ProductVariant[]
+  embroideryOptions EmbroideryOption[]
+}
+
+model ProductVariant {
+  id              String   @id @default(uuid())
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  size            String
+  color           String
+  sku             String   @unique
+  stock           Int      @default(0)
+  priceAdjustment Decimal  @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([productId, size, color])
+}
+
+model EmbroideryOption {
+  id        String   @id @default(uuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  position  String
+  maxChars  Int      @default(20)
+  price     Decimal
+  available Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Enquiry {
+  id          String   @id @default(uuid())
+  name        String
+  email       String
+  phone       String
+  company     String?
+  enquiryType String
+  message     String
+  status      String   @default("new")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Order {
+  id              String   @id @default(uuid())
+  customerName    String
+  customerEmail   String
+  totalAmount     Decimal
+  status          String   @default("pending")
+  paymentId       String?
+  shippingAddress String
+  items           String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Setting {
+  key   String @id
+  value String
+}
