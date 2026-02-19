@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./emission admin panel/project/server
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=http://localhost:3001/api
+      - JWT_SECRET=your_jwt_secret_here
+      - RAZORPAY_KEY_ID=your_razorpay_key_id
+      - RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+    volumes:
+      - ./emission admin panel/project/server/uploads:/app/uploads
+      - ./emission admin panel/project/server/prisma:/app/prisma
+    restart: always
+
+  admin-panel:
+    build:
+      context: ./emission admin panel/project/client
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    restart: always
+
+  customer-site:
+    build:
+      context: ./emission/project
+      dockerfile: Dockerfile
+    ports:
+      - "5174:80"
+    depends_on:
+      - backend
+    restart: always
