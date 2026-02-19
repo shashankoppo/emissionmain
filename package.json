@@ -1,0 +1,15 @@
+{
+    "name": "emission-suite",
+    "version": "1.0.0",
+    "private": true,
+    "scripts": {
+        "dev:website": "npm run dev --prefix emission/project",
+        "dev:admin": "npm run dev --prefix \"emission admin panel/project\"",
+        "dev": "concurrently \"npm run dev:website\" \"npm run dev:admin\"",
+        "install:all": "npm install && npm install --prefix emission/project && npm install --prefix \"emission admin panel/project\"",
+        "build": "npm run build --prefix emission/project && npm run build --prefix \"emission admin panel/project\""
+    },
+    "devDependencies": {
+        "concurrently": "^8.2.2"
+    }
+}
