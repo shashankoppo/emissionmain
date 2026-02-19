@@ -1,16 +1,19 @@
 import { useState, useEffect } from 'react';
-import { Check, Package, Truck, Shield, FileText, ShoppingCart, Heart, Star, Minus, Plus, ChevronDown, ChevronUp, Ruler } from 'lucide-react';
+import { Check, Package, ShoppingCart, Heart, Star, Minus, Plus, ChevronDown, ChevronUp, Ruler } from 'lucide-react';
 import { PageType } from '../types';
 import { productAPI, Product } from '../lib/api';
 import Button from '../components/UI/Button';
 import ProductCard from '../components/UI/ProductCard';
 import SizeChart from '../components/UI/SizeChart';
 import PincodeChecker from '../components/UI/PincodeChecker';
+import SizeSelector from '../components/UI/SizeSelector';
+import EmbroideryCustomizer from '../components/UI/EmbroideryCustomizer';
+import { EmbroideryCustomization } from '../types';
 
 interface ProductDetailProps {
   productId: string;
   onNavigate: (page: PageType, productId?: string) => void;
-  onAddToCart?: (productId: string, quantity: number) => void;
+  onAddToCart?: (productId: string, quantity: number, size?: string, color?: string, embroidery?: EmbroideryCustomization | null) => void;
 }
 
 export default function ProductDetail({ productId, onNavigate, onAddToCart }: ProductDetailProps) {
@@ -23,17 +26,19 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart }: Pr
   const [addedToCart, setAddedToCart] = useState(false);
 
   // New States
-  const [selectedSize, setSelectedSize] = useState<string>('');
+  const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>('');
   const [isSizeChartOpen, setIsSizeChartOpen] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<string | null>('desc');
+  const [embroidery, setEmbroidery] = useState<EmbroideryCustomization | null>(null);
 
   useEffect(() => {
     fetchProduct();
     setQuantity(1);
     setAddedToCart(false);
-    setSelectedSize('');
+    setSelectedSize(null);
     setSelectedColor('');
+    setEmbroidery(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [productId]);
 
@@ -44,8 +49,12 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart }: Pr
       setProduct(data);
 
       // select first color and size if available
-      if (data.availableSizes?.length > 0) setSelectedSize(data.availableSizes[0]);
-      if (data.availableColors?.length > 0) setSelectedColor(data.availableColors[0]);
+      if (data.availableSizes && data.availableSizes.length > 0) {
+        setSelectedSize(data.availableSizes[0]);
+      }
+      if (data.availableColors && data.availableColors.length > 0) {
+        setSelectedColor(data.availableColors[0]);
+      }
 
       const allProducts = await productAPI.getAll();
       const related = allProducts
@@ -63,10 +72,12 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart }: Pr
   };
 
   const handleAddToCart = () => {
-    if (onAddToCart && product) {
-      onAddToCart(product.id, quantity);
+    if (onAddToCart && product && selectedSize) {
+      onAddToCart(product.id, quantity, selectedSize, selectedColor, embroidery);
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 3000);
+    } else if (!selectedSize) {
+      alert('Please select a size first');
     }
   };
 
@@ -193,30 +204,30 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart }: Pr
 
             {/* Size Selector */}
             {product.availableSizes && product.availableSizes.length > 0 && (
-              <div className="mb-8">
-                <div className="flex justify-between items-center mb-3">
-                  <p className="text-sm font-bold text-black">Size: <span className="text-gray-500 font-normal">{selectedSize}</span></p>
+              <div className="mb-6">
+                <div className="flex justify-between items-center mb-1">
                   <button
                     onClick={() => setIsSizeChartOpen(true)}
-                    className="flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-black underline transition"
+                    className="ml-auto flex items-center gap-1 text-xs font-semibold text-gray-500 hover:text-black underline transition"
                   >
                     <Ruler className="w-3 h-3" /> Size Guide
                   </button>
                 </div>
-                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                  {product.availableSizes.map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => setSelectedSize(size)}
-                      className={`py-3 rounded-lg text-sm font-medium border transition-all ${selectedSize === size
-                          ? 'border-black bg-black text-white shadow-lg'
-                          : 'border-gray-200 text-gray-900 hover:border-black'
-                        }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
-                </div>
+                <SizeSelector
+                  sizes={product.availableSizes}
+                  selectedSize={selectedSize}
+                  onSizeSelect={setSelectedSize}
+                />
+              </div>
+            )}
+
+            {/* Embroidery Customizer */}
+            {product.allowsEmbroidery && (
+              <div className="mb-8">
+                <EmbroideryCustomizer
+                  price={499} // Base price for embroidery
+                  onCustomizationChange={setEmbroidery}
+                />
               </div>
             )}
 

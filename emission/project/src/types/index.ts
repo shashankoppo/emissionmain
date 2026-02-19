@@ -55,7 +55,7 @@ export interface CartItem {
   quantity: number;
   selectedSize?: string;
   selectedColor?: string;
-  embroidery?: EmbroideryCustomization;
+  embroidery?: EmbroideryCustomization | null;
 }
 
 export interface Category {

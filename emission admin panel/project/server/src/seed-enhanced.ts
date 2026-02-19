@@ -31,7 +31,10 @@ const newProducts = [
             'Customization': 'Logo, colors, design'
         }),
         inStock: true,
-        moq: 30
+        moq: 30,
+        availableSizes: JSON.stringify(['S', 'M', 'L', 'XL', '2XL', '3XL']),
+        availableColors: JSON.stringify(['Black', 'Navy', 'Grey', 'Red']),
+        allowsEmbroidery: true
     },
     {
         id: 'sp-joggers-001',
@@ -200,7 +203,10 @@ const newProducts = [
             'Customization': 'Name embroidery'
         }),
         inStock: true,
-        moq: 50
+        moq: 50,
+        availableSizes: JSON.stringify(['M', 'L', 'XL', '2XL']),
+        availableColors: JSON.stringify(['White', 'Cream']),
+        allowsEmbroidery: true
     },
     {
         id: 'mw-patient-gown-001',

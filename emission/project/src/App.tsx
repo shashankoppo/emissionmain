@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PageType, CartItem } from './types';
+import { PageType, CartItem, EmbroideryCustomization } from './types';
 import { productAPI } from './lib/api';
 import Header from './components/Layout/Header';
 import Footer from './components/Layout/Footer';
@@ -37,24 +37,47 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleAddToCart = async (productId: string, quantity: number) => {
+  const handleAddToCart = async (
+    productId: string,
+    quantity: number,
+    size?: string,
+    color?: string,
+    embroidery?: EmbroideryCustomization | null
+  ) => {
     try {
-      // In a real app we might already have the product object
-      // For now we fetch it to ensure cart has full details
       const product = await productAPI.getById(productId);
 
       setCartItems((prev) => {
-        const existing = prev.find((item) => item.productId === productId);
-        if (existing) {
-          return prev.map((item) =>
-            item.productId === productId
-              ? { ...item, quantity: item.quantity + quantity }
-              : item
-          );
+        // Find if this specific variant already exists in cart
+        const existingIndex = prev.findIndex((item) =>
+          item.productId === productId &&
+          item.selectedSize === size &&
+          item.selectedColor === color &&
+          JSON.stringify(item.embroidery) === JSON.stringify(embroidery)
+        );
+
+        if (existingIndex > -1) {
+          const newItems = [...prev];
+          newItems[existingIndex] = {
+            ...newItems[existingIndex],
+            quantity: newItems[existingIndex].quantity + quantity,
+          };
+          return newItems;
         }
-        return [...prev, { productId, quantity, product }];
+
+        return [
+          ...prev,
+          {
+            productId,
+            quantity,
+            product,
+            selectedSize: size,
+            selectedColor: color,
+            embroidery,
+          },
+        ];
       });
-      setIsCartOpen(true); // Open drawer on add
+      setIsCartOpen(true);
     } catch (err) {
       console.error('Failed to add to cart', err);
     }
