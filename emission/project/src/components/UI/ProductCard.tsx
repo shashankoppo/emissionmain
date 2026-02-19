@@ -1,25 +1,21 @@
 import { useState } from 'react';
 import { Product } from '../../types';
-import { Eye, ShoppingCart, Heart, Plus } from 'lucide-react';
+import { Eye, Heart, Plus, Star } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
   onViewDetails: (productId: string) => void;
   onEnquire?: (productId: string) => void;
-  onAddToCart?: (productId: string, quantity: number) => void;
+  onAddToCart?: (productId: string, quantity: number, size?: string, color?: string) => void;
 }
 
 export default function ProductCard({ product, onViewDetails, onEnquire, onAddToCart }: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
 
-  // Handle image source
   const mainImage = product.images && product.images.length > 0 ? product.images[0] : product.image;
   const hoverImage = product.images && product.images.length > 1 ? product.images[1] : mainImage;
 
-  // Pricing Logic
-  // retailPrice is the selling price. price is MRP.
-  // If retailPrice is present, we show it as current price and 'price' as strikethrough MRP.
   const currentPrice = product.retailPrice || product.price;
   const originalPrice = product.price;
   const hasDiscount = currentPrice < originalPrice;
@@ -30,7 +26,10 @@ export default function ProductCard({ product, onViewDetails, onEnquire, onAddTo
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onAddToCart && product.inStock) {
-      onAddToCart(product.id, 1);
+      // For quick add, we use first available size/color if they exist
+      const defaultSize = product.availableSizes?.[0];
+      const defaultColor = product.availableColors?.[0];
+      onAddToCart(product.id, 1, defaultSize, defaultColor);
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 2000);
     }
@@ -38,59 +37,72 @@ export default function ProductCard({ product, onViewDetails, onEnquire, onAddTo
 
   return (
     <div
-      className="group relative bg-white rounded-2xl overflow-hidden cursor-pointer"
+      className="group relative bg-white rounded-3xl overflow-hidden transition-all duration-500 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-100"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       onClick={() => onViewDetails(product.id)}
     >
       {/* Image Container */}
-      <div className="relative aspect-[4/5] bg-gray-100 overflow-hidden">
+      <div className="relative aspect-[4/5] bg-gray-50 overflow-hidden">
         <img
           src={isHovered ? hoverImage : mainImage}
           alt={product.name}
-          className={`w-full h-full object-cover transition-transform duration-700 ease-in-out ${isHovered ? 'scale-110' : 'scale-100'}`}
+          className={`w-full h-full object-cover transition-all duration-1000 ease-out ${isHovered ? 'scale-110 blur-[2px]' : 'scale-100'}`}
         />
 
+        {/* Overlay on hover */}
+        <div className={`absolute inset-0 bg-black/10 transition-opacity duration-500 ${isHovered ? 'opacity-100' : 'opacity-0'}`} />
+
         {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
+        <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
           {!product.inStock && (
-            <span className="bg-red-600 text-white text-[10px] font-bold px-3 py-1 rounded-md uppercase tracking-wider">
-              Sold Out
+            <span className="backdrop-blur-md bg-red-500/80 text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
+              Out of Stock
             </span>
           )}
           {product.inStock && hasDiscount && (
-            <span className="bg-black text-white text-[10px] font-bold px-3 py-1 rounded-md uppercase tracking-wider">
-              -{discountPercentage}%
-            </span>
-          )}
-          {product.inStock && !hasDiscount && (Math.random() > 0.7) && (
-            <span className="bg-blue-600 text-white text-[10px] font-bold px-3 py-1 rounded-md uppercase tracking-wider">
-              New Arrival
+            <span className="backdrop-blur-md bg-black/80 text-white text-[10px] font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
+              Save {discountPercentage}%
             </span>
           )}
         </div>
 
-        {/* Wishlist Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (onEnquire) onEnquire(product.id);
-          }}
-          className="absolute top-3 right-3 p-2 bg-white rounded-full text-gray-900 shadow-md hover:bg-gray-100 transition-transform hover:scale-110 z-10"
-        >
-          <Heart className="w-4 h-4" />
-        </button>
+        {/* Quick Actions Bar */}
+        <div className={`absolute top-4 right-4 flex flex-col gap-2 transition-all duration-500 transform ${isHovered ? 'translate-x-0 opacity-100' : 'translate-x-4 opacity-0'}`}>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (onEnquire) onEnquire(product.id);
+            }}
+            title="Add to Wishlist"
+            className="p-3 bg-white/90 backdrop-blur-md rounded-full text-gray-900 shadow-xl hover:bg-black hover:text-white transition-all duration-300"
+          >
+            <Heart className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onViewDetails(product.id);
+            }}
+            title="View Details"
+            className="p-3 bg-white/90 backdrop-blur-md rounded-full text-gray-900 shadow-xl hover:bg-black hover:text-white transition-all duration-300"
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+        </div>
 
-        {/* Hover Actions */}
-        <div className={`absolute bottom-4 left-4 right-4 transition-all duration-300 transform ${isHovered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
+        {/* Bottom Add to Cart Button */}
+        <div className={`absolute bottom-6 left-6 right-6 transition-all duration-500 transform ${isHovered ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
           {product.inStock ? (
             <button
               onClick={handleAddToCart}
-              className={`w-full py-3 rounded-lg font-bold text-sm flex items-center justify-center gap-2 shadow-xl transition-colors ${addedToCart ? 'bg-green-600 text-white' : 'bg-white text-black hover:bg-gray-100'
+              className={`w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 shadow-2xl transition-all duration-300 transform active:scale-95 ${addedToCart
+                ? 'bg-green-500 text-white'
+                : 'bg-white text-black hover:bg-black hover:text-white'
                 }`}
             >
               {addedToCart ? (
-                <>Added to Cart ✓</>
+                <>Added Successfully ✓</>
               ) : (
                 <>
                   <Plus className="w-4 h-4" /> Quick Add
@@ -99,31 +111,55 @@ export default function ProductCard({ product, onViewDetails, onEnquire, onAddTo
             </button>
           ) : (
             <button
-              className="w-full py-3 rounded-lg font-bold text-sm bg-gray-800 text-white cursor-not-allowed opacity-80"
+              className="w-full py-4 rounded-2xl font-bold text-sm bg-gray-900/50 backdrop-blur-md text-white/50 cursor-not-allowed uppercase tracking-widest"
+              disabled
             >
-              Out of Stock
+              Unavailable
             </button>
           )}
         </div>
       </div>
 
       {/* Product Info */}
-      <div className="pt-4 px-1 pb-2">
-        <h3 className="font-bold text-base text-black mb-1 line-clamp-1 group-hover:text-gray-600 transition-colors">
-          {product.name}
-        </h3>
+      <div className="p-6 transition-colors duration-300">
+        <div className="flex justify-between items-start mb-2">
+          <div>
+            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest mb-1">
+              {product.category === 'sportswear' ? 'Performance' : 'Medical Grade'}
+            </p>
+            <h3 className="font-bold text-lg text-black line-clamp-1 transition-colors group-hover:text-blue-600">
+              {product.name}
+            </h3>
+          </div>
+          <div className="flex items-center gap-1 bg-yellow-400/10 px-2 py-1 rounded-lg">
+            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+            <span className="text-[10px] font-bold text-black">4.9</span>
+          </div>
+        </div>
 
-        <p className="text-xs text-gray-500 mb-2">{product.category === 'sportswear' ? 'Sportswear' : 'Medical Wear'} • {product.subcategory}</p>
-
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-bold text-black">
-            ₹{currentPrice.toLocaleString()}
-          </span>
-          {hasDiscount && (
-            <span className="text-sm text-gray-400 line-through decoration-gray-400">
-              ₹{originalPrice.toLocaleString()}
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex items-baseline gap-2">
+            <span className="text-xl font-black text-black">
+              ₹{currentPrice.toLocaleString()}
             </span>
-          )}
+            {hasDiscount && (
+              <span className="text-xs text-gray-400 line-through font-medium">
+                ₹{originalPrice.toLocaleString()}
+              </span>
+            )}
+          </div>
+          <div className="flex -space-x-1">
+            {product.availableColors?.slice(0, 3).map((color, idx) => (
+              <div
+                key={idx}
+                className="w-3 h-3 rounded-full border border-white"
+                style={{ backgroundColor: color.toLowerCase() }}
+              />
+            ))}
+            {product.availableColors && product.availableColors.length > 3 && (
+              <span className="text-[8px] font-bold text-gray-400 pl-2">+{product.availableColors.length - 3}</span>
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { User, Package, MapPin, LogOut, Settings, CreditCard } from 'lucide-react';
+import { Package, MapPin, LogOut, Settings, CreditCard } from 'lucide-react';
 import { PageType } from '../types';
 
 interface AccountProps {

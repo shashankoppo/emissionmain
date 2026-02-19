@@ -1,4 +1,4 @@
-import { MapPin, Phone, Mail, ArrowRight } from 'lucide-react';
+import { MapPin, Award } from 'lucide-react';
 import { PageType } from '../../types';
 import EmissionLogo from '../UI/EmissionLogo';
 
@@ -8,160 +8,98 @@ interface FooterProps {
 
 export default function Footer({ onNavigate }: FooterProps) {
   return (
-    <footer className="bg-gray-900 text-gray-300">
-      {/* Newsletter */}
-      <div className="border-b border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
-              <h3 className="text-white text-lg font-bold mb-1">Stay Updated</h3>
-              <p className="text-gray-400 text-sm">Get notified about new products and exclusive offers</p>
-            </div>
-            <div className="flex gap-2 w-full md:w-auto">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm placeholder-gray-500 focus:ring-2 focus:ring-white/30 focus:border-transparent flex-1 md:w-64"
-              />
-              <button className="px-6 py-3 bg-white text-black rounded-xl text-sm font-semibold hover:bg-gray-100 transition-colors flex items-center gap-1">
-                Subscribe
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Footer */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
-          {/* About */}
-          <div>
-            <div className="mb-4">
+    <footer className="bg-black text-[#888] border-t border-white/5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-16 lg:gap-8">
+          {/* Brand Identity */}
+          <div className="lg:col-span-4">
+            <div className="mb-8">
               <EmissionLogo size="md" color="white" />
             </div>
-            <p className="text-sm text-gray-400 mb-6 leading-relaxed">
-              Premium sportswear and medical wear manufacturer. Buy directly from our factory at the best prices with free shipping across India.
+            <p className="text-xs font-bold uppercase tracking-widest leading-loose mb-10 max-w-sm">
+              ENGINEERING UTILITY SINCE 2026. BORN IN THE HEART OF JABALPUR. MASTERING THE FUSION OF MEDICAL PRECISION AND ATHLETIC PERFORMANCE.
             </p>
-            <div className="flex items-center gap-2 text-sm text-gray-400">
-              <MapPin className="w-4 h-4 flex-shrink-0" />
-              Jabalpur, Madhya Pradesh, India
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-white">
+                <MapPin className="w-4 h-4 text-blue-500" />
+                <span>Madhya Pradesh, India</span>
+              </div>
+              <div className="flex items-center gap-3 text-[10px] font-black uppercase tracking-[0.2em] text-white">
+                <Award className="w-4 h-4 text-purple-500" />
+                <span>ISO 9001:2015 PRESET</span>
+              </div>
             </div>
           </div>
 
-          {/* Shop */}
-          <div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4">Shop</h3>
-            <ul className="space-y-3">
-              <li>
-                <button onClick={() => onNavigate('products')} className="text-sm text-gray-400 hover:text-white transition-colors">
-                  All Products
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('products')} className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Sportswear
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('products')} className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Medical Wear
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('products')} className="text-sm text-gray-400 hover:text-white transition-colors">
-                  T-Shirts & Jerseys
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('products')} className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Scrubs & Uniforms
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          {/* Company */}
-          <div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4">Company</h3>
-            <ul className="space-y-3">
-              <li>
-                <button onClick={() => onNavigate('about')} className="text-sm text-gray-400 hover:text-white transition-colors">
-                  About Us
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('certifications')} className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Certifications
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('contact')} className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Contact Us
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('contact')} className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Bulk Orders
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('privacy')} className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Privacy Policy
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('terms')} className="text-sm text-gray-400 hover:text-white transition-colors">
-                  Terms & Conditions
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          {/* Contact & Support */}
-          <div>
-            <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4">Get In Touch</h3>
+          {/* Shop Links */}
+          <div className="lg:col-span-2">
+            <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em] mb-8">Directory</h3>
             <ul className="space-y-4">
-              <li className="flex items-start gap-3">
-                <Phone className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-400">+91 7987040844</p>
-                  <p className="text-xs text-gray-500">11:00 AM - 6:00 PM</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <Mail className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-400">info@emission.in</p>
-                </div>
-              </li>
-              <li className="flex items-start gap-3">
-                <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-gray-500" />
-                <div>
-                  <p className="text-sm text-gray-400">1650/A Narsingh Nagar</p>
-                  <p className="text-sm text-gray-400">Ranjhi, Jabalpur</p>
-                </div>
-              </li>
+              {['Products', 'Sportswear', 'Medical Wear', 'Jerseys', 'Uniforms'].map((link) => (
+                <li key={link}>
+                  <button onClick={() => onNavigate('products')} className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-white transition-colors">
+                    {link}
+                  </button>
+                </li>
+              ))}
             </ul>
+          </div>
+
+          {/* Corporate Links */}
+          <div className="lg:col-span-2">
+            <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em] mb-8">Corporate</h3>
+            <ul className="space-y-4">
+              {['About Us', 'Contact', 'Bulk Orders', 'Privacy', 'Terms'].map((link) => (
+                <li key={link}>
+                  <button onClick={() => onNavigate(link.toLowerCase().replace(' ', '-') as PageType)} className="text-[10px] font-black uppercase tracking-[0.2em] hover:text-white transition-colors">
+                    {link}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Contact Details */}
+          <div className="lg:col-span-4 lg:pl-10">
+            <h3 className="text-[10px] font-black text-white uppercase tracking-[0.4em] mb-8">Connect</h3>
+            <div className="space-y-8">
+              <div className="group cursor-pointer">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 group-hover:text-blue-500 transition-colors mb-2">Voice</p>
+                <p className="text-sm font-black text-white tracking-widest">+91 7987040844</p>
+              </div>
+              <div className="group cursor-pointer">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 group-hover:text-purple-500 transition-colors mb-2">Digital</p>
+                <p className="text-sm font-black text-white tracking-widest leading-loose">GENESIS@EMISSION.IN</p>
+              </div>
+              <div className="group cursor-pointer">
+                <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/30 group-hover:text-emerald-500 transition-colors mb-2">Genesis Location</p>
+                <p className="text-xs font-bold text-white tracking-wider leading-loose">
+                  1650/A NARSINGH NAGAR<br />RANJHI, JABALPUR
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom Bar */}
-      <div className="border-t border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-xs text-gray-500">
-              © {new Date().getFullYear()} Emission. All rights reserved. Made with ❤️ in India.
-            </p>
-            <div className="flex items-center gap-4">
-              <span className="text-xs text-gray-500">We accept:</span>
-              <div className="flex gap-2">
-                <span className="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400">UPI</span>
-                <span className="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400">Cards</span>
-                <span className="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400">NetBanking</span>
-                <span className="text-xs bg-gray-800 px-2 py-1 rounded text-gray-400">COD</span>
-              </div>
+      {/* Legal & Local Pride */}
+      <div className="border-t border-white/5 py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+            <div className="flex items-center gap-6">
+              <p className="text-[8px] font-black uppercase tracking-[0.4em]">
+                © {new Date().getFullYear()} EMISSION LABORATORY.
+              </p>
+              <div className="h-4 w-[1px] bg-white/10 hidden md:block" />
+              <p className="text-[8px] font-black uppercase tracking-[0.4em] text-white/40">
+                ENGINEERED WITH PASSION IN JABALPUR, INDIA.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-6 opacity-40 hover:opacity-100 transition-opacity">
+              {['UPI', 'VISA', 'AMEX', 'COD'].map((pay) => (
+                <span key={pay} className="text-[8px] font-black uppercase tracking-[0.3em]">{pay}</span>
+              ))}
             </div>
           </div>
         </div>

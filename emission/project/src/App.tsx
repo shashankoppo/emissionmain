@@ -29,7 +29,6 @@ function App() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState<{ name: string; email: string } | null>(null);
 
   const handleNavigate = (page: PageType, param?: string) => {
     setCurrentPage(page);
@@ -87,15 +86,13 @@ function App() {
     setCartItems(items);
   };
 
-  const handleLogin = (email: string) => {
+  const handleLogin = (_email: string) => {
     setIsLoggedIn(true);
-    setUser({ name: 'John Doe', email });
     handleNavigate('home');
   };
 
-  const handleRegister = (data: { name: string; email: string }) => {
+  const handleRegister = (_data: { name: string; email: string }) => {
     setIsLoggedIn(true);
-    setUser({ name: data.name, email: data.email });
     handleNavigate('home');
   };
 

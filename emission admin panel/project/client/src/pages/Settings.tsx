@@ -1,11 +1,15 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
-import { Save, Key, ShieldCheck, AlertCircle } from 'lucide-react';
+import { Save, Key, ShieldCheck, AlertCircle, ShoppingBag, Palette } from 'lucide-react';
 
 export default function Settings() {
     const [settings, setSettings] = useState({
         RAZORPAY_KEY_ID: '',
         RAZORPAY_KEY_SECRET: '',
+        PHONEPE_MERCHANT_ID: '',
+        PHONEPE_SALT_KEY: '',
+        PHONEPE_SALT_INDEX: '1',
+        EMBROIDERY_PRICE: '250',
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -21,6 +25,10 @@ export default function Settings() {
             setSettings({
                 RAZORPAY_KEY_ID: response.data.RAZORPAY_KEY_ID || '',
                 RAZORPAY_KEY_SECRET: response.data.RAZORPAY_KEY_SECRET || '',
+                PHONEPE_MERCHANT_ID: response.data.PHONEPE_MERCHANT_ID || '',
+                PHONEPE_SALT_KEY: response.data.PHONEPE_SALT_KEY || '',
+                PHONEPE_SALT_INDEX: response.data.PHONEPE_SALT_INDEX || '1',
+                EMBROIDERY_PRICE: response.data.EMBROIDERY_PRICE || '250',
             });
         } catch (error) {
             console.error('Failed to fetch settings:', error);
@@ -55,82 +63,147 @@ export default function Settings() {
     }
 
     return (
-        <div className="max-w-4xl">
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-                <p className="text-gray-600 mt-1">Manage payment gateway and API configurations</p>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="mb-12">
+                <h1 className="text-4xl font-black text-gray-900 tracking-tight uppercase">Settings</h1>
+                <p className="text-gray-500 mt-2 font-medium">Gateway configurations and global business rules</p>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <div className="p-6 border-b border-gray-200 bg-gray-50">
-                    <div className="flex items-center gap-2 text-gray-900 font-semibold">
-                        <ShieldCheck className="w-5 h-5 text-blue-600" />
-                        <h2>Payment Gateway (Razorpay)</h2>
+            <form onSubmit={handleSave} className="space-y-12">
+                {message.text && (
+                    <div className={`p-6 rounded-[24px] flex items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-300 ${message.type === 'success' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'
+                        }`}>
+                        {message.type === 'success' ? <Save className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+                        <p className="font-bold text-sm uppercase tracking-wider">{message.text}</p>
+                    </div>
+                )}
+
+                {/* Razorpay Section */}
+                <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="p-8 border-b border-gray-50 bg-gray-50/50">
+                        <div className="flex items-center gap-3 text-gray-900 font-black uppercase text-xs tracking-widest">
+                            <ShieldCheck className="w-5 h-5 text-blue-600" />
+                            <h2>Razorpay Configuration</h2>
+                        </div>
+                    </div>
+                    <div className="p-8 grid gap-8">
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                    <Key className="w-4 h-4" />
+                                    Key ID
+                                </label>
+                                <input
+                                    type="text"
+                                    value={settings.RAZORPAY_KEY_ID}
+                                    onChange={(e) => setSettings({ ...settings, RAZORPAY_KEY_ID: e.target.value })}
+                                    className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-blue-500/10 outline-none transition"
+                                    placeholder="rzp_live_..."
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 flex items-center gap-2">
+                                    <Key className="w-4 h-4" />
+                                    Key Secret
+                                </label>
+                                <input
+                                    type="password"
+                                    value={settings.RAZORPAY_KEY_SECRET}
+                                    onChange={(e) => setSettings({ ...settings, RAZORPAY_KEY_SECRET: e.target.value })}
+                                    className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-blue-500/10 outline-none transition"
+                                    placeholder="••••••••••••••••"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <form onSubmit={handleSave} className="p-6 space-y-6">
-                    {message.text && (
-                        <div className={`p-4 rounded-lg flex items-center gap-3 ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
-                            }`}>
-                            {message.type === 'success' ? <Save className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-                            <p>{message.text}</p>
-                        </div>
-                    )}
-
-                    <div className="grid gap-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                                <Key className="w-4 h-4 text-gray-400" />
-                                Razorpay Key ID
-                            </label>
-                            <input
-                                type="text"
-                                value={settings.RAZORPAY_KEY_ID}
-                                onChange={(e) => setSettings({ ...settings, RAZORPAY_KEY_ID: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                                placeholder="rzp_test_..."
-                            />
-                            <p className="mt-1 text-xs text-gray-500">Your public Razorpay API key</p>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
-                                <Key className="w-4 h-4 text-gray-400" />
-                                Razorpay Key Secret
-                            </label>
-                            <input
-                                type="password"
-                                value={settings.RAZORPAY_KEY_SECRET}
-                                onChange={(e) => setSettings({ ...settings, RAZORPAY_KEY_SECRET: e.target.value })}
-                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                                placeholder="••••••••••••••••"
-                            />
-                            <p className="mt-1 text-xs text-gray-500">Your private Razorpay API secret (stored securely)</p>
+                {/* PhonePe Section */}
+                <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="p-8 border-b border-gray-50 bg-gray-50/50">
+                        <div className="flex items-center gap-3 text-gray-900 font-black uppercase text-xs tracking-widest">
+                            <ShoppingBag className="w-5 h-5 text-purple-600" />
+                            <h2>PhonePe Gateway (New)</h2>
                         </div>
                     </div>
-
-                    <div className="pt-4 flex justify-end">
-                        <button
-                            type="submit"
-                            disabled={saving}
-                            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition disabled:bg-blue-400 disabled:cursor-not-allowed"
-                        >
-                            <Save className="w-4 h-4" />
-                            {saving ? 'Saving...' : 'Save Settings'}
-                        </button>
+                    <div className="p-8 grid gap-8">
+                        <div className="grid md:grid-cols-3 gap-6">
+                            <div className="md:col-span-1">
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Merchant ID</label>
+                                <input
+                                    type="text"
+                                    value={settings.PHONEPE_MERCHANT_ID}
+                                    onChange={(e) => setSettings({ ...settings, PHONEPE_MERCHANT_ID: e.target.value })}
+                                    className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-purple-500/10 outline-none transition"
+                                    placeholder="MID12345678"
+                                />
+                            </div>
+                            <div className="md:col-span-1">
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Salt Key</label>
+                                <input
+                                    type="password"
+                                    value={settings.PHONEPE_SALT_KEY}
+                                    onChange={(e) => setSettings({ ...settings, PHONEPE_SALT_KEY: e.target.value })}
+                                    className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-purple-500/10 outline-none transition"
+                                    placeholder="••••••••••••••••"
+                                />
+                            </div>
+                            <div className="md:col-span-1">
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Salt Index</label>
+                                <input
+                                    type="text"
+                                    value={settings.PHONEPE_SALT_INDEX}
+                                    onChange={(e) => setSettings({ ...settings, PHONEPE_SALT_INDEX: e.target.value })}
+                                    className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-purple-500/10 outline-none transition"
+                                    placeholder="1"
+                                />
+                            </div>
+                        </div>
                     </div>
-                </form>
-            </div>
+                </div>
 
-            <div className="mt-8 bg-blue-50 border border-blue-100 rounded-xl p-6">
-                <h3 className="text-blue-800 font-semibold mb-2 flex items-center gap-2">
+                {/* Business Rules */}
+                <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="p-8 border-b border-gray-50 bg-gray-50/50">
+                        <div className="flex items-center gap-3 text-gray-900 font-black uppercase text-xs tracking-widest">
+                            <Palette className="w-5 h-5 text-orange-600" />
+                            <h2>Customization Rules</h2>
+                        </div>
+                    </div>
+                    <div className="p-8">
+                        <div className="w-[300px]">
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Embroidery Charge (₹)</label>
+                            <input
+                                type="number"
+                                value={settings.EMBROIDERY_PRICE}
+                                onChange={(e) => setSettings({ ...settings, EMBROIDERY_PRICE: e.target.value })}
+                                className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-orange-500/10 outline-none transition"
+                                placeholder="250"
+                            />
+                            <p className="mt-2 text-xs font-bold text-gray-400 tracking-tight">Standard fee for medical wear branding</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="flex justify-end pt-4">
+                    <button
+                        type="submit"
+                        disabled={saving}
+                        className="flex items-center gap-3 bg-black text-white px-12 py-5 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] hover:bg-blue-600 transition-all shadow-2xl shadow-black/10 active:scale-95 disabled:bg-gray-200 disabled:cursor-not-allowed"
+                    >
+                        <Save className="w-5 h-5" />
+                        {saving ? 'Synchronizing...' : 'Commit Changes'}
+                    </button>
+                </div>
+            </form>
+
+            <div className="mt-12 bg-blue-50/50 border border-blue-100 rounded-[32px] p-8">
+                <h3 className="text-blue-900 font-black uppercase text-xs tracking-widest mb-3 flex items-center gap-2">
                     <AlertCircle className="w-5 h-5" />
-                    Important Note
+                    Operational Security
                 </h3>
-                <p className="text-blue-700 text-sm">
-                    Settings configured here will take precedence over environment variables (`.env`).
-                    Please ensure your Razorpay keys are correct to avoid payment processing issues on the main website.
+                <p className="text-blue-800 text-sm font-medium leading-relaxed">
+                    Settings configured here are updated in real-time across the platform. Ensure Salt Keys and Secrets are correct to maintain transaction integrity. Global embroidery charges will apply to all medical apparel marked with the "Customization" tag.
                 </p>
             </div>
         </div>

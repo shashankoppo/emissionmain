@@ -1,67 +1,36 @@
-import { useState } from 'react';
-import { MapPin, CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { MapPin, Truck, CheckCircle } from 'lucide-react';
 
 export default function PincodeChecker() {
-    const [pincode, setPincode] = useState('');
-    const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-    const [message, setMessage] = useState('');
-
-    const checkPincode = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (pincode.length !== 6) return;
-
-        setStatus('loading');
-
-        // Simulate API call
-        setTimeout(() => {
-            if (['482001', '400001', '110001', '560001'].includes(pincode) || Math.random() > 0.3) {
-                setStatus('success');
-                setMessage(`Delivery available by ${new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}.`);
-            } else {
-                setStatus('error');
-                setMessage('Sorry, we do not deliver to this pincode yet.');
-            }
-        }, 1500);
-    };
-
     return (
-        <div className="bg-gray-50 rounded-xl p-5 border border-gray-100 mb-8">
-            <div className="flex items-center gap-2 mb-3">
-                <MapPin className="w-4 h-4 text-black" />
-                <span className="text-sm font-bold text-black">Check Delivery Availability</span>
+        <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 rounded-2xl p-6 border border-blue-200/50 mb-8 relative overflow-hidden group">
+            <div className="absolute -right-4 -top-4 w-24 h-24 bg-blue-600/5 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+
+            <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center flex-shrink-0">
+                    <Truck className="w-6 h-6 text-blue-600" />
+                </div>
+
+                <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-black text-black uppercase tracking-widest">Domestic Shipping</span>
+                        <span className="bg-blue-600 text-white text-[8px] font-black px-2 py-0.5 rounded-full">FREE</span>
+                    </div>
+                    <h3 className="text-lg font-black text-blue-900 tracking-tight">Pan-India Delivery</h3>
+                    <p className="text-sm text-blue-700/70 mt-1 leading-relaxed">
+                        We offer complimentary express shipping on all domestic orders. No hidden charges.
+                    </p>
+
+                    <div className="mt-4 flex items-center gap-2 text-xs font-bold text-blue-800">
+                        <CheckCircle className="w-4 h-4" />
+                        <span>All pincodes served across India</span>
+                    </div>
+                </div>
             </div>
 
-            <form onSubmit={checkPincode} className="relative flex gap-2">
-                <input
-                    type="text"
-                    placeholder="Enter Pincode"
-                    maxLength={6}
-                    value={pincode}
-                    onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
-                    className="flex-1 px-4 py-2.5 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/5 transition"
-                />
-                <button
-                    type="submit"
-                    disabled={pincode.length !== 6 || status === 'loading'}
-                    className="px-6 py-2.5 bg-black text-white text-sm font-semibold rounded-lg hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                >
-                    {status === 'loading' ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Check'}
-                </button>
-            </form>
-
-            {status === 'success' && (
-                <div className="flex items-center gap-2 mt-3 text-green-700 text-sm animate-fade-in">
-                    <CheckCircle className="w-4 h-4" />
-                    <span>{message}</span>
-                </div>
-            )}
-
-            {status === 'error' && (
-                <div className="flex items-center gap-2 mt-3 text-red-600 text-sm animate-fade-in">
-                    <XCircle className="w-4 h-4" />
-                    <span>{message}</span>
-                </div>
-            )}
+            <div className="mt-4 pt-4 border-t border-blue-200/30 flex items-center gap-3">
+                <MapPin className="w-3 h-3 text-blue-400" />
+                <span className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Jabalpur Factory Dispatch</span>
+            </div>
         </div>
     );
 }

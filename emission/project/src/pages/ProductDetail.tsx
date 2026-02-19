@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Check, Package, ShoppingCart, Heart, Star, Minus, Plus, ChevronDown, ChevronUp, Ruler } from 'lucide-react';
 import { PageType } from '../types';
-import { productAPI, Product } from '../lib/api';
+import api, { productAPI, Product } from '../lib/api';
 import Button from '../components/UI/Button';
 import ProductCard from '../components/UI/ProductCard';
 import SizeChart from '../components/UI/SizeChart';
@@ -31,9 +31,11 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart }: Pr
   const [isSizeChartOpen, setIsSizeChartOpen] = useState(false);
   const [openAccordion, setOpenAccordion] = useState<string | null>('desc');
   const [embroidery, setEmbroidery] = useState<EmbroideryCustomization | null>(null);
+  const [embroideryPrice, setEmbroideryPrice] = useState(250);
 
   useEffect(() => {
     fetchProduct();
+    fetchSettings();
     setQuantity(1);
     setAddedToCart(false);
     setSelectedSize(null);
@@ -41,6 +43,15 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart }: Pr
     setEmbroidery(null);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [productId]);
+
+  const fetchSettings = async () => {
+    try {
+      const response = await api.get('/settings');
+      if (response.data.EMBROIDERY_PRICE) setEmbroideryPrice(Number(response.data.EMBROIDERY_PRICE));
+    } catch (err) {
+      console.error('Failed to fetch settings', err);
+    }
+  };
 
   const fetchProduct = async () => {
     try {
@@ -222,11 +233,12 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart }: Pr
             )}
 
             {/* Embroidery Customizer */}
-            {product.allowsEmbroidery && (
+            {(product.allowsEmbroidery || product.category === 'medicalwear') && (
               <div className="mb-8">
                 <EmbroideryCustomizer
-                  price={499} // Base price for embroidery
+                  price={embroideryPrice}
                   onCustomizationChange={setEmbroidery}
+                  defaultEnabled={product.category === 'medicalwear'}
                 />
               </div>
             )}

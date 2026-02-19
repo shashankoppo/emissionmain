@@ -1,4 +1,4 @@
-import { Package, MessageSquare, ShoppingCart, LogOut, LayoutDashboard, Settings as SettingsIcon } from 'lucide-react';
+import { Package, MessageSquare, ShoppingCart, LogOut, LayoutDashboard, Settings as SettingsIcon, FileText, Zap, Truck, Image as ImageIcon } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -11,8 +11,12 @@ export default function Sidebar() {
   const menuItems = [
     { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { href: '/admin/products', icon: Package, label: 'Products' },
-    { href: '/admin/enquiries', icon: MessageSquare, label: 'Enquiries' },
     { href: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
+    { href: '/admin/invoices', icon: FileText, label: 'Invoices' },
+    { href: '/admin/pos', icon: Zap, label: 'POS Terminal' },
+    { href: '/admin/courier', icon: Truck, label: 'Delivery' },
+    { href: '/admin/banners', icon: ImageIcon, label: 'Content' },
+    { href: '/admin/enquiries', icon: MessageSquare, label: 'Enquiries' },
     { href: '/admin/settings', icon: SettingsIcon, label: 'Settings' },
   ];
 
@@ -29,8 +33,8 @@ export default function Sidebar() {
             key={item.href}
             to={item.href}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg mb-2 transition ${isActive(item.href)
-                ? 'bg-blue-600 text-white'
-                : 'text-gray-300 hover:bg-gray-800'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-300 hover:bg-gray-800'
               }`}
           >
             <item.icon className="w-5 h-5" />

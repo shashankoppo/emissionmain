@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowRight, Package, Shield, Truck, Star, CheckCircle, Clock, Award } from 'lucide-react';
+import { ArrowRight, Package, Shield, Truck, CheckCircle, Clock, Award } from 'lucide-react';
 import { PageType } from '../types';
 import { productAPI, Product } from '../lib/api';
 import ProductCard from '../components/UI/ProductCard';
@@ -17,6 +17,8 @@ export default function Home({ onNavigate, onAddToCart }: HomeProps) {
     fetchBestSellers();
   }, []);
 
+
+
   const fetchBestSellers = async () => {
     try {
       const allProducts = await productAPI.getAll();
@@ -32,134 +34,142 @@ export default function Home({ onNavigate, onAddToCart }: HomeProps) {
     {
       id: 'sportswear',
       title: 'Performance Sportswear',
-      image: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?auto=format&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80',
       desc: 'Engineered for athletes',
     },
     {
       id: 'medicalwear',
       title: 'Medical Scrubs & Coats',
-      image: 'https://images.unsplash.com/photo-1584982751601-97dcc096654c?auto=format&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1581595221475-79d150275510?auto=format&fit=crop&q=80',
       desc: 'Professional & Comfortable',
     },
     {
       id: 'custom',
       title: 'Custom Uniforms',
-      image: 'https://images.unsplash.com/photo-1556906781-9a412961d289?auto=format&fit=crop&q=80',
+      image: 'https://images.unsplash.com/photo-1598501022238-79673b40090d?auto=format&fit=crop&q=80',
       desc: 'Logos & Embroidery',
     },
   ];
 
   return (
-    <div className="font-sans">
-      {/* Hero Section - High Impact */}
-      <div className="relative h-[85vh] bg-black overflow-hidden">
+    <div className="font-sans selection:bg-black selection:text-white">
+      {/* Hero Section - Yesterday's Design */}
+      <div className="relative h-[90vh] bg-black overflow-hidden flex items-center">
+        {/* Background Visual */}
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1571731956672-f2b94d7dd0cb?auto=format&fit=crop&q=80"
             alt="Hero Background"
             className="w-full h-full object-cover opacity-60"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-90" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
         </div>
-        <div className="relative z-10 h-full flex items-center">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-            <div className="max-w-3xl">
-              <span className="inline-block py-1 px-3 rounded-full bg-white/10 text-white text-sm font-semibold mb-6 backdrop-blur-sm border border-white/20">
-                🚀 New Collection 2026
-              </span>
-              <h1 className="text-5xl md:text-7xl font-bold text-white leading-tight mb-6 animate-fade-in-up">
-                Performance.<br />
-                Precision.<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
-                  Perfection.
-                </span>
-              </h1>
-              <p className="text-xl text-gray-300 mb-8 max-w-xl leading-relaxed">
-                Premium sportswear and medical apparel engineered for professionals.
-                Experience the perfect blend of comfort, durability, and style.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <button
-                  onClick={() => onNavigate('products')}
-                  className="bg-white text-black px-8 py-4 rounded-xl text-lg font-bold hover:bg-gray-100 transition-transform transform hover:scale-105 flex items-center gap-2"
-                >
-                  Shop Now
-                  <ArrowRight className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() => onNavigate('contact')}
-                  className="bg-white/10 text-white border border-white/30 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-white/20 transition backdrop-blur-sm"
-                >
-                  Bulk Orders
-                </button>
-              </div>
+
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="max-w-2xl animate-slide-up">
+            {/* Badge */}
+            <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full glass-card text-white text-[10px] font-bold mb-8 uppercase tracking-widest shadow-xl">
+              <span>🚀</span>
+              <span>New Collection 2026</span>
+            </div>
+
+            {/* Headline */}
+            <h1 className="text-6xl md:text-8xl font-black text-white leading-[1.1] tracking-tight mb-8">
+              Performance.<br />
+              Precision.<br />
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">Perfection.</span>
+            </h1>
+
+            {/* Subtext */}
+            <p className="text-white/80 text-lg md:text-xl font-medium mb-12 leading-relaxed max-w-xl">
+              Premium sportswear and medical apparel engineered for professionals.
+              Experience the perfect blend of comfort, durability, and style.
+            </p>
+
+            {/* Buttons */}
+            <div className="flex flex-wrap gap-5">
+              <button
+                onClick={() => onNavigate('products')}
+                className="group bg-white text-black px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:bg-gray-100 transition-all flex items-center gap-2 shadow-2xl"
+              >
+                Shop Now
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button
+                onClick={() => onNavigate('contact')}
+                className="bg-black/20 backdrop-blur-md border border-white/20 text-white px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:bg-white/10 transition-all shadow-xl"
+              >
+                Bulk Orders
+              </button>
             </div>
           </div>
         </div>
 
         {/* Scroll Indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 text-white animate-bounce">
-          <div className="w-6 h-10 border-2 border-white/30 rounded-full flex justify-center p-2">
-            <div className="w-1 h-3 bg-white rounded-full" />
+        <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
+          <div className="w-6 h-10 border-2 border-white/20 rounded-full flex p-1 justify-center">
+            <div className="w-1.5 h-3 bg-white rounded-full animate-scroll-pill" />
           </div>
         </div>
       </div>
 
-      {/* Trust Badges Strip (Similar to Jogger Sports) */}
-      <div className="bg-black border-t border-gray-900 py-6">
-        <div className="max-w-7xl mx-auto px-4 overflow-x-auto">
-          <div className="flex justify-between min-w-[600px] text-gray-400 text-sm font-medium">
-            <div className="flex items-center gap-2">
-              <Truck className="w-5 h-5 text-white" />
-              <span>Free Shipping Across India</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Shield className="w-5 h-5 text-white" />
-              <span>100% Secure Payments</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-5 h-5 text-white" />
-              <span>Easy 7-Day Returns</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Award className="w-5 h-5 text-white" />
-              <span>ISO 9001:2015 Certified</span>
-            </div>
+      {/* Trust Badges - Sleek Minimalist */}
+      <div className="bg-black py-8 border-y border-white/5 relative z-20">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-0">
+            {[
+              { icon: Truck, text: 'Pan-India Express Delivery' },
+              { icon: Shield, text: 'Secure Transactions Guarantee' },
+              { icon: CheckCircle, text: '7-Day Premium Returns' },
+              { icon: Award, text: 'ISO 9001:2015 Precision' }
+            ].map((item, idx) => (
+              <div key={idx} className={`flex items-center justify-center gap-4 group ${idx !== 3 ? 'lg:border-r lg:border-white/10' : ''}`}>
+                <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-white group-hover:rotate-[360deg] transition-all duration-700">
+                  <item.icon className="w-5 h-5 text-white group-hover:text-black transition-colors" />
+                </div>
+                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-white transition-colors">
+                  {item.text}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Shop by Category - Visual Grid (Knya Style) */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-black mb-4">Shop by Category</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Explore our diverse collection tailored for your specific needs.
-            </p>
+      {/* Shop by Category - Ultra Modern */}
+      <section className="py-32 bg-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-blue-50/50 rounded-full blur-3xl -mr-96 -mt-96" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-24">
+            <span className="text-blue-600 font-black text-[10px] uppercase tracking-[0.4em] mb-4 block">Curated Collections</span>
+            <h2 className="text-5xl md:text-7xl font-black text-black tracking-tighter uppercase leading-none">Choose Your<br />Masterpiece.</h2>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
             {categories.map((cat) => (
               <div
                 key={cat.id}
                 onClick={() => onNavigate('products', cat.id)}
-                className="group relative h-[500px] rounded-3xl overflow-hidden cursor-pointer shadow-lg"
+                className="group relative h-[600px] rounded-[48px] overflow-hidden cursor-pointer premium-shadow active:scale-95 transition-all duration-500"
               >
                 <img
                   src={cat.image}
                   alt={cat.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-8 transform transition-transform duration-500 group-hover:-translate-y-2">
-                  <h3 className="text-2xl font-bold text-white mb-2">{cat.title}</h3>
-                  <p className="text-gray-300 mb-4 opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80" />
+                <div className="absolute inset-0 glass-dark opacity-0 group-hover:opacity-10 transition-opacity" />
+
+                <div className="absolute bottom-0 left-0 right-0 p-12 translate-y-8 group-hover:translate-y-0 transition-transform duration-500">
+                  <div className="w-12 h-[1px] bg-white/50 mb-6 group-hover:w-full transition-all duration-700" />
+                  <h3 className="text-3xl font-black text-white mb-3 uppercase tracking-tight">{cat.title}</h3>
+                  <p className="text-white/60 text-xs font-bold uppercase tracking-widest leading-relaxed mb-6 opacity-0 group-hover:opacity-100 transition-all delay-100">
                     {cat.desc}
                   </p>
-                  <button className="flex items-center gap-2 text-white font-semibold border-b border-white pb-1 group-hover:border-blue-400 transition-colors">
-                    Explore Collection <ArrowRight className="w-4 h-4" />
-                  </button>
+                  <div className="flex items-center gap-3 text-white text-[10px] font-black uppercase tracking-[0.3em] group-hover:gap-5 transition-all">
+                    Explore Now <ArrowRight className="w-3 h-3" />
+                  </div>
                 </div>
               </div>
             ))}
@@ -167,92 +177,100 @@ export default function Home({ onNavigate, onAddToCart }: HomeProps) {
         </div>
       </section>
 
-      {/* Best Sellers (Jogger Sports Logic) */}
-      <section className="py-20 bg-gray-50 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
-            <div>
-              <span className="text-blue-600 font-bold tracking-wider text-sm uppercase mb-2 block">Top Rated</span>
-              <h2 className="text-4xl font-bold text-black">Best Sellers</h2>
+      {/* Best Sellers - Dynamic Grid */}
+      <section className="py-32 bg-gray-50 overflow-hidden relative">
+        <div className="absolute top-1/2 left-0 w-full h-[1px] bg-black/5" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
+            <div className="animate-fade-in">
+              <span className="text-blue-600 font-black text-[10px] uppercase tracking-[0.4em] mb-4 block">Crowd Favorites</span>
+              <h2 className="text-5xl font-black text-black tracking-tighter uppercase leading-none">Best<br />Sellers.</h2>
             </div>
             <button
               onClick={() => onNavigate('products')}
-              className="text-black font-semibold border-b-2 border-black pb-1 hover:text-gray-600 hover:border-gray-600 transition"
+              className="group flex items-center gap-4 text-black text-[10px] font-black uppercase tracking-[0.3em] hover:text-blue-600 transition-colors"
             >
-              View All Products
+              Discover Full Archive
+              <div className="w-10 h-10 rounded-full border border-black/10 flex items-center justify-center group-hover:border-blue-600 transition-colors">
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
             </button>
           </div>
 
           {loading ? (
             <div className="flex justify-center p-12">
-              <div className="w-12 h-12 border-4 border-black border-t-transparent rounded-full animate-spin" />
+              <div className="w-10 h-10 border-2 border-black border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
               {bestSellers.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onViewDetails={(id) => onNavigate('product-detail', id)}
-                  onAddToCart={onAddToCart}
-                />
+                <div key={product.id} className="animate-fade-in">
+                  <ProductCard
+                    product={product}
+                    onViewDetails={(id) => onNavigate('product-detail', id)}
+                    onAddToCart={onAddToCart}
+                  />
+                </div>
               ))}
             </div>
           )}
         </div>
       </section>
 
-      {/* Why Choose Us - Modern Cards */}
-      <section className="py-24 bg-white">
+      {/* Why Choose Us - Premium Visual Storytelling */}
+      <section className="py-40 bg-white relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-            <div className="relative">
-              <div className="absolute -top-10 -left-10 w-40 h-40 bg-blue-100 rounded-full blur-3xl opacity-50" />
-              <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-purple-100 rounded-full blur-3xl opacity-50" />
-              <img
-                src="https://images.unsplash.com/photo-1556817405-6e7c515712c6?auto=format&fit=crop&q=80"
-                alt="Quality Manufacturing"
-                className="relative z-10 rounded-3xl shadow-2xl w-full"
-              />
-              <div className="absolute -right-8 top-1/2 -translate-y-1/2 bg-white p-6 rounded-2xl shadow-xl z-20 hidden md:block">
-                <div className="flex items-center gap-4 mb-2">
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                    <CheckCircle className="w-6 h-6 text-green-600" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+            <div className="relative group">
+              <div className="absolute -inset-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-[48px] opacity-10 blur-2xl group-hover:opacity-20 transition-opacity duration-700" />
+              <div className="relative overflow-hidden rounded-[40px] shadow-2xl">
+                <img
+                  src="https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&q=80"
+                  alt="Precision Manufacturing"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2s]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
+              </div>
+
+              {/* Floating Badge */}
+              <div className="absolute -right-12 -bottom-12 glass-dark p-8 rounded-[32px] shadow-2xl animate-float hidden md:block">
+                <div className="flex items-center gap-5 mb-4">
+                  <div className="w-16 h-16 rounded-2xl bg-white text-black flex items-center justify-center shadow-lg">
+                    <CheckCircle className="w-8 h-8" />
                   </div>
                   <div>
-                    <p className="font-bold text-lg">100%</p>
-                    <p className="text-xs text-gray-500">Quality Checked</p>
+                    <p className="text-white font-black text-2xl tracking-tighter">100%</p>
+                    <p className="text-white/40 text-[8px] font-black uppercase tracking-[0.2em]">Quality Integrity</p>
                   </div>
                 </div>
-                <div className="w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
-                  <div className="bg-green-500 w-full h-full" />
+                <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                  <div className="bg-white w-[100%] h-full rounded-full" />
                 </div>
               </div>
             </div>
 
-            <div>
-              <span className="text-blue-600 font-bold tracking-wider text-sm uppercase mb-4 block">Why Emission?</span>
-              <h2 className="text-4xl font-bold text-black mb-6 leading-tight">
-                Crafted for durability,<br />Designed for comfort.
+            <div className="lg:pl-10">
+              <span className="text-blue-600 font-black text-[10px] uppercase tracking-[0.4em] mb-6 block">The Emission Identity</span>
+              <h2 className="text-5xl md:text-7xl font-black text-black tracking-tighter uppercase leading-none mb-8">
+                Mastered by<br />Hand. <span className="text-gray-300">Perfected</span><br />by Science.
               </h2>
-              <p className="text-gray-600 text-lg mb-8 leading-relaxed">
-                We control the entire manufacturing process from fabric selection to final stitching.
-                Our ISO-certified facility in Jabalpur ensures that every piece of clothing meets international standards.
+              <p className="text-gray-500 text-lg mb-12 font-medium leading-relaxed max-w-xl">
+                From the heart of Jabalpur, we redefine utility. Our ISO-certified facility bridges the gap between raw endurance and professional elegance.
               </p>
 
-              <div className="space-y-6">
+              <div className="grid grid-cols-1 gap-12">
                 {[
-                  { icon: Shield, title: 'Premium Fabrics', desc: 'Moisture-wicking, anti-microbial, and durable materials.' },
-                  { icon: Clock, title: 'Fast Delivery', desc: 'Dispatched within 24 hours for stock items.' },
-                  { icon: Package, title: 'Direct from Factory', desc: 'No middlemen. Best prices guaranteed.' }
+                  { icon: Shield, title: 'Bionic Fabrics', desc: 'Moisture-wicking, anti-microbial engineered DNA.' },
+                  { icon: Clock, title: 'Velocity Fulfilment', desc: 'Strategic dispatch infrastructure for 24h arrivals.' },
+                  { icon: Package, title: 'Direct Genesis', desc: 'Factory-to-door ecosystem. Zero dilution.' }
                 ].map((feature, i) => (
-                  <div key={i} className="flex gap-4">
-                    <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <feature.icon className="w-6 h-6 text-black" />
+                  <div key={i} className="flex gap-8 group">
+                    <div className="w-16 h-16 rounded-[24px] bg-gray-50 flex items-center justify-center flex-shrink-0 group-hover:bg-black group-hover:rotate-12 transition-all duration-500">
+                      <feature.icon className="w-6 h-6 text-black group-hover:text-white transition-colors" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-black mb-1">{feature.title}</h4>
-                      <p className="text-sm text-gray-500">{feature.desc}</p>
+                      <h4 className="font-black text-sm uppercase tracking-tight text-black mb-2">{feature.title}</h4>
+                      <p className="text-xs text-gray-400 font-semibold tracking-wide leading-relaxed max-w-xs">{feature.desc}</p>
                     </div>
                   </div>
                 ))}
@@ -262,32 +280,40 @@ export default function Home({ onNavigate, onAddToCart }: HomeProps) {
         </div>
       </section>
 
-      {/* Newsletter / CTA */}
-      <section className="py-20 bg-black text-white relative overflow-hidden">
+      {/* Newsletter - High Octane CTA */}
+      <section className="py-40 bg-black text-white relative overflow-hidden">
         <div className="absolute inset-0">
-          <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-900/30 rounded-full blur-[100px]" />
-          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-900/30 rounded-full blur-[100px]" />
+          <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-blue-600/20 rounded-full blur-[120px]" />
+          <div className="absolute bottom-0 left-1/4 w-[600px] h-[600px] bg-purple-600/20 rounded-full blur-[120px]" />
         </div>
 
-        <div className="relative z-10 max-w-4xl mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">Join the Movement</h2>
-          <p className="text-gray-400 text-lg mb-10 max-w-2xl mx-auto">
-            Subscribe to get special offers, free giveaways, and once-in-a-lifetime deals.
+        <div className="relative z-10 max-w-5xl mx-auto px-4 text-center">
+          <span className="text-blue-500 font-black text-[10px] uppercase tracking-[0.5em] mb-10 block">Stay Ahead</span>
+          <h2 className="text-6xl md:text-8xl font-black mb-10 tracking-tighter uppercase leading-none">Join the<br /><span className="text-gradient">Collective.</span></h2>
+          <p className="text-white/40 text-sm font-bold uppercase tracking-widest mb-16 max-w-xl mx-auto leading-relaxed">
+            Gain early access to limited laboratory drops and performance engineering insights.
           </p>
 
-          <form className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto" onSubmit={(e) => e.preventDefault()}>
-            <input
-              type="email"
-              placeholder="Enter your email address"
-              className="flex-1 px-6 py-4 rounded-xl bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white/50 backdrop-blur-sm"
-            />
-            <button className="px-8 py-4 bg-white text-black font-bold rounded-xl hover:bg-gray-200 transition">
-              Subscribe
+          <form className="flex flex-col md:flex-row gap-4 max-w-2xl mx-auto" onSubmit={(e) => e.preventDefault()}>
+            <div className="flex-1 relative group">
+              <input
+                type="email"
+                placeholder="GENESIS@EMISSION.COM"
+                className="w-full px-8 py-6 rounded-2xl glass-dark text-white placeholder-white/20 text-xs font-black tracking-widest focus:outline-none focus:ring-2 focus:ring-white/50 transition-all uppercase"
+              />
+            </div>
+            <button className="px-12 py-6 bg-white text-black font-black text-xs uppercase tracking-[0.3em] rounded-2xl hover:bg-white/90 transition-all active:scale-95 shadow-2xl shadow-white/10">
+              Infiltrate
             </button>
           </form>
-          <p className="text-xs text-gray-500 mt-6">
-            We assume you're not a robot. By subscribing you agree to our Terms & Conditions.
-          </p>
+
+          <div className="mt-16 pt-16 border-t border-white/5 flex flex-wrap justify-center gap-10">
+            {['Instagram', 'LinkedIn', 'YouTube'].map((social) => (
+              <a key={social} href="#" className="text-[8px] font-black uppercase tracking-[0.4em] text-white/30 hover:text-white transition-colors">
+                {social}
+              </a>
+            ))}
+          </div>
         </div>
       </section>
     </div>

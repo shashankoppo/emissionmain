@@ -87,16 +87,44 @@ model Order {
   id              String   @id @default(uuid())
   customerName    String
   customerEmail   String
+  customerPhone   String?
   totalAmount     Decimal
   status          String   @default("pending")
   paymentId       String?
   shippingAddress String
   items           String
+  trackingId      String?
+  courierId       String?
+  invoiceId       String?
+  taxAmount       Decimal? @default(0)
+  source          String   @default("website") // website, pos
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model Courier {
+  id        String   @id @default(uuid())
+  name      String
+  api_key   String?
+  apiUrl    String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Setting {
   key   String @id
   value String
+}
+
+model Banner {
+  id        String   @id @default(uuid())
+  title     String?
+  subtitle  String?
+  imageUrl  String
+  link      String?  @default("/products")
+  active    Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

@@ -6,6 +6,7 @@ interface EmbroideryCustomizerProps {
     onCustomizationChange: (customization: EmbroideryCustomization | null) => void;
     price: number;
     className?: string;
+    defaultEnabled?: boolean;
 }
 
 const POSITIONS = [
@@ -35,8 +36,9 @@ export default function EmbroideryCustomizer({
     onCustomizationChange,
     price,
     className = '',
+    defaultEnabled = false,
 }: EmbroideryCustomizerProps) {
-    const [enabled, setEnabled] = useState(false);
+    const [enabled, setEnabled] = useState(defaultEnabled);
     const [text, setText] = useState('');
     const [position, setPosition] = useState('left-chest');
     const [fontStyle, setFontStyle] = useState('standard');
@@ -132,8 +134,8 @@ export default function EmbroideryCustomizer({
                                     type="button"
                                     onClick={() => handlePositionChange(pos.value)}
                                     className={`px-4 py-2 text-sm border-2 transition-colors ${position === pos.value
-                                            ? 'border-black bg-black text-white'
-                                            : 'border-gray-300 bg-white text-black hover:border-black'
+                                        ? 'border-black bg-black text-white'
+                                        : 'border-gray-300 bg-white text-black hover:border-black'
                                         }`}
                                 >
                                     {pos.label}
@@ -169,8 +171,8 @@ export default function EmbroideryCustomizer({
                                     type="button"
                                     onClick={() => handleColorChange(color.value)}
                                     className={`flex flex-col items-center gap-1 p-2 border-2 rounded transition-colors ${threadColor === color.value
-                                            ? 'border-black'
-                                            : 'border-gray-200 hover:border-gray-400'
+                                        ? 'border-black'
+                                        : 'border-gray-200 hover:border-gray-400'
                                         }`}
                                     title={color.name}
                                 >

@@ -8,6 +8,10 @@ import Orders from './pages/Orders';
 import Sidebar from './components/Sidebar';
 
 import Settings from './pages/Settings';
+import Courier from './pages/Courier';
+import Invoices from './pages/Invoices';
+import POS from './pages/POS';
+import BannerManagement from './pages/Banners';
 
 function AdminLayout() {
   return (
@@ -19,6 +23,10 @@ function AdminLayout() {
           <Route path="/products" element={<Products />} />
           <Route path="/enquiries" element={<Enquiries />} />
           <Route path="/orders" element={<Orders />} />
+          <Route path="/invoices" element={<Invoices />} />
+          <Route path="/courier" element={<Courier />} />
+          <Route path="/pos" element={<POS />} />
+          <Route path="/banners" element={<BannerManagement />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </main>

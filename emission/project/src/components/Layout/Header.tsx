@@ -14,7 +14,6 @@ interface HeaderProps {
 export default function Header({ currentPage, onNavigate, cartItemCount = 0, isLoggedIn = false, onOpenCart }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isShopDropdownOpen, setIsShopDropdownOpen] = useState(false);
-  const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
 
@@ -44,21 +43,18 @@ export default function Header({ currentPage, onNavigate, cartItemCount = 0, isL
   return (
     <>
       <header className="bg-white sticky top-0 z-50 shadow-sm">
-        {/* Announcement Bar - Like Knya */}
-        <div className="bg-black text-white overflow-hidden">
-          <div className="relative flex">
-            <div className="animate-marquee whitespace-nowrap py-2 text-xs font-medium flex gap-12 sm:gap-16 items-center">
-              <span>🚚 FREE SHIPPING ON ALL ORDERS</span>
-              <span>✨ PREMIUM QUALITY GUARANTEED</span>
-              <span>🔄 EASY 7-DAY RETURNS</span>
-              <span>🏭 MADE IN INDIA — ISO CERTIFIED</span>
-              <span>💳 SECURE PAYMENTS — UPI, CARDS, COD</span>
-              <span>🚚 FREE SHIPPING ON ALL ORDERS</span>
-              <span>✨ PREMIUM QUALITY GUARANTEED</span>
-              <span>🔄 EASY 7-DAY RETURNS</span>
-              <span>🏭 MADE IN INDIA — ISO CERTIFIED</span>
-              <span>💳 SECURE PAYMENTS — UPI, CARDS, COD</span>
-            </div>
+        {/* Announcement Bar - Exact Match from Screenshot */}
+        <div className="bg-black text-white py-2 overflow-hidden border-b border-white/10">
+          <div className="whitespace-nowrap flex gap-12 sm:gap-16 items-center animate-marquee">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="flex gap-12 sm:gap-16 items-center text-[10px] font-bold uppercase tracking-wider">
+                <span className="flex items-center gap-2">🚚 FREE SHIPPING ON ALL ORDERS</span>
+                <span className="flex items-center gap-2">✨ PREMIUM QUALITY GUARANTEED</span>
+                <span className="flex items-center gap-2">🔄 EASY 7-DAY RETURNS</span>
+                <span className="flex items-center gap-2">🏭 MADE IN INDIA — ISO CERTIFIED</span>
+                <span className="flex items-center gap-2">💳 SECURE PAYMENTS — UPI, CARDS, COD</span>
+              </div>
+            ))}
           </div>
         </div>
 
@@ -81,10 +77,10 @@ export default function Header({ currentPage, onNavigate, cartItemCount = 0, isL
               </div>
 
               {/* Center: Nav Links */}
-              <nav className="hidden lg:flex items-center gap-1">
+              <nav className="hidden lg:flex items-center justify-center flex-1 gap-2">
                 <button
                   onClick={() => onNavigate('home')}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${currentPage === 'home' ? 'text-black' : 'text-gray-500 hover:text-black'
+                  className={`px-4 py-2 text-[13px] font-semibold rounded-lg transition-colors ${currentPage === 'home' ? 'text-black' : 'text-gray-600 hover:text-black'
                     }`}
                 >
                   Home
@@ -98,17 +94,17 @@ export default function Header({ currentPage, onNavigate, cartItemCount = 0, isL
                 >
                   <button
                     onClick={() => onNavigate('products')}
-                    className={`flex items-center gap-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors ${currentPage === 'products' || currentPage === 'product-detail'
-                        ? 'text-black'
-                        : 'text-gray-500 hover:text-black'
+                    className={`flex items-center gap-1.5 px-4 py-2 text-[13px] font-semibold rounded-lg transition-colors ${currentPage === 'products' || currentPage === 'product-detail'
+                      ? 'text-black'
+                      : 'text-gray-600 hover:text-black'
                       }`}
                   >
                     Shop
-                    <ChevronDown className="w-3.5 h-3.5" />
+                    <ChevronDown className="w-4 h-4" />
                   </button>
                   {isShopDropdownOpen && (
-                    <div className="absolute left-0 top-full pt-2 w-56 z-50">
-                      <div className="bg-white border border-gray-200 rounded-xl shadow-xl py-2">
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full pt-2 w-56 z-50">
+                      <div className="bg-white border border-gray-100 rounded-xl shadow-2xl py-2">
                         {shopDropdown.map((item) => (
                           <button
                             key={item.label}
@@ -121,17 +117,6 @@ export default function Header({ currentPage, onNavigate, cartItemCount = 0, isL
                             {item.label}
                           </button>
                         ))}
-                        <div className="border-t border-gray-100 mt-2 pt-2 mx-3">
-                          <button
-                            onClick={() => {
-                              onNavigate('contact');
-                              setIsShopDropdownOpen(false);
-                            }}
-                            className="block w-full text-left px-2 py-2.5 text-sm text-gray-400 hover:text-black transition"
-                          >
-                            Bulk / Custom Orders →
-                          </button>
-                        </div>
                       </div>
                     </div>
                   )}
@@ -139,21 +124,21 @@ export default function Header({ currentPage, onNavigate, cartItemCount = 0, isL
 
                 <button
                   onClick={() => onNavigate('about')}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${currentPage === 'about' ? 'text-black' : 'text-gray-500 hover:text-black'
+                  className={`px-4 py-2 text-[13px] font-semibold rounded-lg transition-colors ${currentPage === 'about' ? 'text-black' : 'text-gray-600 hover:text-black'
                     }`}
                 >
                   About
                 </button>
                 <button
                   onClick={() => onNavigate('contact')}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${currentPage === 'contact' ? 'text-black' : 'text-gray-500 hover:text-black'
+                  className={`px-4 py-2 text-[13px] font-semibold rounded-lg transition-colors ${currentPage === 'contact' ? 'text-black' : 'text-gray-600 hover:text-black'
                     }`}
                 >
                   Contact
                 </button>
                 <button
                   onClick={() => onNavigate('track-order')}
-                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${currentPage === 'track-order' ? 'text-black' : 'text-gray-500 hover:text-black'
+                  className={`px-4 py-2 text-[13px] font-semibold rounded-lg transition-colors ${currentPage === 'track-order' ? 'text-black' : 'text-gray-600 hover:text-black'
                     }`}
                 >
                   Track Order
@@ -161,71 +146,44 @@ export default function Header({ currentPage, onNavigate, cartItemCount = 0, isL
               </nav>
 
               {/* Right: Icons */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-2">
                 {/* Search Toggle */}
                 <button
                   onClick={() => setShowSearch(!showSearch)}
-                  className="p-2.5 text-gray-500 hover:text-black rounded-lg hover:bg-gray-50 transition"
+                  className="p-2 text-gray-600 hover:text-black transition"
                   title="Search"
                 >
-                  <Search className="w-5 h-5" />
+                  <Search className="w-[18px] h-[18px]" />
                 </button>
 
                 {/* Wishlist */}
                 <button
                   onClick={() => onNavigate('products')}
-                  className="hidden sm:flex p-2.5 text-gray-500 hover:text-black rounded-lg hover:bg-gray-50 transition"
+                  className="hidden sm:block p-2 text-gray-600 hover:text-black transition"
                   title="Wishlist"
                 >
-                  <Heart className="w-5 h-5" />
+                  <Heart className="w-[18px] h-[18px]" />
                 </button>
 
                 {/* Account */}
-                <div
-                  className="relative"
-                  onMouseEnter={() => setIsAccountDropdownOpen(true)}
-                  onMouseLeave={() => setIsAccountDropdownOpen(false)}
+                <button
+                  onClick={() => onNavigate(isLoggedIn ? 'account' : 'login')}
+                  className="p-2 text-gray-600 hover:text-black transition"
+                  title="Account"
                 >
-                  <button
-                    onClick={() => onNavigate(isLoggedIn ? 'account' : 'login')}
-                    className="p-2.5 text-gray-500 hover:text-black rounded-lg hover:bg-gray-50 transition"
-                    title="Account"
-                  >
-                    <User className="w-5 h-5" />
-                  </button>
-                  {isAccountDropdownOpen && (
-                    <div className="absolute right-0 top-full pt-2 w-48 z-50">
-                      <div className="bg-white border border-gray-200 rounded-xl shadow-xl py-2">
-                        {isLoggedIn ? (
-                          <>
-                            <button onClick={() => { onNavigate('account'); setIsAccountDropdownOpen(false); }} className="block w-full text-left px-5 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-black transition">My Account</button>
-                            <button onClick={() => { onNavigate('orders'); setIsAccountDropdownOpen(false); }} className="block w-full text-left px-5 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-black transition">My Orders</button>
-                            <button onClick={() => { onNavigate('track-order'); setIsAccountDropdownOpen(false); }} className="block w-full text-left px-5 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-black transition">Track Order</button>
-                          </>
-                        ) : (
-                          <>
-                            <button onClick={() => { onNavigate('login'); setIsAccountDropdownOpen(false); }} className="block w-full text-left px-5 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-black transition">Sign In</button>
-                            <button onClick={() => { onNavigate('register'); setIsAccountDropdownOpen(false); }} className="block w-full text-left px-5 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-black transition">Create Account</button>
-                            <div className="border-t border-gray-100 mt-2 pt-2">
-                              <button onClick={() => { onNavigate('track-order'); setIsAccountDropdownOpen(false); }} className="block w-full text-left px-5 py-2.5 text-sm text-gray-400 hover:text-black transition">Track Order</button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  <User className="w-[18px] h-[18px]" />
+                </button>
 
-                {/* Cart - Now opens drawer */}
+                {/* Cart */}
                 <button
                   onClick={handleCartClick}
-                  className="relative p-2.5 text-gray-500 hover:text-black rounded-lg hover:bg-gray-50 transition"
+                  className="relative p-2 text-gray-600 hover:text-black transition"
                   title="Shopping Cart"
                 >
-                  <ShoppingCart className="w-5 h-5" />
+                  <ShoppingCart className="w-[18px] h-[18px]" />
                   {cartItemCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 bg-black text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1">
-                      {cartItemCount > 99 ? '99+' : cartItemCount}
+                    <span className="absolute top-1.5 right-1.5 bg-black text-white text-[8px] font-bold min-w-[14px] h-[14px] flex items-center justify-center rounded-full">
+                      {cartItemCount}
                     </span>
                   )}
                 </button>
