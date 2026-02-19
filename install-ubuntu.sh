@@ -30,28 +30,39 @@ else
     echo "✅ Docker is already installed."
 fi
 
-# 3. Setup Directories
+# 3. Pull latest code
+echo "📥 Pulling latest code from GitHub..."
+git pull origin main
+
+# 4. Setup Directories
 echo "📁 Setting up storage directories..."
 mkdir -p "emission admin panel/project/server/uploads"
+chmod -R 777 "emission admin panel/project/server/uploads"
 
-# 4. Starting Platform
-echo "🚢 Launching containers with Docker Compose..."
+# 5. Starting Platform
+echo "🚢 Launching containers with Docker Compose (Rebuilding frontends)..."
+sudo docker compose down
 sudo docker compose up -d --build
 
-# 5. Initialize Database
+# 6. Initialize Database
 echo "🗄️ Initializing database..."
 echo "Waiting for backend to be ready..."
-sleep 10
+sleep 15
 
 sudo docker compose exec backend npx prisma migrate deploy
 sudo docker compose exec backend npm run seed
 
 echo ""
 echo "===================================================="
-echo "🎉 INSTALLATION COMPLETE!"
+echo "🎉 DEPLOYMENT SUCCESSFUL!"
 echo "===================================================="
-echo "Customer Website: http://localhost:5174"
-echo "Admin Panel:      http://localhost:5173 (admin@emission.com / 123)"
-echo "Backend API:      http://localhost:3001"
+echo "Customer Website: http://YOUR_SERVER_IP:5174"
+echo "Admin Panel:      http://YOUR_SERVER_IP:5173"
+echo "API & Uploads:    http://YOUR_SERVER_IP:3001"
+echo "----------------------------------------------------"
+echo "Credentials:"
+echo "Email:    admin@emission.com"
+echo "Password: 123"
 echo "===================================================="
+echo "NOTE: If products still don't load, clear your browser cache."
 echo "Detailed guide: DEPLOYMENT_GUIDE.md"
