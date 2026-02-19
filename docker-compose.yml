@@ -9,6 +9,7 @@ services:
       - "3001:3001"
     environment:
       - NODE_ENV=production
+      - DATABASE_URL=file:./dev.db
       - VITE_API_URL=http://localhost:3001/api
       - JWT_SECRET=your_jwt_secret_here
       - RAZORPAY_KEY_ID=your_razorpay_key_id
