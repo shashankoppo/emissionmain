@@ -145,4 +145,25 @@ export const orderAPI = {
     },
 };
 
+// Banner API
+export interface Banner {
+    id: string;
+    title: string;
+    subtitle: string;
+    imageUrl: string;
+    link: string;
+    active: boolean;
+    order: number;
+}
+
+export const bannerAPI = {
+    getAll: async (): Promise<Banner[]> => {
+        const response = await api.get('/banners');
+        return response.data.map((b: any) => ({
+            ...b,
+            imageUrl: formatImageUrl(b.imageUrl)
+        }));
+    },
+};
+
 export default api;

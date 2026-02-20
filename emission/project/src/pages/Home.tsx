@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { ArrowRight, Package, Shield, Truck, CheckCircle, Clock, Award } from 'lucide-react';
+import { ArrowRight, Package, Shield, Truck, CheckCircle, Clock, Award, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PageType } from '../types';
-import { productAPI, Product } from '../lib/api';
+import { productAPI, Product, bannerAPI, Banner } from '../lib/api';
 import ProductCard from '../components/UI/ProductCard';
 
 interface HomeProps {
@@ -11,13 +11,24 @@ interface HomeProps {
 
 export default function Home({ onNavigate, onAddToCart }: HomeProps) {
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [currentBanner, setCurrentBanner] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchBestSellers();
+    Promise.all([fetchBestSellers(), fetchBanners()]).finally(() => {
+      setLoading(false);
+    });
   }, []);
 
-
+  const fetchBanners = async () => {
+    try {
+      const data = await bannerAPI.getAll();
+      setBanners(data);
+    } catch (err) {
+      console.error('Failed to fetch banners', err);
+    }
+  };
 
   const fetchBestSellers = async () => {
     try {
@@ -25,10 +36,24 @@ export default function Home({ onNavigate, onAddToCart }: HomeProps) {
       setBestSellers(allProducts.slice(0, 4));
     } catch (err) {
       console.error('Failed to fetch products', err);
-    } finally {
-      setLoading(false);
     }
   };
+
+  const nextBanner = () => {
+    setCurrentBanner((prev) => (prev + 1) % banners.length);
+  };
+
+  const prevBanner = () => {
+    setCurrentBanner((prev) => (prev - 1 + banners.length) % banners.length);
+  };
+
+  // Auto-slide banners
+  useEffect(() => {
+    if (banners.length > 1) {
+      const timer = setInterval(nextBanner, 5000);
+      return () => clearInterval(timer);
+    }
+  }, [banners.length]);
 
   const categories = [
     {
@@ -53,60 +78,139 @@ export default function Home({ onNavigate, onAddToCart }: HomeProps) {
 
   return (
     <div className="font-sans selection:bg-black selection:text-white">
-      {/* Hero Section - Yesterday's Design */}
+      {/* Hero Section - Dynamic Banners */}
       <div className="relative h-[90vh] bg-black overflow-hidden flex items-center">
-        {/* Background Visual */}
-        <div className="absolute inset-0">
-          <img
-            src="https://images.unsplash.com/photo-1571731956672-f2b94d7dd0cb?auto=format&fit=crop&q=80"
-            alt="Hero Background"
-            className="w-full h-full object-cover opacity-60"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
-        </div>
-
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <div className="max-w-2xl animate-slide-up">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full glass-card text-white text-[10px] font-bold mb-8 uppercase tracking-widest shadow-xl">
-              <span>🚀</span>
-              <span>New Collection 2026</span>
+        {banners.length > 0 ? (
+          <>
+            {/* Background Visual */}
+            <div className="absolute inset-0 transition-all duration-1000 ease-in-out">
+              <img
+                src={banners[currentBanner].imageUrl}
+                alt={banners[currentBanner].title || 'Hero Background'}
+                className="w-full h-full object-cover opacity-60 transition-transform duration-[10s] scale-110 animate-ken-burns"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
             </div>
 
-            {/* Headline */}
-            <h1 className="text-6xl md:text-8xl font-black text-white leading-[1.1] tracking-tight mb-8">
-              Performance.<br />
-              Precision.<br />
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">Perfection.</span>
-            </h1>
+            <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+              <div className="max-w-2xl animate-slide-up" key={currentBanner}>
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full glass-card text-white text-[10px] font-bold mb-8 uppercase tracking-widest shadow-xl">
+                  <span>🚀</span>
+                  <span>New Collection 2026</span>
+                </div>
 
-            {/* Subtext */}
-            <p className="text-white/80 text-lg md:text-xl font-medium mb-12 leading-relaxed max-w-xl">
-              Premium sportswear and medical apparel engineered for professionals.
-              Experience the perfect blend of comfort, durability, and style.
-            </p>
+                {/* Headline */}
+                <h1 className="text-6xl md:text-8xl font-black text-white leading-[1.1] tracking-tight mb-8">
+                  {banners[currentBanner].title ? (
+                    <>
+                      {banners[currentBanner].title.split('.').map((line, i) => (
+                        <span key={i}>
+                          {line}
+                          {i < banners[currentBanner].title!.split('.').length - 1 && <br />}
+                        </span>
+                      ))}
+                    </>
+                  ) : (
+                    <>Performance.<br />Precision.<br /><span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">Perfection.</span></>
+                  )}
+                </h1>
 
-            {/* Buttons */}
-            <div className="flex flex-wrap gap-5">
-              <button
-                onClick={() => onNavigate('products')}
-                className="group bg-white text-black px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:bg-gray-100 transition-all flex items-center gap-2 shadow-2xl"
-              >
-                Shop Now
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-              <button
-                onClick={() => onNavigate('contact')}
-                className="bg-black/20 backdrop-blur-md border border-white/20 text-white px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:bg-white/10 transition-all shadow-xl"
-              >
-                Bulk Orders
-              </button>
+                {/* Subtext */}
+                <p className="text-white/80 text-lg md:text-xl font-medium mb-12 leading-relaxed max-w-xl">
+                  {banners[currentBanner].subtitle || 'Premium sportswear and medical apparel engineered for professionals. Experience the perfect blend of comfort, durability, and style.'}
+                </p>
+
+                {/* Buttons */}
+                <div className="flex flex-wrap gap-5">
+                  <button
+                    onClick={() => onNavigate('products')}
+                    className="group bg-white text-black px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:bg-gray-100 transition-all flex items-center gap-2 shadow-2xl"
+                  >
+                    Shop Now
+                    <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                  <button
+                    onClick={() => onNavigate('contact')}
+                    className="bg-black/20 backdrop-blur-md border border-white/20 text-white px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:bg-white/10 transition-all shadow-xl"
+                  >
+                    Bulk Orders
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+
+            {/* Navigation Arrows */}
+            {banners.length > 1 && (
+              <>
+                <button
+                  onClick={prevBanner}
+                  title="Previous Banner"
+                  className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full glass-card flex items-center justify-center text-white hover:bg-white hover:text-black transition-all z-20"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button
+                  onClick={nextBanner}
+                  title="Next Banner"
+                  className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full glass-card flex items-center justify-center text-white hover:bg-white hover:text-black transition-all z-20"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+
+                {/* Dots */}
+                <div className="absolute bottom-10 right-20 flex gap-3 z-20">
+                  {banners.map((_, i) => (
+                    <button
+                      key={i}
+                      title={`Go to slide ${i + 1}`}
+                      onClick={() => setCurrentBanner(i)}
+                      className={`h-1.5 rounded-full transition-all duration-500 ${currentBanner === i ? 'w-8 bg-blue-500' : 'w-2 bg-white/30 hover:bg-white/50'}`}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        ) : (
+          /* Fallback if no banners */
+          <>
+            <div className="absolute inset-0">
+              <img
+                src="https://images.unsplash.com/photo-1571731956672-f2b94d7dd0cb?auto=format&fit=crop&q=80"
+                alt="Hero Background"
+                className="w-full h-full object-cover opacity-60"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent" />
+            </div>
+
+            <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+              <div className="max-w-2xl animate-slide-up">
+                <div className="inline-flex items-center gap-2 py-1.5 px-4 rounded-full glass-card text-white text-[10px] font-bold mb-8 uppercase tracking-widest shadow-xl">
+                  <span>🚀</span>
+                  <span>New Collection 2026</span>
+                </div>
+                <h1 className="text-6xl md:text-8xl font-black text-white leading-[1.1] tracking-tight mb-8">
+                  Performance.<br />Precision.<br /><span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">Perfection.</span>
+                </h1>
+                <p className="text-white/80 text-lg md:text-xl font-medium mb-12 leading-relaxed max-w-xl">
+                  Premium sportswear and medical apparel engineered for professionals.
+                </p>
+                <div className="flex flex-wrap gap-5">
+                  <button onClick={() => onNavigate('products')} className="group bg-white text-black px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:bg-gray-100 transition-all flex items-center gap-2 shadow-2xl">
+                    Shop Now <ArrowRight className="w-5 h-5" />
+                  </button>
+                  <button onClick={() => onNavigate('contact')} className="bg-black/20 backdrop-blur-md border border-white/20 text-white px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-[0.2em] hover:bg-white/10 transition-all shadow-xl">
+                    Bulk Orders
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Scroll Indicator */}
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
+        <div className="absolute bottom-10 left-10">
           <div className="w-6 h-10 border-2 border-white/20 rounded-full flex p-1 justify-center">
             <div className="w-1.5 h-3 bg-white rounded-full animate-scroll-pill" />
           </div>

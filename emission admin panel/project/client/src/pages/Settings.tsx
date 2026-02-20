@@ -10,6 +10,11 @@ export default function Settings() {
         PHONEPE_SALT_KEY: '',
         PHONEPE_SALT_INDEX: '1',
         EMBROIDERY_PRICE: '250',
+        SMTP_HOST: '',
+        SMTP_PORT: '587',
+        SMTP_USER: '',
+        SMTP_PASS: '',
+        SMTP_FROM: '',
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -29,6 +34,11 @@ export default function Settings() {
                 PHONEPE_SALT_KEY: response.data.PHONEPE_SALT_KEY || '',
                 PHONEPE_SALT_INDEX: response.data.PHONEPE_SALT_INDEX || '1',
                 EMBROIDERY_PRICE: response.data.EMBROIDERY_PRICE || '250',
+                SMTP_HOST: response.data.SMTP_HOST || '',
+                SMTP_PORT: response.data.SMTP_PORT || '587',
+                SMTP_USER: response.data.SMTP_USER || '',
+                SMTP_PASS: response.data.SMTP_PASS || '',
+                SMTP_FROM: response.data.SMTP_FROM || '',
             });
         } catch (error) {
             console.error('Failed to fetch settings:', error);
@@ -181,6 +191,72 @@ export default function Settings() {
                                 placeholder="250"
                             />
                             <p className="mt-2 text-xs font-bold text-gray-400 tracking-tight">Standard fee for medical wear branding</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* SMTP Section */}
+                <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="p-8 border-b border-gray-50 bg-gray-50/50">
+                        <div className="flex items-center gap-3 text-gray-900 font-black uppercase text-xs tracking-widest">
+                            <ShieldCheck className="w-5 h-5 text-green-600" />
+                            <h2>Mail Server (SMTP)</h2>
+                        </div>
+                    </div>
+                    <div className="p-8 grid gap-8">
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">SMTP Host</label>
+                                <input
+                                    type="text"
+                                    value={settings.SMTP_HOST}
+                                    onChange={(e) => setSettings({ ...settings, SMTP_HOST: e.target.value })}
+                                    className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-green-500/10 outline-none transition"
+                                    placeholder="smtp.gmail.com"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">SMTP Port</label>
+                                <input
+                                    type="text"
+                                    value={settings.SMTP_PORT}
+                                    onChange={(e) => setSettings({ ...settings, SMTP_PORT: e.target.value })}
+                                    className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-green-500/10 outline-none transition"
+                                    placeholder="587"
+                                />
+                            </div>
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-6">
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Username</label>
+                                <input
+                                    type="text"
+                                    value={settings.SMTP_USER}
+                                    onChange={(e) => setSettings({ ...settings, SMTP_USER: e.target.value })}
+                                    className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-green-500/10 outline-none transition"
+                                    placeholder="your-email@gmail.com"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Password</label>
+                                <input
+                                    type="password"
+                                    value={settings.SMTP_PASS}
+                                    onChange={(e) => setSettings({ ...settings, SMTP_PASS: e.target.value })}
+                                    className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-green-500/10 outline-none transition"
+                                    placeholder="••••••••••••••••"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">From Email</label>
+                            <input
+                                type="text"
+                                value={settings.SMTP_FROM}
+                                onChange={(e) => setSettings({ ...settings, SMTP_FROM: e.target.value })}
+                                className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-green-500/10 outline-none transition"
+                                placeholder="Emission <no-reply@emission.com>"
+                            />
                         </div>
                     </div>
                 </div>
