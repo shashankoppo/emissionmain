@@ -5,19 +5,37 @@
 
 echo "🚀 Starting aaPanel Configuration..."
 
+# 0. Fix Permissions (Crucial for aaPanel/Ubuntu)
+echo "🛡️ Fixing npm cache and project permissions..."
+sudo chown -R $(whoami):$(whoami) .
+sudo chown -R $(whoami):$(whoami) "/www/server/nodejs/cache" 2>/dev/null || true
+# Fixing the specific error mentioned in your logs
+sudo chown -R 1000:1000 "/www/server/nodejs/cache" 2>/dev/null || true
+
 # 1. Backend Setup
 echo "📦 Setting up Backend Server..."
 cd "emission admin panel/project/server"
-npm install
-npm install nodemailer # Ensure nodemailer is installed
+
+# Ensure .env exists for Prisma
+if [ ! -f .env ]; then
+  echo "DATABASE_URL=\"file:./dev.db\"" > .env
+  echo "JWT_SECRET=\"$(openssl rand -base64 32 2>/dev/null || echo 'supersecretkey')\"" >> .env
+  echo "PORT=3001" >> .env
+fi
+
+npm install --no-audit
+npm install nodemailer
 
 # Database Configuration
 echo "🗄️ Configuring Database..."
+# Set ENV for the current session to ensure Prisma sees it
+export DATABASE_URL="file:./dev.db"
+
 # Generate Prisma Client
 npx prisma generate
-# Push schema to database (works for SQLite/MySQL/Postgres)
-npx prisma db push
-# Seed initial data (Admin, Settings)
+# Push schema to database
+npx prisma db push --accept-data-loss
+# Seed initial data
 npm run seed
 
 cd ../../../
@@ -25,16 +43,15 @@ cd ../../../
 # 2. Main Website (Customer Frontend)
 echo "🌐 Setting up Main Website..."
 cd "emission/project"
-npm install
-# Note: In aaPanel, if you use static sites, you need to build:
-# npm run build
+sudo chown -R $(whoami):$(whoami) .
+npm install --no-audit
 cd ../../
 
 # 3. Admin Panel (Frontend)
 echo "🔒 Setting up Admin Panel..."
 cd "emission admin panel/project/client"
-npm install
-# npm run build
+sudo chown -R $(whoami):$(whoami) .
+npm install --no-audit
 cd ../../../
 
 echo "✅ Configuration Complete!"
