@@ -253,7 +253,7 @@ async function main() {
   // Seed admin account
   const adminEmail = 'admin@emission.com';
   const adminPassword = '123';
-  
+
   try {
     const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
@@ -280,7 +280,7 @@ async function main() {
 
   // Seed products
   console.log('📦 Seeding products...\n');
-  
+
   for (const product of products) {
     try {
       await prisma.product.upsert({
@@ -294,11 +294,72 @@ async function main() {
     }
   }
 
+  // Seed default banners
+  console.log('🖼️ Seeding banners...\n');
+  const defaultBanners = [
+    {
+      id: 'banner-1',
+      title: 'Performance. Precision. Perfection.',
+      subtitle: 'Premium sportswear and medical apparel engineered for professionals.',
+      imageUrl: 'https://images.unsplash.com/photo-1571731956672-f2b94d7dd0cb?auto=format&fit=crop&q=80',
+      link: '/products',
+      active: true,
+      order: 1
+    },
+    {
+      id: 'banner-2',
+      title: 'Premium Quality. Medical Wear.',
+      subtitle: 'Durable and comfortable medical gear for the healthcare heroes.',
+      imageUrl: 'https://images.unsplash.com/photo-1631815587646-b85a1bb027e1?auto=format&fit=crop&q=80',
+      link: '/category/medicalwear',
+      active: true,
+      order: 2
+    }
+  ];
+
+  for (const banner of defaultBanners) {
+    try {
+      await prisma.banner.upsert({
+        where: { id: banner.id },
+        update: banner,
+        create: banner,
+      });
+      console.log(`✅ Banner: ${banner.title}`);
+    } catch (error) {
+      console.error(`❌ Failed to seed banner:`, error);
+    }
+  }
+
+  // Seed default settings
+  console.log('⚙️ Seeding settings...\n');
+  const defaultSettings = [
+    { key: 'EMBROIDERY_PRICE', value: '250' },
+    { key: 'SMTP_HOST', value: '' },
+    { key: 'SMTP_PORT', value: '587' },
+    { key: 'SMTP_USER', value: '' },
+    { key: 'SMTP_PASS', value: '' },
+    { key: 'SMTP_FROM', value: '' },
+  ];
+
+  for (const setting of defaultSettings) {
+    try {
+      await prisma.setting.upsert({
+        where: { key: setting.key },
+        update: { value: setting.value },
+        create: { key: setting.key, value: setting.value },
+      });
+      console.log(`✅ Setting: ${setting.key}`);
+    } catch (error) {
+      console.error(`❌ Failed to seed setting ${setting.key}:`, error);
+    }
+  }
+
   console.log('\n🎉 Database seeding completed successfully!');
   console.log(`\n📊 Summary:`);
   console.log(`   - Admin accounts: 1`);
   console.log(`   - Products: ${products.length}`);
-  console.log(`   - Categories: Sportswear, Medical Wear`);
+  console.log(`   - Banners: ${defaultBanners.length}`);
+  console.log(`   - Settings: ${defaultSettings.length}`);
 }
 
 main()
