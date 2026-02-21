@@ -52,9 +52,11 @@ EOF
   chown elsxglobal:elsxglobal .env
 fi
 
+# Clean old artifacts
+rm -rf dist
+
 # Install as current user to avoid permission pitfalls
 sudo -u elsxglobal npm install --no-audit
-sudo -u elsxglobal npm install nodemailer --no-audit
 
 # Database Configuration with explicit ENV
 echo "🗄️  Configuring Database..."
@@ -66,13 +68,21 @@ sudo -u elsxglobal DATABASE_URL="file:./dev.db" npm run seed
 cd "$PROJECT_DIR"
 
 # 5. Frontend Reconstruction
-echo "🌐 Rebuilding Main Website..."
+echo "🌐 Setting up Main Website..."
 cd "emission/project"
+rm -rf dist
+# Ensure relative API path for Nginx proxy compatibility
+echo "VITE_API_URL=/api" > .env
+chown elsxglobal:elsxglobal .env
 sudo -u elsxglobal npm install --no-audit
 cd "$PROJECT_DIR"
 
 echo "🔒 Rebuilding Admin Panel..."
 cd "emission admin panel/project/client"
+rm -rf dist
+# Ensure relative API path for Nginx proxy compatibility
+echo "VITE_API_URL=/api" > .env
+chown elsxglobal:elsxglobal .env
 sudo -u elsxglobal npm install --no-audit
 cd "$PROJECT_DIR"
 
@@ -81,5 +91,7 @@ echo "------------------------------------------------"
 echo "Your platform is now ready. Next steps in aaPanel:"
 echo "1. Website -> Node Project -> Add Project"
 echo "2. Port: 3001, Root: $PROJECT_DIR/emission admin panel/project/server"
-echo "3. Remember to add Nginx proxy rules for /api and /uploads"
+echo "3. In Nginx (Website Settings), ensure /api is proxied to http://127.0.0.1:3001"
+echo "4. IMPORTANT: If you are using 'npm run dev', pages should load instantly."
+echo "   If using production, run 'npm run build' in the client folders."
 echo "------------------------------------------------"

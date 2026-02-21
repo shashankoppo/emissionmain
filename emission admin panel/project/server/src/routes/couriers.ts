@@ -1,11 +1,12 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
+import { authMiddleware } from '../middleware/auth.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
 
 // Get all couriers
-router.get('/', async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
     try {
         const couriers = await prisma.courier.findMany();
         res.json(couriers);
@@ -15,11 +16,11 @@ router.get('/', async (req, res) => {
 });
 
 // Create courier
-router.post('/', async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
     const { name, api_key, apiUrl, active } = req.body;
     try {
         const courier = await prisma.courier.create({
-            data: { name, api_key, apiUrl, active }
+            data: { name, api_key, apiUrl, active: active !== undefined ? active : true }
         });
         res.json(courier);
     } catch (error) {
@@ -28,13 +29,13 @@ router.post('/', async (req, res) => {
 });
 
 // Update courier
-router.put('/:id', async (req, res) => {
+router.put('/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
     const { name, api_key, apiUrl, active } = req.body;
     try {
         const courier = await prisma.courier.update({
             where: { id },
-            data: { name, api_key, apiUrl, active }
+            data: { name, api_key, apiUrl, active: active !== undefined ? active : true }
         });
         res.json(courier);
     } catch (error) {
@@ -43,7 +44,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete courier
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
     try {
         await prisma.courier.delete({ where: { id } });
