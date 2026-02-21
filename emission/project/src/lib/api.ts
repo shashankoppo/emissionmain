@@ -166,4 +166,25 @@ export const bannerAPI = {
     },
 };
 
+// Featured Collection API
+export interface FeaturedCollection {
+    id: string;
+    title: string;
+    description: string;
+    imageUrl: string;
+    link: string;
+    active: boolean;
+    order: number;
+}
+
+export const collectionAPI = {
+    getAll: async (): Promise<FeaturedCollection[]> => {
+        const response = await api.get('/collections');
+        return response.data.map((c: any) => ({
+            ...c,
+            imageUrl: formatImageUrl(c.imageUrl)
+        }));
+    },
+};
+
 export default api;

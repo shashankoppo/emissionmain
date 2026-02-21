@@ -12,6 +12,7 @@ import Courier from './pages/Courier';
 import Invoices from './pages/Invoices';
 import POS from './pages/POS';
 import BannerManagement from './pages/Banners';
+import CollectionManagement from './pages/Collections';
 
 function AdminLayout() {
   return (
@@ -27,6 +28,7 @@ function AdminLayout() {
           <Route path="/courier" element={<Courier />} />
           <Route path="/pos" element={<POS />} />
           <Route path="/banners" element={<BannerManagement />} />
+          <Route path="/collections" element={<CollectionManagement />} />
           <Route path="/settings" element={<Settings />} />
         </Routes>
       </main>

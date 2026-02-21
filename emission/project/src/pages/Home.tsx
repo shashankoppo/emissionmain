@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ArrowRight, Package, Shield, Truck, CheckCircle, Clock, Award, ChevronLeft, ChevronRight } from 'lucide-react';
 import { PageType } from '../types';
-import { productAPI, Product, bannerAPI, Banner } from '../lib/api';
+import { productAPI, Product, bannerAPI, Banner, collectionAPI, FeaturedCollection } from '../lib/api';
 import ProductCard from '../components/UI/ProductCard';
 
 interface HomeProps {
@@ -12,14 +12,24 @@ interface HomeProps {
 export default function Home({ onNavigate, onAddToCart }: HomeProps) {
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [collections, setCollections] = useState<FeaturedCollection[]>([]);
   const [currentBanner, setCurrentBanner] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([fetchBestSellers(), fetchBanners()]).finally(() => {
+    Promise.all([fetchBestSellers(), fetchBanners(), fetchCollections()]).finally(() => {
       setLoading(false);
     });
   }, []);
+
+  const fetchCollections = async () => {
+    try {
+      const data = await collectionAPI.getAll();
+      setCollections(data);
+    } catch (err) {
+      console.error('Failed to fetch collections', err);
+    }
+  };
 
   const fetchBanners = async () => {
     try {
@@ -40,11 +50,11 @@ export default function Home({ onNavigate, onAddToCart }: HomeProps) {
   };
 
   const nextBanner = () => {
-    setCurrentBanner((prev) => (prev + 1) % banners.length);
+    setCurrentBanner((prev) => (prev + 1) % (banners.length || 1));
   };
 
   const prevBanner = () => {
-    setCurrentBanner((prev) => (prev - 1 + banners.length) % banners.length);
+    setCurrentBanner((prev) => (prev - 1 + (banners.length || 1)) % (banners.length || 1));
   };
 
   // Auto-slide banners
@@ -54,27 +64,6 @@ export default function Home({ onNavigate, onAddToCart }: HomeProps) {
       return () => clearInterval(timer);
     }
   }, [banners.length]);
-
-  const categories = [
-    {
-      id: 'sportswear',
-      title: 'Performance Sportswear',
-      image: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80',
-      desc: 'Engineered for athletes',
-    },
-    {
-      id: 'medicalwear',
-      title: 'Medical Scrubs & Coats',
-      image: 'https://images.unsplash.com/photo-1581595221475-79d150275510?auto=format&fit=crop&q=80',
-      desc: 'Professional & Comfortable',
-    },
-    {
-      id: 'custom',
-      title: 'Custom Uniforms',
-      image: 'https://images.unsplash.com/photo-1598501022238-79673b40090d?auto=format&fit=crop&q=80',
-      desc: 'Logos & Embroidery',
-    },
-  ];
 
   return (
     <div className="font-sans selection:bg-black selection:text-white">
@@ -251,14 +240,47 @@ export default function Home({ onNavigate, onAddToCart }: HomeProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            {categories.map((cat) => (
+            {(collections.length > 0 ? collections : [
+              {
+                id: 'sportswear',
+                title: 'Performance Sportswear',
+                imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80',
+                description: 'Engineered for athletes',
+                link: '/products/sportswear'
+              },
+              {
+                id: 'medicalwear',
+                title: 'Medical Scrubs & Coats',
+                imageUrl: 'https://images.unsplash.com/photo-1581595221475-79d150275510?auto=format&fit=crop&q=80',
+                description: 'Professional & Comfortable',
+                link: '/products/medicalwear'
+              },
+              {
+                id: 'custom',
+                title: 'Custom Uniforms',
+                imageUrl: 'https://images.unsplash.com/photo-1598501022238-79673b40090d?auto=format&fit=crop&q=80',
+                description: 'Logos & Embroidery',
+                link: '/contact'
+              }
+            ]).map((cat: any) => (
               <div
                 key={cat.id}
-                onClick={() => onNavigate('products', cat.id)}
+                onClick={() => {
+                  if (cat.link?.startsWith('http')) {
+                    window.location.href = cat.link;
+                  } else if (cat.link?.startsWith('/')) {
+                    // Assuming internal navigation or simple link
+                    const page = cat.link.split('/')[1] as PageType || 'products';
+                    const param = cat.link.split('/')[2];
+                    onNavigate(page, param);
+                  } else {
+                    onNavigate('products', cat.id);
+                  }
+                }}
                 className="group relative h-[600px] rounded-[48px] overflow-hidden cursor-pointer premium-shadow active:scale-95 transition-all duration-500"
               >
                 <img
-                  src={cat.image}
+                  src={cat.imageUrl || cat.image}
                   alt={cat.title}
                   className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110"
                 />
@@ -269,7 +291,7 @@ export default function Home({ onNavigate, onAddToCart }: HomeProps) {
                   <div className="w-12 h-[1px] bg-white/50 mb-6 group-hover:w-full transition-all duration-700" />
                   <h3 className="text-3xl font-black text-white mb-3 uppercase tracking-tight">{cat.title}</h3>
                   <p className="text-white/60 text-xs font-bold uppercase tracking-widest leading-relaxed mb-6 opacity-0 group-hover:opacity-100 transition-all delay-100">
-                    {cat.desc}
+                    {cat.description || cat.desc}
                   </p>
                   <div className="flex items-center gap-3 text-white text-[10px] font-black uppercase tracking-[0.3em] group-hover:gap-5 transition-all">
                     Explore Now <ArrowRight className="w-3 h-3" />

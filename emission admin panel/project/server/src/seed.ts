@@ -252,7 +252,7 @@ async function main() {
 
   // Seed admin account
   const adminEmail = 'admin@emission.com';
-  const adminPassword = '123';
+  const adminPassword = 'admin123';
 
   try {
     const hashedPassword = await bcrypt.hash(adminPassword, 10);
@@ -354,11 +354,57 @@ async function main() {
     }
   }
 
+  // Seed default featured collections (Masterpieces)
+  console.log('💎 Seeding featured collections...\n');
+  const defaultCollections = [
+    {
+      id: 'col-1',
+      title: 'Performance Sportswear',
+      description: 'Engineered for athletes',
+      imageUrl: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80',
+      link: '/products/sportswear',
+      active: true,
+      order: 1
+    },
+    {
+      id: 'col-2',
+      title: 'Medical Scrubs & Coats',
+      description: 'Professional & Comfortable',
+      imageUrl: 'https://images.unsplash.com/photo-1581595221475-79d150275510?auto=format&fit=crop&q=80',
+      link: '/products/medicalwear',
+      active: true,
+      order: 2
+    },
+    {
+      id: 'col-3',
+      title: 'Custom Uniforms',
+      description: 'Logos & Embroidery',
+      imageUrl: 'https://images.unsplash.com/photo-1598501022238-79673b40090d?auto=format&fit=crop&q=80',
+      link: '/contact',
+      active: true,
+      order: 3
+    }
+  ];
+
+  for (const collection of defaultCollections) {
+    try {
+      await (prisma as any).featuredCollection.upsert({
+        where: { id: collection.id },
+        update: collection,
+        create: collection,
+      });
+      console.log(`✅ Collection: ${collection.title}`);
+    } catch (error) {
+      console.error(`❌ Failed to seed collection:`, error);
+    }
+  }
+
   console.log('\n🎉 Database seeding completed successfully!');
   console.log(`\n📊 Summary:`);
   console.log(`   - Admin accounts: 1`);
   console.log(`   - Products: ${products.length}`);
   console.log(`   - Banners: ${defaultBanners.length}`);
+  console.log(`   - Collections: ${defaultCollections.length}`);
   console.log(`   - Settings: ${defaultSettings.length}`);
 }
 
