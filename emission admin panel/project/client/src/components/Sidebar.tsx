@@ -1,4 +1,4 @@
-import { Package, MessageSquare, ShoppingCart, LogOut, LayoutDashboard, Settings as SettingsIcon, FileText, Zap, Truck, Image as ImageIcon, LayoutGrid } from 'lucide-react';
+import { Package, MessageSquare, ShoppingCart, LogOut, LayoutDashboard, Settings as SettingsIcon, FileText, Zap, Truck, Image as ImageIcon, LayoutGrid, Palette, Tag } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -18,6 +18,8 @@ export default function Sidebar() {
     { href: '/admin/banners', icon: ImageIcon, label: 'Hero Banners' },
     { href: '/admin/collections', icon: LayoutGrid, label: 'Masterpieces' },
     { href: '/admin/enquiries', icon: MessageSquare, label: 'Enquiries' },
+    { href: '/admin/invoice-design', icon: Palette, label: 'Invoice Design' },
+    { href: '/admin/coupons', icon: Tag, label: 'Promotions' },
     { href: '/admin/settings', icon: SettingsIcon, label: 'Settings' },
   ];
 

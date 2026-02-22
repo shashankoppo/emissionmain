@@ -140,3 +140,32 @@ model FeaturedCollection {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
+
+model InvoiceTemplate {
+  id              String   @id @default("default-template")
+  companyName    String   @default("EMISSION")
+  companyAddress String   @default("Jabalpur, Madhya Pradesh")
+  companyPhone   String   @default("+91 0000000000")
+  companyEmail   String   @default("support@emission.in")
+  companyLogo    String?
+  gstNumber      String?
+  terms          String   @default("Thank you for choosing EMISSION. We appreciate your business!")
+  primaryColor   String   @default("#1a1a1a")
+  accentColor    String   @default("#3b82f6")
+  updatedAt      DateTime @updatedAt
+}
+
+model Coupon {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  discountType    String   // percentage, fixed
+  discountValue   Decimal
+  minOrderAmount  Decimal  @default(0)
+  maxDiscount     Decimal?
+  expiryDate      DateTime?
+  usageLimit      Int      @default(0) // 0 for unlimited
+  usedCount       Int      @default(0)
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}

@@ -13,6 +13,8 @@ import Invoices from './pages/Invoices';
 import POS from './pages/POS';
 import BannerManagement from './pages/Banners';
 import CollectionManagement from './pages/Collections';
+import InvoiceDesign from './pages/InvoiceDesign';
+import Coupons from './pages/Coupons';
 
 function AdminLayout() {
   return (
@@ -30,6 +32,8 @@ function AdminLayout() {
           <Route path="/banners" element={<BannerManagement />} />
           <Route path="/collections" element={<CollectionManagement />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/invoice-design" element={<InvoiceDesign />} />
+          <Route path="/coupons" element={<Coupons />} />
         </Routes>
       </main>
     </div>

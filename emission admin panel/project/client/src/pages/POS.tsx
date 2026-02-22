@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import api from '../lib/api';
-import { ShoppingCart, Search, Plus, Minus, Trash2, User, Phone, CreditCard, Receipt, Zap, Check, Printer, Palette, XCircle } from 'lucide-react';
+import { ShoppingCart, Search, Plus, Minus, Trash2, User, Phone, CreditCard, Receipt, Zap, Check, Printer, Palette, XCircle, Tag, CheckCircle2 } from 'lucide-react';
 
 interface Product {
     id: string;
@@ -21,6 +21,12 @@ interface CartItem {
     embroideryText?: string;
 }
 
+declare global {
+    interface Window {
+        Razorpay: any;
+    }
+}
+
 export default function POS() {
     const [products, setProducts] = useState<Product[]>([]);
     const [cart, setCart] = useState<CartItem[]>([]);
@@ -29,7 +35,9 @@ export default function POS() {
     const [loading, setLoading] = useState(true);
     const [processing, setProcessing] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState<any>(null);
-    const [embroideryPrice, setEmbroideryPrice] = useState(250);
+    const [embroideryCharge, setEmbroideryCharge] = useState(0);
+    const [couponCode, setCouponCode] = useState('');
+    const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; id: string } | null>(null);
 
     useEffect(() => {
         fetchProducts();
@@ -50,8 +58,9 @@ export default function POS() {
     const fetchSettings = async () => {
         try {
             const response = await api.get('/settings');
-            if (response.data.EMBROIDERY_PRICE) {
-                setEmbroideryPrice(Number(response.data.EMBROIDERY_PRICE));
+            const data = response.data;
+            if (data.EMBROIDERY_CHARGE) {
+                setEmbroideryCharge(Number(data.EMBROIDERY_CHARGE));
             }
         } catch (error) {
             console.error('Failed to fetch settings:', error);
@@ -99,13 +108,47 @@ export default function POS() {
         setCart(prev => prev.filter(item => item.product.id !== productId));
     };
 
-    const total = useMemo(() => {
+    const subtotal = useMemo(() => {
         return cart.reduce((sum, item) => {
             const basePrice = Number(item.product.retailPrice || item.product.price);
-            const customizationPrice = item.hasEmbroidery ? embroideryPrice : 0;
+            const customizationPrice = item.hasEmbroidery ? embroideryCharge : 0;
             return sum + (basePrice + customizationPrice) * item.quantity;
         }, 0);
-    }, [cart, embroideryPrice]);
+    }, [cart, embroideryCharge]);
+
+    const total = useMemo(() => {
+        const discount = appliedCoupon ? appliedCoupon.discount : 0;
+        return Math.max(0, subtotal - discount);
+    }, [subtotal, appliedCoupon]);
+
+    const handleApplyCoupon = async () => {
+        if (!couponCode) return;
+        try {
+            const response = await api.post('/coupons/validate', {
+                code: couponCode,
+                orderAmount: subtotal
+            });
+            if (response.data.valid) {
+                setAppliedCoupon({
+                    code: response.data.code,
+                    discount: response.data.discount,
+                    id: response.data.couponId
+                });
+            }
+        } catch (error: any) {
+            alert(error.response?.data?.error || 'Invalid coupon');
+        }
+    };
+
+    const loadRazorpayScript = () => {
+        return new Promise((resolve) => {
+            const script = document.createElement('script');
+            script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+            script.onload = () => resolve(true);
+            script.onerror = () => resolve(false);
+            document.body.appendChild(script);
+        });
+    };
 
     const handleCheckout = async (paymentMethod: 'cash' | 'card' | 'upi') => {
         if (cart.length === 0) return;
@@ -115,6 +158,59 @@ export default function POS() {
         }
 
         setProcessing(true);
+
+        try {
+            if (paymentMethod === 'card' || paymentMethod === 'upi') {
+                const scriptLoaded = await loadRazorpayScript();
+                if (!scriptLoaded) throw new Error('Razorpay SDK failed to load');
+
+                // Get Razorpay Key from settings
+                const settingsResp = await api.get('/settings');
+                const razorpayKey = settingsResp.data.find((s: any) => s.key === 'RAZORPAY_KEY_ID')?.value;
+
+                if (!razorpayKey) throw new Error('Razorpay is not configured');
+
+                // Create Order on backend
+                const orderResp = await api.post('/payment/create-order', {
+                    amount: total,
+                    receipt: `pos_${Date.now()}`
+                });
+
+                if (!orderResp.data.success) throw new Error('Failed to create payment order');
+
+                const options = {
+                    key: razorpayKey,
+                    amount: orderResp.data.order.amount,
+                    currency: orderResp.data.order.currency,
+                    name: 'Emission POS',
+                    description: 'In-Store Purchase',
+                    order_id: orderResp.data.order.id,
+                    handler: async function (response: any) {
+                        finalizeOrder(paymentMethod, response.razorpay_payment_id);
+                    },
+                    prefill: {
+                        name: customerInfo.name,
+                        email: customerInfo.email,
+                        contact: customerInfo.phone
+                    },
+                    theme: { color: '#000000' },
+                    modal: { ondismiss: () => setProcessing(false) }
+                };
+
+                const rzp = new window.Razorpay(options);
+                rzp.open();
+            } else {
+                // Cash Payment
+                finalizeOrder('cash');
+            }
+        } catch (error: any) {
+            console.error('Checkout error:', error);
+            alert(error.message || 'Payment initiation failed');
+            setProcessing(false);
+        }
+    };
+
+    const finalizeOrder = async (paymentMethod: string, paymentId?: string) => {
         try {
             const orderData = {
                 customerName: customerInfo.name,
@@ -124,23 +220,30 @@ export default function POS() {
                 totalAmount: total,
                 status: 'completed',
                 paymentMethod,
+                paymentId,
                 source: 'pos',
                 items: cart.map(item => ({
                     productId: item.product.id,
                     name: item.product.name,
                     quantity: item.quantity,
-                    price: Number(item.product.retailPrice || item.product.price) + (item.hasEmbroidery ? embroideryPrice : 0),
+                    price: Number(item.product.retailPrice || item.product.price) + (item.hasEmbroidery ? embroideryCharge : 0),
                     hasEmbroidery: item.hasEmbroidery
                 }))
             };
 
             const response = await api.post('/orders', orderData);
+
+            // If coupon used, we might want to track usage, but the coupon validation route handles some of this logic potentially
+            // In a real app, you'd call an endpoint to increment coupon counter.
+
             setOrderSuccess(response.data);
             setCart([]);
             setCustomerInfo({ name: '', phone: '', email: '', address: '' });
+            setAppliedCoupon(null);
+            setCouponCode('');
         } catch (error) {
-            console.error('Checkout failed:', error);
-            alert('Order processing failed. Please try again.');
+            console.error('Finalization failed:', error);
+            alert('Order recorded failed but payment might have been taken. Please check dashboard.');
         } finally {
             setProcessing(false);
         }
@@ -148,9 +251,6 @@ export default function POS() {
 
     const printInvoice = () => {
         if (!orderSuccess) return;
-
-        const printContent = document.getElementById('invoice-print-area');
-        if (!printContent) return;
 
         const winPrint = window.open('', '', 'left=0,top=0,width=800,height=900,toolbar=0,scrollbars=0,status=0');
         if (!winPrint) return;
@@ -160,12 +260,12 @@ export default function POS() {
                 <head>
                     <title>Invoice - ${orderSuccess.id}</title>
                     <style>
-                        body { font-family: 'Inter', sans-serif; padding: 40px; color: #1a1a1a; }
+                        body { font-family: 'Inter', sans-serif; padding: 40px; color: #1a1a1a; line-height: 1.5; }
                         .header { text-align: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 30px; margin-bottom: 30px; }
                         .logo { font-size: 28px; font-weight: 900; letter-spacing: -1px; text-transform: uppercase; }
                         .invoice-meta { display: flex; justify-content: space-between; margin-bottom: 40px; }
-                        .meta-block h4 { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-                        .meta-block p { font-weight: 700; font-size: 14px; }
+                        .meta-block h4 { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; margin-top: 0; }
+                        .meta-block p { font-weight: 700; font-size: 14px; margin: 0; }
                         table { width: 100%; border-collapse: collapse; }
                         th { text-align: left; padding: 15px; background: #f9f9f9; font-size: 11px; text-transform: uppercase; color: #666; }
                         td { padding: 15px; border-bottom: 1px solid #eee; font-size: 13px; font-weight: 600; }
@@ -177,7 +277,7 @@ export default function POS() {
                 <body>
                     <div class="header">
                         <div class="logo">EMISSION</div>
-                        <p style="font-size: 12px; margin-top: 5px;">Premium Corporate & Medical Apparel</p>
+                        <p style="font-size: 12px; margin-top: 5px; color: #666;">Premium Apparel Solutions</p>
                     </div>
                     <div class="invoice-meta">
                         <div class="meta-block">
@@ -188,7 +288,7 @@ export default function POS() {
                         <div class="meta-block" style="text-align: right;">
                             <h4>Order ID</h4>
                             <p>#${orderSuccess.id.slice(0, 8).toUpperCase()}</p>
-                            <h4>Date</h4>
+                            <h4 style="margin-top: 15px;">Date</h4>
                             <p>${new Date(orderSuccess.createdAt).toLocaleDateString()}</p>
                         </div>
                     </div>
@@ -206,7 +306,7 @@ export default function POS() {
                                 <tr>
                                     <td>
                                         ${item.name}
-                                        ${item.hasEmbroidery ? '<br><span style="font-size: 10px; color: #666;">+ Custom Embroidery</span>' : ''}
+                                        ${item.hasEmbroidery ? '<br><span style="font-size: 10px; color: #666;">+ Custom Branding</span>' : ''}
                                     </td>
                                     <td style="text-align: center;">${item.quantity}</td>
                                     <td style="text-align: right;">₹${item.price.toLocaleString()}</td>
@@ -214,22 +314,25 @@ export default function POS() {
                                 </tr>
                             `).join('')}
                             <tr class="total-row">
-                                <td colspan="3">Grand Total</td>
+                                <td colspan="3">Grand Total Paid</td>
                                 <td style="text-align: right;">₹${Number(orderSuccess.totalAmount).toLocaleString()}</td>
                             </tr>
                         </tbody>
                     </table>
                     <div class="footer">
                         <p>Thank you for shopping at EMISSION!</p>
-                        <p>This is a computer-generated invoice and doesn't require a physical signature.</p>
+                        <p>${orderSuccess.paymentId ? `Payment ID: ${orderSuccess.paymentId}` : 'Payment Mode: Cash'}</p>
+                        <p style="font-size: 8px; margin-top: 20px;">This is a computer-generated receipt.</p>
                     </div>
                 </body>
             </html>
         `);
         winPrint.document.close();
         winPrint.focus();
-        winPrint.print();
-        winPrint.close();
+        setTimeout(() => {
+            winPrint.print();
+            winPrint.close();
+        }, 500);
     };
 
     return (
@@ -336,13 +439,13 @@ export default function POS() {
                                     </div>
                                     <p className="text-xs font-black text-gray-900 tracking-tight">₹{(Number(item.product.retailPrice || item.product.price) * item.quantity).toLocaleString()}</p>
                                 </div>
-                                <div className="mt-2">
+                                <div className="mt-2 text-right">
                                     <button
                                         onClick={() => toggleEmbroidery(item.product.id)}
                                         className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-tight transition-all ${item.hasEmbroidery ? 'bg-orange-100 text-orange-600' : 'bg-gray-50 text-gray-400 hover:bg-gray-100'}`}
                                     >
                                         <Palette className="w-3 h-3" />
-                                        {item.hasEmbroidery ? `Branding Applied (+₹${embroideryPrice * item.quantity})` : 'Add Branding?'}
+                                        {item.hasEmbroidery ? `Branding (+₹${embroideryCharge * item.quantity})` : 'Add Branding?'}
                                     </button>
                                 </div>
                             </div>
@@ -360,9 +463,53 @@ export default function POS() {
                 </div>
 
                 <div className="p-8 bg-gray-50 border-t border-gray-100">
-                    <div className="flex justify-between items-center mb-6">
-                        <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Total Due</span>
-                        <span className="text-3xl font-black text-gray-900 tracking-tighter">₹{total.toLocaleString()}</span>
+                    {/* Coupon Secion */}
+                    <div className="mb-6 bg-white p-4 rounded-2xl border border-gray-100">
+                        <div className="flex items-center gap-3 mb-3">
+                            <Tag className="w-4 h-4 text-gray-400" />
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Apply Coupon</span>
+                        </div>
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                placeholder="CODE"
+                                value={couponCode}
+                                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                className="flex-1 bg-gray-50 border-none rounded-xl py-2 px-4 text-xs font-black outline-none focus:ring-2 focus:ring-black/5"
+                            />
+                            <button
+                                onClick={handleApplyCoupon}
+                                className="bg-black text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-600 transition"
+                            >
+                                Apply
+                            </button>
+                        </div>
+                        {appliedCoupon && (
+                            <div className="mt-3 flex items-center justify-between bg-green-50 px-3 py-2 rounded-xl text-green-600">
+                                <span className="text-[10px] font-black">{appliedCoupon.code} Applied</span>
+                                <span className="text-[10px] font-black">-₹{appliedCoupon.discount}</span>
+                                <button onClick={() => setAppliedCoupon(null)} className="text-green-400 hover:text-green-600">
+                                    <XCircle className="w-3 h-3" />
+                                </button>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="space-y-2 mb-6 text-sm">
+                        <div className="flex justify-between items-center text-gray-400 font-bold uppercase tracking-tighter">
+                            <span>Subtotal</span>
+                            <span>₹{subtotal.toLocaleString()}</span>
+                        </div>
+                        {appliedCoupon && (
+                            <div className="flex justify-between items-center text-green-500 font-bold uppercase tracking-tighter">
+                                <span>Discount</span>
+                                <span>-₹{appliedCoupon.discount.toLocaleString()}</span>
+                            </div>
+                        )}
+                        <div className="flex justify-between items-center pt-2">
+                            <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Total Due</span>
+                            <span className="text-3xl font-black text-gray-900 tracking-tighter">₹{total.toLocaleString()}</span>
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-3 gap-3">

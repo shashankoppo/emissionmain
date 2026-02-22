@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react';
-import { ShoppingBag, ArrowLeft, Lock, MapPin, User, Mail, Phone, ShieldCheck, Truck, CheckCircle } from 'lucide-react';
+import { ShoppingBag, ArrowLeft, Lock, MapPin, User, Mail, Phone, ShieldCheck, Truck, CheckCircle, Tag, X } from 'lucide-react';
 import { PageType, CartItem } from '../types';
 import RazorpayCheckout from '../components/RazorpayCheckout';
+import { couponAPI } from '../lib/api';
 
 interface CartProps {
   onNavigate: (page: PageType, productId?: string) => void;
@@ -10,6 +11,12 @@ interface CartProps {
 }
 
 export default function Cart({ onNavigate, cartItems = [], onUpdateCart }: CartProps) {
+  const [couponCode, setCouponCode] = useState('');
+  const [discount, setDiscount] = useState(0);
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+  const [couponError, setCouponError] = useState('');
+
   const [checkoutForm, setCheckoutForm] = useState({
     name: '',
     email: '',
@@ -28,6 +35,36 @@ export default function Cart({ onNavigate, cartItems = [], onUpdateCart }: CartP
     const { name, value } = e.target;
     setCheckoutForm(prev => ({ ...prev, [name]: value }));
   };
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+
+    setIsApplyingCoupon(true);
+    setCouponError('');
+
+    try {
+      const result = await couponAPI.validate(couponCode, subtotal);
+      if (result.valid) {
+        setDiscount(result.discount);
+        setAppliedCoupon(result.code);
+        setCouponCode('');
+      } else {
+        setCouponError(result.error || 'Invalid coupon');
+      }
+    } catch (error: any) {
+      setCouponError(error.response?.data?.error || 'Failed to validate coupon');
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setDiscount(0);
+    setAppliedCoupon(null);
+    setCouponError('');
+  };
+
+  const totalDue = Math.max(0, subtotal - discount);
 
   const handlePaymentSuccess = (_paymentId: string, _orderId: string) => {
     alert('Order Placed Successfully!');
@@ -222,25 +259,72 @@ export default function Cart({ onNavigate, cartItems = [], onUpdateCart }: CartP
                   ))}
                 </div>
 
-                <div className="space-y-4 border-t border-white/10 pt-8 mb-10 relative z-10">
+                <div className="space-y-4 border-t border-white/10 pt-8 mb-4 relative z-10">
                   <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase tracking-widest">
                     <span>Subtotal</span>
                     <span className="text-white">₹{subtotal.toLocaleString()}</span>
                   </div>
+
+                  {discount > 0 && (
+                    <div className="flex justify-between items-center text-xs font-bold text-green-500 uppercase tracking-widest">
+                      <span className="flex items-center gap-1"><Tag className="w-3 h-3" /> Discount ({appliedCoupon})</span>
+                      <span>-₹{discount.toLocaleString()}</span>
+                    </div>
+                  )}
+
                   <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase tracking-widest">
                     <span>Shipping</span>
                     <span className="text-blue-500">Complimentary</span>
                   </div>
                   <div className="flex justify-between items-center pt-4 border-t border-white/10">
                     <span className="text-sm font-black uppercase tracking-[0.2em]">Total Due</span>
-                    <span className="text-3xl font-black tracking-tight">₹{subtotal.toLocaleString()}</span>
+                    <span className="text-3xl font-black tracking-tight">₹{totalDue.toLocaleString()}</span>
                   </div>
+                </div>
+
+                {/* Coupon Section */}
+                <div className="mb-10 relative z-10">
+                  {!appliedCoupon ? (
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Tag className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="text"
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                          placeholder="PROMO CODE"
+                          className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-white/20 outline-none transition"
+                        />
+                      </div>
+                      <button
+                        onClick={handleApplyCoupon}
+                        disabled={isApplyingCoupon || !couponCode}
+                        title="Apply Coupon Code"
+                        className="bg-white text-black px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-gray-200 transition disabled:opacity-50"
+                      >
+                        {isApplyingCoupon ? '...' : 'APPLY'}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between bg-white/5 border border-dashed border-green-500/50 rounded-xl p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center">
+                          <CheckCircle className="w-3 h-3 text-green-500" />
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-widest text-green-500">{appliedCoupon} Applied</span>
+                      </div>
+                      <button onClick={removeCoupon} title="Remove Coupon" className="p-1 hover:bg-white/10 rounded-lg transition">
+                        <X className="w-3 h-3 text-gray-400" />
+                      </button>
+                    </div>
+                  )}
+                  {couponError && <p className="text-[8px] font-black text-red-500 uppercase tracking-widest mt-2 ml-1">{couponError}</p>}
                 </div>
 
                 {isFormValid ? (
                   <div className="relative z-10">
                     <RazorpayCheckout
-                      amount={subtotal}
+                      amount={totalDue}
                       orderDetails={{
                         customerName: checkoutForm.name,
                         customerEmail: checkoutForm.email,

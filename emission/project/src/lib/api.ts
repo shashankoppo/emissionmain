@@ -187,4 +187,12 @@ export const collectionAPI = {
     },
 };
 
+// Coupon API
+export const couponAPI = {
+    validate: async (code: string, orderAmount: number) => {
+        const response = await api.post('/coupons/validate', { code, orderAmount });
+        return response.data;
+    },
+};
+
 export default api;

@@ -17,12 +17,15 @@ interface Order {
 
 export default function Invoices() {
     const [orders, setOrders] = useState<Order[]>([]);
+    const [template, setTemplate] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
     useEffect(() => {
-        fetchOrders();
+        Promise.all([fetchOrders(), fetchTemplate()]).finally(() => {
+            setLoading(false);
+        });
     }, []);
 
     const fetchOrders = async () => {
@@ -31,9 +34,37 @@ export default function Invoices() {
             setOrders(response.data);
         } catch (error) {
             console.error('Failed to fetch orders:', error);
-        } finally {
-            setLoading(false);
         }
+    };
+
+    const fetchTemplate = async () => {
+        try {
+            const response = await api.get('/invoices/template');
+            setTemplate(response.data);
+        } catch (error) {
+            console.error('Failed to fetch template:', error);
+        }
+    };
+
+    const exportAllInvoices = () => {
+        if (orders.length === 0) return;
+        const headers = ['Invoice ID', 'Order ID', 'Customer', 'Email', 'Amount', 'Status', 'Source', 'Date'];
+        const rows = orders.map(o => [
+            o.invoiceId || o.id.slice(0, 8).toUpperCase(),
+            o.id,
+            o.customerName,
+            o.customerEmail,
+            o.totalAmount,
+            o.status,
+            o.source || 'website',
+            new Date(o.createdAt).toLocaleDateString()
+        ]);
+        const csvContent = [headers.join(','), ...rows.map(r => r.map(cell => `"${cell}"`).join(','))].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `emission_invoices_${new Date().toISOString().slice(0, 10)}.csv`;
+        link.click();
     };
 
     const filteredOrders = orders.filter(o =>
@@ -55,6 +86,16 @@ export default function Invoices() {
         const winPrint = window.open('', '', 'left=0,top=0,width=800,height=900,toolbar=0,scrollbars=0,status=0');
         if (!winPrint) return;
 
+        const currentTemplate = template || {
+            companyName: 'EMISSION',
+            companyAddress: 'Jabalpur, Madhya Pradesh',
+            companyPhone: '+91 0000000000',
+            companyEmail: 'support@emission.in',
+            terms: 'Thank you for choosing EMISSION. We appreciate your business!',
+            primaryColor: '#1a1a1a',
+            accentColor: '#3b82f6'
+        };
+
         winPrint.document.write(`
             <html>
                 <head>
@@ -62,22 +103,24 @@ export default function Invoices() {
                     <style>
                         body { font-family: 'Inter', sans-serif; padding: 40px; color: #1a1a1a; line-height: 1.5; }
                         .header { text-align: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 30px; margin-bottom: 30px; }
-                        .logo { font-size: 28px; font-weight: 900; letter-spacing: -1px; text-transform: uppercase; }
+                        .logo { font-size: 28px; font-weight: 900; letter-spacing: -1px; text-transform: uppercase; color: ${currentTemplate.primaryColor}; }
+                        .accent-bar { width: 40px; height: 4px; background: ${currentTemplate.accentColor}; margin: 10px auto; }
                         .invoice-meta { display: flex; justify-content: space-between; margin-bottom: 40px; }
                         .meta-block h4 { font-size: 10px; color: #999; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; margin-top: 0; }
                         .meta-block p { font-weight: 700; font-size: 14px; margin: 0; }
                         table { width: 100%; border-collapse: collapse; }
                         th { text-align: left; padding: 15px; background: #f9f9f9; font-size: 11px; text-transform: uppercase; color: #666; }
                         td { padding: 15px; border-bottom: 1px solid #eee; font-size: 13px; font-weight: 600; }
-                        .total-row { background: #1a1a1a; color: white; }
+                        .total-row { background: ${currentTemplate.primaryColor}; color: white; }
                         .total-row td { border: none; font-size: 18px; font-weight: 900; }
                         .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #999; }
                     </style>
                 </head>
                 <body>
                     <div class="header">
-                        <div class="logo">EMISSION</div>
-                        <p style="font-size: 12px; margin-top: 5px; color: #666;">Premium Corporate & Medical Apparel</p>
+                        <div class="logo">${currentTemplate.companyName}</div>
+                        <div class="accent-bar"></div>
+                        <p style="font-size: 12px; margin-top: 5px; color: #666;">Premium Apparel Solutions</p>
                     </div>
                     <div class="invoice-meta">
                         <div class="meta-block">
@@ -91,6 +134,7 @@ export default function Invoices() {
                             <p>#${order.invoiceId || order.id.slice(0, 8).toUpperCase()}</p>
                             <h4 style="margin-top: 15px;">Date</h4>
                             <p>${new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</p>
+                            ${currentTemplate.gstNumber ? `<h4 style="margin-top: 15px;">GSTIN</h4><p>${currentTemplate.gstNumber}</p>` : ''}
                         </div>
                     </div>
                     <table>
@@ -125,10 +169,15 @@ export default function Invoices() {
                             <p style="font-size: 10px; color: #999; text-transform: uppercase; font-weight: 900; margin-bottom: 5px;">Payment Status</p>
                             <p style="font-size: 12px; font-weight: 900; color: #059669; text-transform: uppercase; letter-spacing: 1px;">PAID via ${order.source === 'pos' ? 'In-Store POS' : 'Online Gateway'}</p>
                         </div>
+                        <div style="text-align: right;">
+                            <p style="font-size: 10px; color: #999; text-transform: uppercase; font-weight: 900; margin-bottom: 5px;">Contact</p>
+                            <p style="font-size: 10px; font-weight: 700;">${currentTemplate.companyPhone}</p>
+                            <p style="font-size: 10px; font-weight: 700;">${currentTemplate.companyEmail}</p>
+                        </div>
                     </div>
                     <div class="footer">
-                        <p>Thank you for choosing EMISSION. We appreciate your business!</p>
-                        <p>Questions? Reach out to support@emission.in</p>
+                        <p>${currentTemplate.terms}</p>
+                        <p style="font-size: 8px; margin-top: 20px;">Issued by ${currentTemplate.companyName} - ${currentTemplate.companyAddress}</p>
                     </div>
                 </body>
             </html>
@@ -149,7 +198,10 @@ export default function Invoices() {
                     <p className="text-gray-500 mt-2 font-medium">Digital records and financial statements</p>
                 </div>
                 <div className="flex gap-3">
-                    <button className="flex items-center gap-3 bg-gray-50 text-gray-900 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black hover:text-white transition-all shadow-sm active:scale-95">
+                    <button
+                        onClick={exportAllInvoices}
+                        className="flex items-center gap-3 bg-gray-50 text-gray-900 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black hover:text-white transition-all shadow-sm active:scale-95"
+                    >
                         <Download className="w-4 h-4" />
                         Export All
                     </button>

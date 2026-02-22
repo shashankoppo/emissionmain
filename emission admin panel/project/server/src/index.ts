@@ -12,6 +12,8 @@ import settingsRoutes from './routes/settings.js';
 import courierRoutes from './routes/couriers.js';
 import bannerRoutes from './routes/banners.js';
 import collectionRoutes from './routes/collections.js';
+import invoiceRoutes from './routes/invoices.js';
+import couponRoutes from './routes/coupons.js';
 import { PrismaClient } from '@prisma/client';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -40,6 +42,8 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/couriers', courierRoutes);
 app.use('/api/banners', bannerRoutes);
 app.use('/api/collections', collectionRoutes);
+app.use('/api/invoices', invoiceRoutes);
+app.use('/api/coupons', couponRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Emission Admin API is running' });

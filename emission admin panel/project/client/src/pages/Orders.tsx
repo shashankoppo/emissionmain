@@ -17,6 +17,7 @@ export default function Orders() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     fetchOrders();
@@ -40,6 +41,37 @@ export default function Orders() {
     } catch (error) {
       alert('Failed to update status');
     }
+  };
+
+  const exportToCSV = () => {
+    if (orders.length === 0) return;
+
+    const headers = ['Order ID', 'Customer Name', 'Customer Email', 'Customer Phone', 'Total Amount', 'Status', 'Source', 'Date'];
+    const rows = orders.map(o => [
+      o.id,
+      o.customerName,
+      o.customerEmail,
+      o.customerPhone || '',
+      o.totalAmount,
+      o.status,
+      o.source || 'website',
+      new Date(o.createdAt).toLocaleDateString()
+    ]);
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `emission_orders_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const filteredOrders = orders.filter(o =>
@@ -77,7 +109,10 @@ export default function Orders() {
           <p className="text-gray-500 mt-2 font-medium">Manage and track your customer shipments</p>
         </div>
         <div className="flex gap-3">
-          <button className="flex items-center gap-3 bg-gray-50 text-gray-900 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black hover:text-white transition-all shadow-sm active:scale-95">
+          <button
+            onClick={exportToCSV}
+            className="flex items-center gap-3 bg-gray-50 text-gray-900 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black hover:text-white transition-all shadow-sm active:scale-95"
+          >
             <Download className="w-4 h-4" />
             Export CSV
           </button>
@@ -163,7 +198,11 @@ export default function Orders() {
                         <option value="delivered">Delivered</option>
                         <option value="cancelled">Cancelled</option>
                       </select>
-                      <button title="View Details" className="p-3 bg-white border border-gray-100 text-gray-900 rounded-xl hover:bg-black hover:text-white transition-all">
+                      <button
+                        onClick={() => setSelectedOrder(order)}
+                        title="View Details"
+                        className="p-3 bg-white border border-gray-100 text-gray-900 rounded-xl hover:bg-black hover:text-white transition-all"
+                      >
                         <ExternalLink className="w-4 h-4" />
                       </button>
                     </div>
@@ -173,6 +212,76 @@ export default function Orders() {
             </tbody>
           </table>
         </div>
+
+        {selectedOrder && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+            <div className="bg-white rounded-[40px] w-full max-w-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+              <div className="p-10">
+                <div className="flex justify-between items-start mb-10">
+                  <div>
+                    <h2 className="text-3xl font-black text-gray-900 tracking-tight uppercase">Order Details</h2>
+                    <p className="text-gray-400 font-mono text-xs mt-1">#{selectedOrder.id}</p>
+                  </div>
+                  <button onClick={() => setSelectedOrder(null)} className="p-3 hover:bg-gray-100 rounded-2xl transition">
+                    <XCircle className="w-6 h-6 text-gray-400" />
+                  </button>
+                </div>
+
+                <div className="space-y-8">
+                  <div className="grid grid-cols-2 gap-8">
+                    <div>
+                      <h4 className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-2">Customer</h4>
+                      <p className="text-sm font-black text-gray-900">{selectedOrder.customerName}</p>
+                      <p className="text-xs font-bold text-gray-400 mt-1">{selectedOrder.customerEmail}</p>
+                      <p className="text-xs font-bold text-gray-400">{selectedOrder.customerPhone || 'No phone'}</p>
+                    </div>
+                    <div className="text-right">
+                      <h4 className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-2">Payment Status</h4>
+                      <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border text-[10px] font-black uppercase tracking-widest ${getStatusStyle(selectedOrder.status)}`}>
+                        {getStatusIcon(selectedOrder.status)}
+                        {selectedOrder.status}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-gray-50 rounded-[32px] p-8">
+                    <h4 className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-6">Items Ordered</h4>
+                    <div className="space-y-4">
+                      {JSON.parse((selectedOrder as any).items || '[]').map((item: any, i: number) => (
+                        <div key={i} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0 border-dashed">
+                          <div>
+                            <p className="text-sm font-black text-gray-900">{item.name || item.product?.name || 'Product'}</p>
+                            <span className="text-[10px] font-bold text-gray-400">Qty: {item.quantity}</span>
+                          </div>
+                          <span className="text-sm font-black text-gray-900">₹{(Number(item.price || item.product?.retailPrice || 0) * item.quantity).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="mt-8 pt-6 border-t border-gray-200 flex justify-between items-center">
+                      <span className="text-xs font-black text-gray-400 uppercase tracking-widest">Grand Total</span>
+                      <span className="text-2xl font-black text-black tracking-tighter">₹{Number(selectedOrder.totalAmount).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-10 pt-10 border-t border-gray-50 flex gap-4">
+                  <button
+                    onClick={() => { window.location.href = '/admin/invoices'; }}
+                    className="flex-1 bg-black text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-black/10"
+                  >
+                    View Invoice
+                  </button>
+                  <button
+                    onClick={() => setSelectedOrder(null)}
+                    className="flex-1 bg-gray-50 text-gray-900 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-100 transition-all font-bold"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {filteredOrders.length === 0 && !loading && (
           <div className="py-24 text-center">
