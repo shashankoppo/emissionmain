@@ -25,37 +25,35 @@ model Customer {
 }
 
 model Product {
-  id               String   @id @default(uuid())
-  name             String
-  slug             String   @unique
-  category         String
-  subcategory      String
-  description      String
-  shortDescription String
-  price            Decimal
-  wholesalePrice   Decimal
-  retailPrice      Decimal?
-  images           String   @default("[]")
-  features         String   @default("[]")
-  specifications   String   @default("{}")
-  inStock          Boolean  @default(true)
-  moq              Int      @default(1)
-  availableSizes   String   @default("[]")
-  availableColors  String   @default("[]")
-  allowsEmbroidery Boolean  @default(false)
-  gstPercentage    Decimal  @default(18)
-  shippingIncluded Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  
-  variants         ProductVariant[]
+  id                String             @id @default(uuid())
+  name              String
+  slug              String             @unique
+  category          String
+  subcategory       String
+  description       String
+  shortDescription  String
+  price             Decimal
+  wholesalePrice    Decimal
+  retailPrice       Decimal?
+  images            String             @default("[]")
+  features          String             @default("[]")
+  specifications    String             @default("{}")
+  inStock           Boolean            @default(true)
+  moq               Int                @default(1)
+  availableSizes    String             @default("[]")
+  availableColors   String             @default("[]")
+  allowsEmbroidery  Boolean            @default(false)
+  gstPercentage     Decimal            @default(18)
+  shippingIncluded  Boolean            @default(true)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
   embroideryOptions EmbroideryOption[]
+  variants          ProductVariant[]
 }
 
 model ProductVariant {
   id              String   @id @default(uuid())
   productId       String
-  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   size            String
   color           String
   sku             String   @unique
@@ -63,20 +61,21 @@ model ProductVariant {
   priceAdjustment Decimal  @default(0)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
   @@unique([productId, size, color])
 }
 
 model EmbroideryOption {
   id        String   @id @default(uuid())
   productId String
-  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
   position  String
   maxChars  Int      @default(20)
   price     Decimal
   available Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 }
 
 model Enquiry {
@@ -106,7 +105,7 @@ model Order {
   courierId       String?
   invoiceId       String?
   taxAmount       Decimal? @default(0)
-  source          String   @default("website") // website, pos
+  source          String   @default("website")
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
@@ -151,7 +150,7 @@ model FeaturedCollection {
 }
 
 model InvoiceTemplate {
-  id              String   @id @default("default-template")
+  id             String   @id @default("default-template")
   companyName    String   @default("EMISSION")
   companyAddress String   @default("Jabalpur, Madhya Pradesh")
   companyPhone   String   @default("+91 0000000000")
@@ -165,16 +164,16 @@ model InvoiceTemplate {
 }
 
 model Coupon {
-  id              String   @id @default(uuid())
-  code            String   @unique
-  discountType    String   // percentage, fixed
-  discountValue   Decimal
-  minOrderAmount  Decimal  @default(0)
-  maxDiscount     Decimal?
-  expiryDate      DateTime?
-  usageLimit      Int      @default(0) // 0 for unlimited
-  usedCount       Int      @default(0)
-  active          Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id             String    @id @default(uuid())
+  code           String    @unique
+  discountType   String
+  discountValue  Decimal
+  minOrderAmount Decimal   @default(0)
+  maxDiscount    Decimal?
+  expiryDate     DateTime?
+  usageLimit     Int       @default(0)
+  usedCount      Int       @default(0)
+  active         Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
