@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
-import { LayoutGrid, Plus, Trash2, Edit2, XCircle, MoveUp, MoveDown } from 'lucide-react';
+import { LayoutGrid, Plus, Trash2, Edit2, XCircle } from 'lucide-react';
 
 interface Collection {
     id: string;

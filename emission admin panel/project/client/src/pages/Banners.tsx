@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
-import { Image as ImageIcon, Plus, Trash2, Edit2, CheckCircle, XCircle, ExternalLink, MoveUp, MoveDown } from 'lucide-react';
+import { Image as ImageIcon, Plus, Trash2, Edit2, XCircle } from 'lucide-react';
 
 interface Banner {
     id: string;

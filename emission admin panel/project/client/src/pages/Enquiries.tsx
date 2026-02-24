@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
-import { CheckCircle } from 'lucide-react';
+
 
 interface Enquiry {
   id: string;
@@ -70,6 +70,7 @@ export default function Enquiries() {
                   <p className="text-sm text-gray-600 mt-1">{enquiry.email}</p>
                 </div>
                 <select
+                  title="Update enquiry status"
                   value={enquiry.status}
                   onChange={(e) => updateStatus(enquiry.id, e.target.value)}
                   className="px-3 py-1 border border-gray-300 rounded-lg text-sm"

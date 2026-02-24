@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import api from '../lib/api';
-import { ShoppingCart, Search, Plus, Minus, Trash2, User, Phone, CreditCard, Receipt, Zap, Check, Printer, Palette, XCircle, Tag, CheckCircle2 } from 'lucide-react';
+import { ShoppingCart, Search, Plus, Minus, Trash2, User, Phone, CreditCard, Receipt, Zap, Check, Printer, Palette, XCircle, Tag } from 'lucide-react';
 
 interface Product {
     id: string;

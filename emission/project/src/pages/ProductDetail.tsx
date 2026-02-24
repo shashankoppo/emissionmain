@@ -83,12 +83,16 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart }: Pr
   };
 
   const handleAddToCart = () => {
-    if (onAddToCart && product && selectedSize) {
-      onAddToCart(product.id, quantity, selectedSize, selectedColor, embroidery);
+    const hasSizes = product && product.availableSizes && product.availableSizes.length > 0;
+
+    if (onAddToCart && product) {
+      if (hasSizes && !selectedSize) {
+        alert('Please select a size first');
+        return;
+      }
+      onAddToCart(product.id, quantity, selectedSize || undefined, selectedColor, embroidery);
       setAddedToCart(true);
       setTimeout(() => setAddedToCart(false), 3000);
-    } else if (!selectedSize) {
-      alert('Please select a size first');
     }
   };
 

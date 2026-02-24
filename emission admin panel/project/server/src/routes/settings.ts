@@ -35,20 +35,25 @@ router.get('/public', async (req, res) => {
 router.post('/', authMiddleware, async (req, res) => {
     try {
         const settings = req.body; // Expecting { key: value, ... }
+        console.log('Updating settings with payload:', settings);
 
-        const updates = Object.entries(settings).map(([key, value]) => {
-            return prisma.setting.upsert({
+        // Use sequential updates to avoid SQLite lock issues
+        const entries = Object.entries(settings);
+        for (const [key, value] of entries) {
+            await prisma.setting.upsert({
                 where: { key },
                 update: { value: String(value) },
                 create: { key, value: String(value) },
             });
-        });
+        }
 
-        await Promise.all(updates);
         res.json({ success: true, message: 'Settings updated successfully' });
     } catch (error) {
-        console.error('Failed to update settings:', error);
-        res.status(500).json({ error: 'Failed to update settings' });
+        console.error('CRITICAL: Failed to update settings:', error);
+        res.status(500).json({
+            error: 'Failed to update settings',
+            details: error instanceof Error ? error.message : String(error)
+        });
     }
 });
 
