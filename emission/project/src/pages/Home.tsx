@@ -91,19 +91,25 @@ export default function Home({ onNavigate, onAddToCart }: HomeProps) {
 
                 {/* Headline */}
                 <h1 className="text-6xl md:text-8xl font-black text-white leading-[1.1] tracking-tight mb-8">
-                  {banners[currentBanner].title ? (
-                    <>
-                      {banners[currentBanner].title.split('.').map((line, i) => (
-                        <span key={i}>
-                          {line}
-                          {i < banners[currentBanner].title!.split('.').length - 1 && <br />}
-                        </span>
-                      ))}
-                    </>
-                  ) : (
-                    <>Performance.<br />Precision.<br /><span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">Perfection.</span></>
-                  )}
+                  {(banners[currentBanner]?.title || 'Performance.Precision.Perfection.').split('.').map((line, i, arr) => {
+                    const hasPerfection = line.includes('Perfection');
+                    return (
+                      <span key={i}>
+                        {hasPerfection ? (
+                          <>
+                            {line.split('Perfection')[0]}
+                            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">Perfection</span>
+                            {line.split('Perfection')[1]}
+                          </>
+                        ) : (
+                          line
+                        )}
+                        {i < arr.length - 1 && <br />}
+                      </span>
+                    );
+                  })}
                 </h1>
+
 
                 {/* Subtext */}
                 <p className="text-white/80 text-lg md:text-xl font-medium mb-12 leading-relaxed max-w-xl">
