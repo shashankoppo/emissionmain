@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { ShoppingBag, ArrowLeft, Lock, MapPin, User, Mail, Phone, ShieldCheck, Truck, CheckCircle, Tag, X } from 'lucide-react';
 import { PageType, CartItem } from '../types';
 import RazorpayCheckout from '../components/RazorpayCheckout';
@@ -8,9 +8,10 @@ interface CartProps {
   onNavigate: (page: PageType, productId?: string) => void;
   cartItems?: CartItem[];
   onUpdateCart?: (items: CartItem[]) => void;
+  customer?: { name: string; email: string; phone?: string } | null;
 }
 
-export default function Cart({ onNavigate, cartItems = [], onUpdateCart }: CartProps) {
+export default function Cart({ onNavigate, cartItems = [], onUpdateCart, customer }: CartProps) {
   const [couponCode, setCouponCode] = useState('');
   const [discount, setDiscount] = useState(0);
   const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
@@ -25,6 +26,18 @@ export default function Cart({ onNavigate, cartItems = [], onUpdateCart }: CartP
     city: '',
     pincode: ''
   });
+
+  // Pre-fill form if customer is logged in
+  useEffect(() => {
+    if (customer) {
+      setCheckoutForm(prev => ({
+        ...prev,
+        name: customer.name || prev.name,
+        email: customer.email || prev.email,
+        phone: customer.phone || prev.phone,
+      }));
+    }
+  }, [customer]);
 
   const subtotal = useMemo(() => cartItems.reduce((sum, item) => {
     const price = Number(item.product?.retailPrice) || Number(item.product?.price) || 0;

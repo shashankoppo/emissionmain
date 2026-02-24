@@ -29,8 +29,34 @@ function App() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [customerName, setCustomerName] = useState('');
+  const [customer, setCustomer] = useState<{ id: string; name: string; email: string; phone?: string } | null>(null);
+
+  // Restore session from localStorage on app load
+  useEffect(() => {
+    const token = localStorage.getItem('customerToken');
+    const info = localStorage.getItem('customerInfo');
+    if (token && info) {
+      try {
+        const customerData = JSON.parse(info);
+        setIsLoggedIn(true);
+        setCustomerName(customerData.name || '');
+        setCustomer(customerData);
+      } catch {
+        localStorage.removeItem('customerToken');
+        localStorage.removeItem('customerInfo');
+      }
+    }
+  }, []);
 
   const handleNavigate = (page: PageType, param?: string) => {
+    // Gate cart and checkout — redirect to login if not logged in
+    if ((page === 'cart' || page === 'checkout') && !isLoggedIn) {
+      setCurrentPage('login');
+      setPageParam(undefined);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     setCurrentPage(page);
     setPageParam(param);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -47,7 +73,6 @@ function App() {
       const product = await productAPI.getById(productId);
 
       setCartItems((prev) => {
-        // Find if this specific variant already exists in cart
         const existingIndex = prev.findIndex((item) =>
           item.productId === productId &&
           item.selectedSize === size &&
@@ -66,14 +91,7 @@ function App() {
 
         return [
           ...prev,
-          {
-            productId,
-            quantity,
-            product,
-            selectedSize: size,
-            selectedColor: color,
-            embroidery,
-          },
+          { productId, quantity, product, selectedSize: size, selectedColor: color, embroidery },
         ];
       });
       setIsCartOpen(true);
@@ -86,14 +104,34 @@ function App() {
     setCartItems(items);
   };
 
-  const handleLogin = (_email: string) => {
+  const handleLogin = (name: string, email: string) => {
+    const info = localStorage.getItem('customerInfo');
+    if (info) {
+      setCustomer(JSON.parse(info));
+    }
     setIsLoggedIn(true);
+    setCustomerName(name);
     handleNavigate('home');
   };
 
-  const handleRegister = (_data: { name: string; email: string }) => {
+  const handleRegister = (name: string, email: string) => {
+    const info = localStorage.getItem('customerInfo');
+    if (info) {
+      setCustomer(JSON.parse(info));
+    }
     setIsLoggedIn(true);
+    setCustomerName(name);
     handleNavigate('home');
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('customerToken');
+    localStorage.removeItem('customerInfo');
+    setIsLoggedIn(false);
+    setCustomerName('');
+    setCustomer(null);
+    setCurrentPage('home');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   useEffect(() => {
@@ -109,7 +147,6 @@ function App() {
       orders: 'My Orders - Emission',
       'track-order': 'Track Your Order - Emission',
     };
-
     document.title = pageTitles[currentPage] || 'Emission';
   }, [currentPage]);
 
@@ -134,16 +171,15 @@ function App() {
       case 'contact':
         return <Contact onNavigate={handleNavigate} selectedProductId={pageParam} />;
       case 'cart':
-        // Reuse Cart component as Checkout page
-        return <Cart onNavigate={handleNavigate} cartItems={cartItems} onUpdateCart={handleUpdateCart} />;
       case 'checkout':
-        return <Cart onNavigate={handleNavigate} cartItems={cartItems} onUpdateCart={handleUpdateCart} />;
+        return <Cart onNavigate={handleNavigate} cartItems={cartItems} onUpdateCart={handleUpdateCart} customer={customer} />;
       case 'account':
-        return <Account onNavigate={handleNavigate} />;
+        return <Account onNavigate={handleNavigate} customer={customer} />;
       case 'login':
         return <Login onNavigate={handleNavigate} onLogin={handleLogin} />;
       case 'register':
         return <Register onNavigate={handleNavigate} onRegister={handleRegister} />;
+
       case 'orders':
         return <Orders onNavigate={handleNavigate} isLoggedIn={isLoggedIn} />;
       case 'track-order':
@@ -165,7 +201,15 @@ function App() {
           onNavigate={handleNavigate}
           cartItemCount={cartItems.length}
           isLoggedIn={isLoggedIn}
-          onOpenCart={() => setIsCartOpen(true)}
+          customerName={customerName}
+          onOpenCart={() => {
+            if (!isLoggedIn) {
+              setCurrentPage('login');
+            } else {
+              setIsCartOpen(true);
+            }
+          }}
+          onLogout={handleLogout}
         />
       )}
 

@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { User, Mail, Lock, Phone, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { PageType } from '../types';
 import EmissionLogo from '../components/UI/EmissionLogo';
+import { customerAPI } from '../lib/api';
 
 interface RegisterProps {
     onNavigate: (page: PageType) => void;
-    onRegister: (data: { name: string; email: string; phone: string; password: string }) => void;
+    onRegister: (name: string, email: string) => void;
 }
 
 export default function Register({ onNavigate, onRegister }: RegisterProps) {
@@ -38,14 +39,18 @@ export default function Register({ onNavigate, onRegister }: RegisterProps) {
         }
         setLoading(true);
         try {
-            await onRegister({
+            const result = await customerAPI.register({
                 name: formData.name,
                 email: formData.email,
                 phone: formData.phone,
                 password: formData.password,
             });
-        } catch {
-            setError('Registration failed. Please try again.');
+            localStorage.setItem('customerToken', result.token);
+            localStorage.setItem('customerInfo', JSON.stringify(result.customer));
+            onRegister(result.customer.name, result.customer.email);
+        } catch (err: any) {
+            const msg = err?.response?.data?.error || 'Registration failed. Please try again.';
+            setError(msg);
         } finally {
             setLoading(false);
         }

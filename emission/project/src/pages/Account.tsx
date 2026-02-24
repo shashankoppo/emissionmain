@@ -3,16 +3,17 @@ import { PageType } from '../types';
 
 interface AccountProps {
   onNavigate: (page: PageType) => void;
+  customer: { id: string; name: string; email: string; phone?: string } | null;
 }
 
-export default function Account({ onNavigate }: AccountProps) {
-  // Mock user data
+export default function Account({ onNavigate, customer }: AccountProps) {
+  // Use real user data from props, fallback to empty if null (though should be logged in)
   const user = {
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+91 98765 43210',
-    address: '123, Green Park, Jabalpur, MP - 482001',
-    memberSince: 'Feb 2026',
+    name: customer?.name || 'Customer',
+    email: customer?.email || '',
+    phone: customer?.phone || 'No phone provided',
+    address: 'Address not set', // We don't store address in Customer model yet based on schema.prisma
+    memberSince: 'Member',
   };
 
   return (

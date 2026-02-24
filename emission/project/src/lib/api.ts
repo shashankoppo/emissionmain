@@ -195,4 +195,16 @@ export const couponAPI = {
     },
 };
 
+// Customer Auth API
+export const customerAPI = {
+    register: async (data: { name: string; email: string; password: string; phone?: string }) => {
+        const response = await api.post('/customers/register', data);
+        return response.data as { token: string; customer: { id: string; name: string; email: string; phone?: string } };
+    },
+    login: async (email: string, password: string) => {
+        const response = await api.post('/customers/login', { email, password });
+        return response.data as { token: string; customer: { id: string; name: string; email: string; phone?: string } };
+    },
+};
+
 export default api;

@@ -8,10 +8,20 @@ interface HeaderProps {
   onNavigate: (page: PageType, id?: string) => void;
   cartItemCount?: number;
   isLoggedIn?: boolean;
+  customerName?: string;
   onOpenCart?: () => void;
+  onLogout?: () => void;
 }
 
-export default function Header({ currentPage, onNavigate, cartItemCount = 0, isLoggedIn = false, onOpenCart }: HeaderProps) {
+export default function Header({
+  currentPage,
+  onNavigate,
+  cartItemCount = 0,
+  isLoggedIn = false,
+  customerName = '',
+  onOpenCart,
+  onLogout
+}: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isShopDropdownOpen, setIsShopDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -166,13 +176,43 @@ export default function Header({ currentPage, onNavigate, cartItemCount = 0, isL
                 </button>
 
                 {/* Account */}
-                <button
-                  onClick={() => onNavigate(isLoggedIn ? 'account' : 'login')}
-                  className="p-2 text-gray-600 hover:text-black transition"
-                  title="Account"
-                >
-                  <User className="w-[18px] h-[18px]" />
-                </button>
+                <div className="relative group/account">
+                  <button
+                    onClick={() => onNavigate(isLoggedIn ? 'account' : 'login')}
+                    className="p-2 text-gray-600 hover:text-black transition flex items-center gap-1"
+                    title="Account"
+                  >
+                    <User className="w-[18px] h-[18px]" />
+                    {isLoggedIn && (
+                      <span className="hidden md:block text-[11px] font-bold uppercase tracking-tight">{customerName.split(' ')[0]}</span>
+                    )}
+                  </button>
+                  {isLoggedIn && (
+                    <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover/account:opacity-100 group-hover/account:visible transition-all">
+                      <div className="bg-white border border-gray-100 rounded-xl shadow-2xl py-2 w-48">
+                        <button
+                          onClick={() => onNavigate('account')}
+                          className="block w-full text-left px-5 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-black transition"
+                        >
+                          My Profile
+                        </button>
+                        <button
+                          onClick={() => onNavigate('orders')}
+                          className="block w-full text-left px-5 py-2 text-sm text-gray-600 hover:bg-gray-50 hover:text-black transition"
+                        >
+                          My Orders
+                        </button>
+                        <hr className="my-1 border-gray-100" />
+                        <button
+                          onClick={() => onLogout?.()}
+                          className="block w-full text-left px-5 py-2 text-sm text-red-600 hover:bg-red-50 transition"
+                        >
+                          Logout
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 {/* Cart */}
                 <button
@@ -249,12 +289,22 @@ export default function Header({ currentPage, onNavigate, cartItemCount = 0, isL
                   </button>
                 </div>
               ) : (
-                <div className="mb-6 p-4 bg-gray-50 rounded-xl flex items-center gap-3">
-                  <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center font-bold">U</div>
-                  <div>
-                    <p className="text-sm font-medium text-black">Welcome back!</p>
-                    <button onClick={() => { onNavigate('account'); setIsMenuOpen(false); }} className="text-xs text-gray-500 hover:text-black">View Profile →</button>
+                <div className="mb-6 p-4 bg-gray-50 rounded-xl">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center font-bold">
+                      {customerName[0]?.toUpperCase() || 'U'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-black">Hello, {customerName}!</p>
+                      <button onClick={() => { onNavigate('account'); setIsMenuOpen(false); }} className="text-xs text-gray-500 hover:text-black">View Profile →</button>
+                    </div>
                   </div>
+                  <button
+                    onClick={() => { onLogout?.(); setIsMenuOpen(false); }}
+                    className="w-full border border-red-100 text-red-600 py-2 rounded-lg text-xs font-bold hover:bg-red-50 transition"
+                  >
+                    Logout
+                  </button>
                 </div>
               )}
 

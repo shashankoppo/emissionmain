@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 import { PageType } from '../types';
 import EmissionLogo from '../components/UI/EmissionLogo';
+import { customerAPI } from '../lib/api';
 
 interface LoginProps {
     onNavigate: (page: PageType) => void;
-    onLogin: (email: string, password: string) => void;
+    onLogin: (name: string, email: string) => void;
 }
 
 export default function Login({ onNavigate, onLogin }: LoginProps) {
@@ -20,7 +21,10 @@ export default function Login({ onNavigate, onLogin }: LoginProps) {
         setError('');
         setLoading(true);
         try {
-            await onLogin(email, password);
+            const result = await customerAPI.login(email, password);
+            localStorage.setItem('customerToken', result.token);
+            localStorage.setItem('customerInfo', JSON.stringify(result.customer));
+            onLogin(result.customer.name, result.customer.email);
         } catch {
             setError('Invalid email or password. Please try again.');
         } finally {
