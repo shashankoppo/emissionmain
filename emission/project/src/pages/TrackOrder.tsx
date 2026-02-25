@@ -33,27 +33,9 @@ export default function TrackOrder({ onNavigate }: TrackOrderProps) {
         setError('');
         setResult(null);
 
-        // Simulate API call — in production, this would call your backend
+        // In production, this would call your backend
         setTimeout(() => {
-            // Demo result for UX preview
-            setResult({
-                orderNumber: orderId,
-                status: 'shipped',
-                items: [
-                    { name: 'Classic V-Neck Scrub Top - Navy', qty: 2 },
-                    { name: 'Performance Training Shorts', qty: 1 },
-                ],
-                trackingId: 'SHIP' + Math.random().toString(36).substring(2, 10).toUpperCase(),
-                estimatedDelivery: 'Feb 18, 2026',
-                shippingAddress: 'Jabalpur, Madhya Pradesh',
-                timeline: [
-                    { status: 'Order Confirmed', date: 'Feb 14, 2026 • 2:30 PM', description: 'Your order has been confirmed and payment received.', completed: true },
-                    { status: 'Processing', date: 'Feb 14, 2026 • 5:00 PM', description: 'We are preparing your order for shipment.', completed: true },
-                    { status: 'Shipped', date: 'Feb 15, 2026 • 10:00 AM', description: 'Your order has been shipped and is on its way.', completed: true },
-                    { status: 'Out for Delivery', date: 'Expected Feb 18', description: 'Your order is out for delivery.', completed: false },
-                    { status: 'Delivered', date: 'Expected Feb 18', description: 'Your order has been delivered.', completed: false },
-                ],
-            });
+            setError('Order details not found. Please verify your order ID.');
             setLoading(false);
         }, 1500);
     };

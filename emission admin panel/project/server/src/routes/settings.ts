@@ -1,6 +1,13 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../middleware/auth.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const logFile = path.join(__dirname, '../../debug_settings.log');
 
 const router = Router();
 const prisma = new PrismaClient();
@@ -25,7 +32,8 @@ router.get('/public', async (req, res) => {
         const setting = await prisma.setting.findUnique({
             where: { key: 'RAZORPAY_KEY_ID' }
         });
-        res.json({ RAZORPAY_KEY_ID: setting?.value || process.env.RAZORPAY_KEY_ID || '' });
+        const keyId = setting?.value || process.env.RAZORPAY_KEY_ID || '';
+        res.json({ RAZORPAY_KEY_ID: keyId });
     } catch (error) {
         res.json({ RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID || '' });
     }
@@ -34,10 +42,10 @@ router.get('/public', async (req, res) => {
 // Update settings (protected)
 router.post('/', authMiddleware, async (req, res) => {
     try {
-        const settings = req.body; // Expecting { key: value, ... }
-        console.log('Updating settings with payload:', settings);
+        const settings = req.body;
+        const logMsg = `[${new Date().toISOString()}] Payload: ${JSON.stringify(settings)}\n`;
+        fs.appendFileSync(logFile, logMsg);
 
-        // Use sequential updates to avoid SQLite lock issues
         const entries = Object.entries(settings);
         for (const [key, value] of entries) {
             await prisma.setting.upsert({
@@ -49,11 +57,9 @@ router.post('/', authMiddleware, async (req, res) => {
 
         res.json({ success: true, message: 'Settings updated successfully' });
     } catch (error) {
-        console.error('CRITICAL: Failed to update settings:', error);
-        res.status(500).json({
-            error: 'Failed to update settings',
-            details: error instanceof Error ? error.message : String(error)
-        });
+        const errMsg = `[${new Date().toISOString()}] ERROR: ${error instanceof Error ? error.message : String(error)}\n`;
+        fs.appendFileSync(logFile, errMsg);
+        res.status(500).json({ error: 'Failed to update settings' });
     }
 });
 

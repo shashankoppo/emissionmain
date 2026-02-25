@@ -21,35 +21,7 @@ export default function Orders({ onNavigate, isLoggedIn }: OrdersProps) {
     const [activeTab, setActiveTab] = useState<'all' | 'active' | 'delivered'>('all');
 
     // Demo orders for UI preview
-    const demoOrders: MockOrder[] = [
-        {
-            id: '1',
-            orderNumber: 'EM-2026021400001',
-            date: 'Feb 14, 2026',
-            total: 2499,
-            status: 'shipped',
-            itemCount: 3,
-            firstItemName: 'Classic V-Neck Scrub - Navy',
-        },
-        {
-            id: '2',
-            orderNumber: 'EM-2026021200002',
-            date: 'Feb 12, 2026',
-            total: 1899,
-            status: 'delivered',
-            itemCount: 1,
-            firstItemName: 'Performance Training Shorts - Black',
-        },
-        {
-            id: '3',
-            orderNumber: 'EM-2026020800003',
-            date: 'Feb 08, 2026',
-            total: 4999,
-            status: 'delivered',
-            itemCount: 5,
-            firstItemName: 'Tracksuit Full Set - Grey',
-        },
-    ];
+    const demoOrders: MockOrder[] = [];
 
     if (!isLoggedIn) {
         return (

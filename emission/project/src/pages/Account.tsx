@@ -40,7 +40,7 @@ export default function Account({ onNavigate, customer }: AccountProps) {
             {/* Quick Stats */}
             <div className="bg-white rounded-2xl shadow-sm p-6 flex justify-between">
               <div className="text-center flex-1 border-r border-gray-100">
-                <p className="text-2xl font-bold text-black">12</p>
+                <p className="text-2xl font-bold text-black">0</p>
                 <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">Total Orders</p>
               </div>
               <div className="text-center flex-1 border-r border-gray-100">
@@ -48,7 +48,7 @@ export default function Account({ onNavigate, customer }: AccountProps) {
                 <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">Returns</p>
               </div>
               <div className="text-center flex-1">
-                <p className="text-2xl font-bold text-black">4</p>
+                <p className="text-2xl font-bold text-black">0</p>
                 <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">Wishlist</p>
               </div>
             </div>
@@ -66,30 +66,21 @@ export default function Account({ onNavigate, customer }: AccountProps) {
               </div>
 
               <div className="space-y-4">
-                {[
-                  { id: 'EM-2026-001', date: 'Feb 14, 2026', status: 'Shipped', total: '₹2,499' },
-                  { id: 'EM-2026-002', date: 'Jan 28, 2026', status: 'Delivered', total: '₹4,999' },
-                ].map((order) => (
-                  <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition cursor-pointer" onClick={() => onNavigate('orders')}>
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center border border-gray-200">
-                        <Package className="w-5 h-5 text-gray-600" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-black text-sm">{order.id}</p>
-                        <p className="text-xs text-gray-500">{order.date}</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-black text-sm">{order.total}</p>
-                      <p className={`text-xs font-medium ${order.status === 'Delivered' ? 'text-green-600' : 'text-blue-600'}`}>
-                        {order.status}
-                      </p>
-                    </div>
+                <div className="text-center py-8">
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Package className="w-8 h-8 text-gray-300" />
                   </div>
-                ))}
+                  <p className="text-gray-500 font-medium">No orders yet</p>
+                  <button
+                    onClick={() => onNavigate('products')}
+                    className="text-blue-600 font-bold text-sm mt-2 hover:underline"
+                  >
+                    Start Shopping
+                  </button>
+                </div>
               </div>
             </div>
+
           </div>
 
           {/* Sidebar */}

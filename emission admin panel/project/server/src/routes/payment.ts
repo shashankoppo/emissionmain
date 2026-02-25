@@ -12,8 +12,12 @@ async function getRazorpayInstance() {
     let key_id = process.env.RAZORPAY_KEY_ID;
     let key_secret = process.env.RAZORPAY_KEY_SECRET;
 
+    console.log('Razorpay Init - Env Key ID:', key_id ? 'EXISTS' : 'MISSING');
+    console.log('Razorpay Init - Env Key Secret:', key_secret ? 'EXISTS' : 'MISSING');
+
     // If not in env, try database settings
     if (!key_id || !key_secret) {
+        console.log('Fetching Razorpay keys from database...');
         const settings = await prisma.setting.findMany({
             where: {
                 key: { in: ['RAZORPAY_KEY_ID', 'RAZORPAY_KEY_SECRET'] }
@@ -27,9 +31,13 @@ async function getRazorpayInstance() {
 
         key_id = key_id || settingsMap['RAZORPAY_KEY_ID'];
         key_secret = key_secret || settingsMap['RAZORPAY_KEY_SECRET'];
+
+        console.log('DB Key ID:', key_id ? 'FOUND' : 'NOT FOUND');
+        console.log('DB Key Secret:', key_secret ? 'FOUND' : 'NOT FOUND');
     }
 
     if (!key_id || !key_secret) {
+        console.error('CRITICAL: Razorpay keys missing in both Env and DB');
         return null;
     }
 
