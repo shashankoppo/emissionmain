@@ -1,161 +1,41 @@
-# Emission — Deploy on Ubuntu 24.04
+# Emission — Deploy with Docker 🐳
 
-> Just follow Step 1 → 6 in order. Copy-paste each block.
-
----
-
-## Step 1 — Install Everything
-
-```bash
-sudo apt update && sudo apt upgrade -y
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt install -y nodejs nginx git build-essential
-sudo npm install -g pm2
-```
+> **3 commands.** That's it.
 
 ---
 
-## Step 2 — Clone & Build
+## Prerequisites
+
+Install Docker on Ubuntu 24.04:
 
 ```bash
-# Clone
-cd /opt
-sudo mkdir emission && sudo chown $USER:$USER emission
-cd emission
-git clone https://github.com/shashankoppo/emissionmain.git .
-
-# Build Admin Panel + Backend
-cd "emission admin panel/project"
-npm install
-cd server
-npx prisma generate
-npx prisma migrate deploy
-npx tsx src/seed.ts        # Creates admin account
-cd ..
-npm run build
-
-# Build Customer Website
-cd /opt/emission/emission/project
-npm install
-npm run build
+sudo apt update
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker $USER
+# Log out and back in, then continue
 ```
 
 ---
 
-## Step 3 — Configure
-
-**Backend `.env`:**
-```bash
-nano "/opt/emission/emission admin panel/project/server/.env"
-```
-```env
-PORT=3001
-DATABASE_URL="file:./dev.db"
-JWT_SECRET="PASTE_A_RANDOM_SECRET_HERE"
-```
-Generate a secret: `openssl rand -base64 32`
-
-**Customer `.env`:**
-```bash
-nano /opt/emission/emission/project/.env
-```
-```env
-VITE_API_URL=https://yourdomain.com/api
-```
-Then rebuild: `cd /opt/emission/emission/project && npm run build`
-
----
-
-## Step 4 — Start Backend
+## Deploy
 
 ```bash
-cd "/opt/emission/emission admin panel/project/server"
-pm2 start dist/index.js --name "emission-api"
-pm2 save && pm2 startup
+# 1. Clone
+git clone https://github.com/shashankoppo/emissionmain.git /opt/emission
+cd /opt/emission
+
+# 2. Set your secret key
+echo 'JWT_SECRET=paste-a-random-secret-here' > .env
+
+# 3. Launch everything
+docker compose up -d --build
 ```
 
-Test: `curl http://localhost:3001/api/health`
+**That's it.** ✅
 
----
-
-## Step 5 — Setup Nginx
-
-```bash
-sudo nano /etc/nginx/sites-available/emission
-```
-
-Paste this (replace `yourdomain.com`):
-
-```nginx
-server {
-    listen 80;
-    server_name yourdomain.com www.yourdomain.com;
-
-    root /opt/emission/emission/project/dist;
-    index index.html;
-
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    location /api {
-        proxy_pass http://127.0.0.1:3001;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /uploads {
-        proxy_pass http://127.0.0.1:3001/uploads;
-    }
-}
-
-server {
-    listen 80;
-    server_name admin.yourdomain.com;
-
-    root /opt/emission/emission\ admin\ panel/project/client/dist;
-    index index.html;
-
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-
-    location /api {
-        proxy_pass http://127.0.0.1:3001;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /uploads {
-        proxy_pass http://127.0.0.1:3001/uploads;
-    }
-}
-```
-
-Enable it:
-
-```bash
-sudo ln -s /etc/nginx/sites-available/emission /etc/nginx/sites-enabled/
-sudo rm /etc/nginx/sites-enabled/default
-sudo nginx -t && sudo systemctl restart nginx
-```
-
----
-
-## Step 6 — SSL (HTTPS)
-
-```bash
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com -d admin.yourdomain.com
-```
-
-Done. Auto-renews automatically.
+- Customer Website → `http://your-server-ip` (port 80)
+- Backend API → `http://your-server-ip:3001/api`
+- Admin Panel → `http://your-server-ip:3001` (served from backend)
 
 ---
 
@@ -165,16 +45,119 @@ Done. Auto-renews automatically.
 |---|---|
 | `admin@emission.com` | `admin123` |
 
-⚠️ Change this password after first login.
+⚠️ Change password after first login.
 
 ---
 
-## Updating Later
+## Add SSL (HTTPS) — Optional
+
+```bash
+sudo apt install -y certbot
+sudo certbot certonly --standalone -d yourdomain.com
+```
+
+Then update `docker-compose.yml` to mount the certs into nginx.
+
+---
+
+## Useful Commands
+
+```bash
+docker compose logs -f          # View live logs
+docker compose restart           # Restart everything
+docker compose down              # Stop everything
+docker compose up -d --build     # Rebuild & restart
+```
+
+---
+
+## Update to Latest Code
 
 ```bash
 cd /opt/emission
 git pull origin main
-cd "emission admin panel/project" && npm install && npm run build
-cd /opt/emission/emission/project && npm install && npm run build
-pm2 restart emission-api
+docker compose up -d --build
+```
+
+---
+
+## Without Docker (Manual)
+
+If you prefer not to use Docker, follow these 6 steps:
+
+### Step 1 — Install
+
+```bash
+sudo apt update && sudo apt upgrade -y
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt install -y nodejs nginx git build-essential
+sudo npm install -g pm2
+```
+
+### Step 2 — Clone & Build
+
+```bash
+cd /opt
+sudo mkdir emission && sudo chown $USER:$USER emission
+cd emission
+git clone https://github.com/shashankoppo/emissionmain.git .
+
+# Backend
+cd "emission admin panel/project"
+npm install
+cd server
+npx prisma generate && npx prisma migrate deploy && npx tsx src/seed.ts
+cd .. && npm run build
+
+# Frontend
+cd /opt/emission/emission/project
+npm install && npm run build
+```
+
+### Step 3 — Configure .env
+
+```bash
+nano "/opt/emission/emission admin panel/project/server/.env"
+```
+```env
+PORT=3001
+DATABASE_URL="file:./dev.db"
+JWT_SECRET="paste-a-random-secret"
+```
+
+### Step 4 — Start Backend
+
+```bash
+cd "/opt/emission/emission admin panel/project/server"
+pm2 start dist/index.js --name "emission-api"
+pm2 save && pm2 startup
+```
+
+### Step 5 — Nginx
+
+```bash
+sudo nano /etc/nginx/sites-available/emission
+```
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com;
+    root /opt/emission/emission/project/dist;
+    index index.html;
+    location / { try_files $uri $uri/ /index.html; }
+    location /api { proxy_pass http://127.0.0.1:3001; }
+    location /uploads { proxy_pass http://127.0.0.1:3001/uploads; }
+}
+```
+```bash
+sudo ln -s /etc/nginx/sites-available/emission /etc/nginx/sites-enabled/
+sudo rm /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl restart nginx
+```
+
+### Step 6 — SSL
+
+```bash
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d yourdomain.com
 ```

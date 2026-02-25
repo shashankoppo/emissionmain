@@ -1,37 +1,35 @@
+version: "3.8"
+
 services:
+  # Backend API + Admin Panel
   backend:
     build:
-      context: ./emission admin panel/project/server
+      context: ./emission admin panel/project
       dockerfile: Dockerfile
+    container_name: emission-api
+    restart: always
     ports:
       - "3001:3001"
     environment:
-      - NODE_ENV=production
+      - PORT=3001
       - DATABASE_URL=file:./dev.db
-      - JWT_SECRET=your_jwt_secret_here
-      - RAZORPAY_KEY_ID=your_razorpay_key_id
-      - RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+      - JWT_SECRET=${JWT_SECRET:-change-this-secret-in-production}
     volumes:
-      - ./emission admin panel/project/server/uploads:/app/uploads
-      - ./emission admin panel/project/server/prisma:/app/prisma
-    restart: always
+      - db-data:/app/server/prisma
+      - uploads:/app/server/uploads
 
-  admin-panel:
-    build:
-      context: ./emission admin panel/project/client
-      dockerfile: Dockerfile
-    ports:
-      - "5173:80"
-    depends_on:
-      - backend
-    restart: always
-
-  customer-site:
+  # Customer Website
+  frontend:
     build:
       context: ./emission/project
       dockerfile: Dockerfile
+    container_name: emission-web
+    restart: always
     ports:
-      - "5174:80"
+      - "80:80"
     depends_on:
       - backend
-    restart: always
+
+volumes:
+  db-data:
+  uploads:
