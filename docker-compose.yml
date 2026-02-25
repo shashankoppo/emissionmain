@@ -1,10 +1,8 @@
-version: "3.8"
-
 services:
   # Backend API + Admin Panel
   backend:
     build:
-      context: ./emission admin panel/project
+      context: "./emission admin panel/project"
       dockerfile: Dockerfile
     container_name: emission-api
     restart: always
