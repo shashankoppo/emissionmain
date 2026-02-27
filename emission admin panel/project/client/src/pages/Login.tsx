@@ -50,7 +50,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                placeholder="admin@emission.com"
+                placeholder="Enter your email"
               />
             </div>
 
@@ -84,10 +84,6 @@ export default function Login() {
             </button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-gray-500">
-            <p>Default credentials:</p>
-            <p className="font-mono text-xs mt-1">admin@emission.com / admin123</p>
-          </div>
         </div>
       </div>
     </div>
