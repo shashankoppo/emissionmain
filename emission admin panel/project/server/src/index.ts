@@ -58,6 +58,42 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Emission Admin API is running' });
 });
 
+// One-time backfill endpoint: enriches old orders with product name/price
+app.post('/api/admin/backfill-orders', async (req, res) => {
+  try {
+    const orders = await (prisma.order as any).findMany();
+    let updated = 0;
+    for (const order of orders) {
+      try {
+        let items: any[];
+        try {
+          items = typeof order.items === 'string' ? JSON.parse(order.items) : (order.items || []);
+        } catch { continue; }
+        const needsUpdate = items.some((it: any) => !it.name && it.productId);
+        if (!needsUpdate) continue;
+        const enrichedItems = await Promise.all(items.map(async (item: any) => {
+          if (item.name || !item.productId) return item;
+          try {
+            const product = await (prisma.product as any).findUnique({
+              where: { id: item.productId },
+              select: { name: true, retailPrice: true, price: true }
+            });
+            if (product) {
+              return { ...item, name: product.name, price: item.price || Number(product.retailPrice || product.price) || 0 };
+            }
+          } catch { }
+          return item;
+        }));
+        await (prisma.order as any).update({ where: { id: order.id }, data: { items: JSON.stringify(enrichedItems) } });
+        updated++;
+      } catch { }
+    }
+    res.json({ success: true, message: `Updated ${updated} of ${orders.length} orders.` });
+  } catch (error: any) {
+    res.status(500).json({ error: 'Backfill failed', details: error.message });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
   console.log(`API available at http://localhost:${PORT}/api`);

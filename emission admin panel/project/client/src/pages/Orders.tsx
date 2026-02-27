@@ -18,6 +18,7 @@ export default function Orders() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [backfilling, setBackfilling] = useState(false);
 
   useEffect(() => {
     fetchOrders();
@@ -31,6 +32,20 @@ export default function Orders() {
       console.error('Failed to fetch orders:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const runBackfill = async () => {
+    if (backfilling) return;
+    setBackfilling(true);
+    try {
+      const res = await api.post('/admin/backfill-orders');
+      alert(res.data.message || 'Done! Reload the page to see updated order details.');
+      fetchOrders();
+    } catch (err: any) {
+      alert('Backfill failed: ' + (err?.response?.data?.error || err.message));
+    } finally {
+      setBackfilling(false);
     }
   };
 
@@ -110,6 +125,15 @@ export default function Orders() {
           <p className="text-gray-500 mt-2 font-medium">Manage and track your customer shipments</p>
         </div>
         <div className="flex gap-3">
+          <button
+            onClick={runBackfill}
+            disabled={backfilling}
+            title="Fix missing product names in old orders"
+            className="flex items-center gap-3 bg-blue-50 text-blue-700 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all shadow-sm active:scale-95 disabled:opacity-50"
+          >
+            <Package className="w-4 h-4" />
+            {backfilling ? 'Fixing...' : 'Fix Order Data'}
+          </button>
           <button
             onClick={exportToCSV}
             className="flex items-center gap-3 bg-gray-50 text-gray-900 px-6 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-black hover:text-white transition-all shadow-sm active:scale-95"
