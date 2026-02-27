@@ -18,7 +18,7 @@ export default function Login() {
 
     try {
       await login(email, password);
-      navigate('/admin/dashboard');
+      navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.error || 'Invalid credentials');
     } finally {

@@ -9,18 +9,18 @@ export default function Sidebar() {
   const isActive = (path: string) => location.pathname === path;
 
   const menuItems = [
-    { href: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-    { href: '/admin/products', icon: Package, label: 'Products' },
-    { href: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
-    { href: '/admin/invoices', icon: FileText, label: 'Invoices' },
-    { href: '/admin/pos', icon: Zap, label: 'POS Terminal' },
-    { href: '/admin/courier', icon: Truck, label: 'Delivery' },
-    { href: '/admin/banners', icon: ImageIcon, label: 'Hero Banners' },
-    { href: '/admin/collections', icon: LayoutGrid, label: 'Masterpieces' },
-    { href: '/admin/enquiries', icon: MessageSquare, label: 'Enquiries' },
-    { href: '/admin/invoice-design', icon: Palette, label: 'Invoice Design' },
-    { href: '/admin/coupons', icon: Tag, label: 'Promotions' },
-    { href: '/admin/settings', icon: SettingsIcon, label: 'Settings' },
+    { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { href: '/products', icon: Package, label: 'Products' },
+    { href: '/orders', icon: ShoppingCart, label: 'Orders' },
+    { href: '/invoices', icon: FileText, label: 'Invoices' },
+    { href: '/pos', icon: Zap, label: 'POS Terminal' },
+    { href: '/courier', icon: Truck, label: 'Delivery' },
+    { href: '/banners', icon: ImageIcon, label: 'Hero Banners' },
+    { href: '/collections', icon: LayoutGrid, label: 'Masterpieces' },
+    { href: '/enquiries', icon: MessageSquare, label: 'Enquiries' },
+    { href: '/invoice-design', icon: Palette, label: 'Invoice Design' },
+    { href: '/coupons', icon: Tag, label: 'Promotions' },
+    { href: '/settings', icon: SettingsIcon, label: 'Settings' },
   ];
 
   return (
