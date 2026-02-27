@@ -34,7 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
 // Serve Admin Panel Client
-app.use(express.static(path.join(__dirname, '../../client/dist')));
+app.use('/admin', express.static(path.join(__dirname, '../../client/dist')));
 
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
