@@ -9,6 +9,15 @@ const api = axios.create({
     },
 });
 
+// Add request interceptor to attach token
+api.interceptors.request.use((config) => {
+    const token = localStorage.getItem('customerToken');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
 export const formatImageUrl = (url: string) => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
