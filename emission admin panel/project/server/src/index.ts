@@ -36,6 +36,11 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Serve Admin Panel Client
 app.use('/admin', express.static(path.join(__dirname, '../../client/dist')));
 
+// SPA Fallback for Admin Panel
+app.get('/admin/*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../../client/dist/index.html'));
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/enquiries', enquiryRoutes);

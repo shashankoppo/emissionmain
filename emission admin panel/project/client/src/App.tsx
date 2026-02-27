@@ -34,6 +34,7 @@ function AdminLayout() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/invoice-design" element={<InvoiceDesign />} />
           <Route path="/coupons" element={<Coupons />} />
+          <Route path="/" element={<Navigate to="/dashboard" />} />
         </Routes>
       </main>
     </div>
@@ -47,19 +48,18 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/admin">
       <AuthProvider>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route
-            path="/admin/*"
+            path="/*"
             element={
               <ProtectedRoute>
                 <AdminLayout />
               </ProtectedRoute>
             }
           />
-          <Route path="/" element={<Navigate to="/admin/dashboard" />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
