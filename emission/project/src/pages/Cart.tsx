@@ -347,7 +347,10 @@ export default function Cart({ onNavigate, cartItems = [], onUpdateCart, custome
                           productId: item.productId,
                           name: item.product?.name || 'Product',
                           quantity: item.quantity,
-                          price: Number(item.product?.retailPrice || item.product?.price) || 0
+                          price: Number(item.product?.retailPrice || item.product?.price) || 0,
+                          size: item.selectedSize,
+                          color: item.selectedColor,
+                          embroidery: item.embroidery
                         }))
                       }}
                       onSuccess={handlePaymentSuccess}

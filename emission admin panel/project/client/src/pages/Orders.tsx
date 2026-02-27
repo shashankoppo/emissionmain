@@ -247,15 +247,32 @@ export default function Orders() {
                   </div>
 
                   <div className="bg-gray-50 rounded-[32px] p-8">
-                    <h4 className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-6">Items Ordered</h4>
                     <div className="space-y-4">
                       {JSON.parse((selectedOrder as any).items || '[]').map((item: any, i: number) => (
-                        <div key={i} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-0 border-dashed">
-                          <div>
-                            <p className="text-sm font-black text-gray-900">{item.name || item.product?.name || 'Product'}</p>
-                            <span className="text-[10px] font-bold text-gray-400">Qty: {item.quantity}</span>
+                        <div key={i} className="py-4 border-b border-gray-100 last:border-0 border-dashed">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <p className="text-sm font-black text-gray-900">{item.name || item.product?.name || 'Product'}</p>
+                              <div className="flex flex-wrap gap-3 mt-1">
+                                <span className="text-[10px] font-bold text-gray-400 uppercase">Qty: {item.quantity}</span>
+                                {item.size && (
+                                  <span className="text-[10px] font-black text-black uppercase tracking-widest bg-gray-100 px-2 py-0.5 rounded">Size: {item.size}</span>
+                                )}
+                                {item.color && (
+                                  <span className="text-[10px] font-black text-black uppercase tracking-widest bg-gray-100 px-2 py-0.5 rounded">Color: {item.color}</span>
+                                )}
+                              </div>
+                            </div>
+                            <span className="text-sm font-black text-gray-900">₹{(Number(item.price || item.product?.retailPrice || 0) * item.quantity).toLocaleString()}</span>
                           </div>
-                          <span className="text-sm font-black text-gray-900">₹{(Number(item.price || item.product?.retailPrice || 0) * item.quantity).toLocaleString()}</span>
+
+                          {item.embroidery && (
+                            <div className="mt-2 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                              <p className="text-[8px] font-black text-gray-300 uppercase tracking-widest mb-1">Customization</p>
+                              <p className="text-[10px] font-bold text-black italic">"{item.embroidery.text}"</p>
+                              <p className="text-[8px] font-bold text-gray-400 uppercase mt-1">Pos: {item.embroidery.position}</p>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
