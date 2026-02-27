@@ -19,6 +19,7 @@ import Account from './pages/Account';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Orders from './pages/Orders';
+import OrderDetail from './pages/OrderDetail';
 import TrackOrder from './pages/TrackOrder';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
@@ -182,6 +183,8 @@ function App() {
 
       case 'orders':
         return <Orders onNavigate={handleNavigate} isLoggedIn={isLoggedIn} />;
+      case 'order-detail':
+        return <OrderDetail orderId={pageParam || ''} onNavigate={handleNavigate} />;
       case 'track-order':
         return <TrackOrder onNavigate={handleNavigate} />;
       case 'privacy':

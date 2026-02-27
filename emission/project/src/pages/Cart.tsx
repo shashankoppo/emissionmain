@@ -345,6 +345,7 @@ export default function Cart({ onNavigate, cartItems = [], onUpdateCart, custome
                         shippingAddress: `${checkoutForm.address}, ${checkoutForm.city}${checkoutForm.pincode ? `, ${checkoutForm.pincode}` : ''}`,
                         items: cartItems.map(item => ({
                           productId: item.productId,
+                          name: item.product?.name || 'Product',
                           quantity: item.quantity,
                           price: Number(item.product?.retailPrice || item.product?.price) || 0
                         }))

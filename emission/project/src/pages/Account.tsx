@@ -1,20 +1,43 @@
-import { Package, MapPin, LogOut, Settings, CreditCard } from 'lucide-react';
+import { Package, MapPin, LogOut, Settings, CreditCard, Loader2 } from 'lucide-react';
 import { PageType } from '../types';
+import { useState, useEffect } from 'react';
+import { customerAPI } from '../lib/api';
 
 interface AccountProps {
-  onNavigate: (page: PageType) => void;
+  onNavigate: (page: PageType, param?: string) => void;
   customer: { id: string; name: string; email: string; phone?: string } | null;
 }
 
 export default function Account({ onNavigate, customer }: AccountProps) {
-  // Use real user data from props, fallback to empty if null (though should be logged in)
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (customer) {
+      fetchOrders();
+    }
+  }, [customer]);
+
+  const fetchOrders = async () => {
+    try {
+      const data = await customerAPI.getOrders();
+      setOrders(data || []);
+    } catch (err) {
+      console.error('Failed to fetch account orders:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const user = {
     name: customer?.name || 'Customer',
     email: customer?.email || '',
     phone: customer?.phone || 'No phone provided',
-    address: 'Address not set', // We don't store address in Customer model yet based on schema.prisma
+    address: 'Address not set',
     memberSince: 'Member',
   };
+
+  const recentOrder = orders.length > 0 ? orders[0] : null;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -40,11 +63,11 @@ export default function Account({ onNavigate, customer }: AccountProps) {
             {/* Quick Stats */}
             <div className="bg-white rounded-2xl shadow-sm p-6 flex justify-between">
               <div className="text-center flex-1 border-r border-gray-100">
-                <p className="text-2xl font-bold text-black">0</p>
+                <p className="text-2xl font-bold text-black">{orders.length}</p>
                 <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">Total Orders</p>
               </div>
               <div className="text-center flex-1 border-r border-gray-100">
-                <p className="text-2xl font-bold text-black">0</p>
+                <p className="text-2xl font-bold text-black">{orders.filter(o => o.status === 'returned').length}</p>
                 <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">Returns</p>
               </div>
               <div className="text-center flex-1">
@@ -66,18 +89,46 @@ export default function Account({ onNavigate, customer }: AccountProps) {
               </div>
 
               <div className="space-y-4">
-                <div className="text-center py-8">
-                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Package className="w-8 h-8 text-gray-300" />
+                {loading ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="w-8 h-8 text-black animate-spin" />
                   </div>
-                  <p className="text-gray-500 font-medium">No orders yet</p>
-                  <button
-                    onClick={() => onNavigate('products')}
-                    className="text-blue-600 font-bold text-sm mt-2 hover:underline"
+                ) : recentOrder ? (
+                  <div
+                    onClick={() => onNavigate('orders')}
+                    className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-black/10 cursor-pointer transition"
                   >
-                    Start Shopping
-                  </button>
-                </div>
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center border border-gray-100">
+                        <Package className="w-6 h-6 text-black" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-black">Order #{recentOrder.id.split('-')[0].toUpperCase()}</p>
+                        <p className="text-xs text-gray-500">{new Date(recentOrder.createdAt).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-black">₹{Number(recentOrder.totalAmount).toLocaleString()}</p>
+                      <span className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${recentOrder.status === 'paid' ? 'bg-green-50 text-green-600' : 'bg-yellow-50 text-yellow-600'
+                        }`}>
+                        {recentOrder.status}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Package className="w-8 h-8 text-gray-300" />
+                    </div>
+                    <p className="text-gray-500 font-medium">No orders yet</p>
+                    <button
+                      onClick={() => onNavigate('products')}
+                      className="text-blue-600 font-bold text-sm mt-2 hover:underline"
+                    >
+                      Start Shopping
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 

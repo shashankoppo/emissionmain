@@ -113,13 +113,13 @@ router.post('/create-order', async (req, res) => {
         // This ensures data is NOT lost if the verification crashes later.
         let localOrder = null;
         if (orderDetails) {
-            localOrder = await prisma.order.create({
+            localOrder = await (prisma.order as any).create({
                 data: {
                     customerId: customerId || null,
                     customerName: orderDetails.customerName || 'Guest',
                     customerEmail: orderDetails.customerEmail || '',
                     customerPhone: orderDetails.customerPhone || null,
-                    totalAmount: parseFloat(amount) || 0,
+                    totalAmount: parseFloat(String(amount)) || 0,
                     status: 'pending',
                     paymentId: rzpOrder.id, // Temporary link
                     shippingAddress: orderDetails.shippingAddress || '',
@@ -187,21 +187,23 @@ router.post('/verify-payment', async (req, res) => {
         });
 
         if (existingOrder) {
-            order = await prisma.order.update({
+            order = await (prisma.order as any).update({
                 where: { id: existingOrder.id },
                 data: {
                     status: 'paid',
-                    paymentId: razorpay_payment_id, // Update to actual payment ID
+                    paymentId: razorpay_payment_id,
+                    customerId: customerId || (existingOrder as any).customerId,
+                    customerPhone: orderDetails?.customerPhone || (existingOrder as any).customerPhone,
                 }
             });
         } else {
             // Fallback for edge cases (should not happen with new flow)
-            order = await prisma.order.create({
+            order = await (prisma.order as any).create({
                 data: {
                     customerId: customerId || null,
                     customerName: orderDetails?.customerName || 'Guest',
                     customerEmail: orderDetails?.customerEmail || '',
-                    totalAmount: parseFloat(orderDetails?.totalAmount) || 0,
+                    totalAmount: parseFloat(String(orderDetails?.totalAmount)) || 0,
                     status: 'paid',
                     paymentId: razorpay_payment_id,
                     shippingAddress: orderDetails?.shippingAddress || '',
