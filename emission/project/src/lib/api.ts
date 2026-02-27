@@ -205,6 +205,10 @@ export const customerAPI = {
         const response = await api.post('/customers/login', { email, password });
         return response.data as { token: string; customer: { id: string; name: string; email: string; phone?: string } };
     },
+    getOrders: async () => {
+        const response = await api.get('/customers/orders');
+        return response.data.orders;
+    },
 };
 
 export default api;

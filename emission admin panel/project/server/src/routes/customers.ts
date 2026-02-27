@@ -1,11 +1,24 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/db';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'emission_admin_secret_key_change_in_production';
+
+// Auth middleware for customers
+const customerAuth = async (req: any, res: any, next: any) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) return res.status(401).json({ error: 'Unauthorized' });
+
+        const decoded: any = jwt.verify(token, JWT_SECRET);
+        req.customerId = decoded.id;
+        next();
+    } catch (error) {
+        res.status(401).json({ error: 'Unauthorized' });
+    }
+};
 
 // Register a new customer
 router.post('/register', async (req, res) => {
@@ -50,6 +63,20 @@ router.post('/login', async (req, res) => {
     } catch (error) {
         console.error('Customer login error:', error);
         res.status(500).json({ error: 'Login failed' });
+    }
+});
+
+// Get customer profile with orders
+router.get('/orders', customerAuth, async (req: any, res) => {
+    try {
+        const orders = await prisma.order.findMany({
+            where: { customerId: req.customerId },
+            orderBy: { createdAt: 'desc' }
+        });
+        res.json({ orders });
+    } catch (error) {
+        console.error('Fetch orders error:', error);
+        res.status(500).json({ error: 'Failed to fetch orders' });
     }
 });
 

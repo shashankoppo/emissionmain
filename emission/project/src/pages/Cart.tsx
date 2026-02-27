@@ -8,7 +8,7 @@ interface CartProps {
   onNavigate: (page: PageType, productId?: string) => void;
   cartItems?: CartItem[];
   onUpdateCart?: (items: CartItem[]) => void;
-  customer?: { name: string; email: string; phone?: string } | null;
+  customer?: { id: string; name: string; email: string; phone?: string } | null;
 }
 
 export default function Cart({ onNavigate, cartItems = [], onUpdateCart, customer }: CartProps) {
@@ -351,6 +351,7 @@ export default function Cart({ onNavigate, cartItems = [], onUpdateCart, custome
                       }}
                       onSuccess={handlePaymentSuccess}
                       onError={handlePaymentError}
+                      customerId={customer?.id}
                     />
                   </div>
                 ) : (

@@ -12,6 +12,7 @@ interface RazorpayCheckoutProps {
     };
     onSuccess: (paymentId: string, orderId: string) => void;
     onError: (error: string) => void;
+    customerId?: string;
 }
 
 declare global {
@@ -25,6 +26,7 @@ export default function RazorpayCheckout({
     orderDetails,
     onSuccess,
     onError,
+    customerId
 }: RazorpayCheckoutProps) {
     const [loading, setLoading] = useState(false);
 
@@ -96,6 +98,7 @@ export default function RazorpayCheckout({
                                     ...orderDetails,
                                     totalAmount: amount,
                                 },
+                                customerId,
                             }
                         );
 

@@ -139,6 +139,7 @@ router.post('/verify-payment', async (req, res) => {
             razorpay_payment_id,
             razorpay_signature,
             orderDetails,
+            customerId,
         } = req.body;
 
         if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
@@ -172,6 +173,7 @@ router.post('/verify-payment', async (req, res) => {
         // Payment verified - Save order to database
         const order = await prisma.order.create({
             data: {
+                customerId: customerId || null,
                 customerName: orderDetails.customerName || 'Guest',
                 customerEmail: orderDetails.customerEmail || '',
                 totalAmount: parseFloat(orderDetails.totalAmount) || 0,
