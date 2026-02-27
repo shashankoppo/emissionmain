@@ -46,7 +46,16 @@ export default function OrderDetail({ orderId, onNavigate }: OrderDetailProps) {
         );
     }
 
-    const items = JSON.parse(order.items || '[]');
+    const getItems = () => {
+        try {
+            if (!order.items) return [];
+            return typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+        } catch (e) {
+            console.error('Error parsing items', e);
+            return [];
+        }
+    };
+    const items = getItems();
     const date = new Date(order.createdAt).toLocaleDateString('en-IN', {
         day: '2-digit',
         month: 'long',

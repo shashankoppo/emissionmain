@@ -193,8 +193,11 @@ export default function Orders({ onNavigate, isLoggedIn }: OrdersProps) {
                                             <Package className="w-6 h-6 text-gray-300" />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Primary Item</p>
-                                            <p className="text-sm font-black text-black truncate uppercase tracking-tight">ID: {firstItem.productId?.split('-')[0] || 'PRD'}</p>
+                                            <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-1">Items</p>
+                                            <p className="text-sm font-black text-black truncate uppercase tracking-tight">
+                                                {firstItem.name || 'Product'}
+                                                {firstItem.size ? ` (${firstItem.size})` : ''}
+                                            </p>
                                             {items.length > 1 && (
                                                 <p className="text-[10px] font-bold text-gray-400 mt-1 uppercase">+ {items.length - 1} Additional Item{items.length > 2 ? 's' : ''}</p>
                                             )}

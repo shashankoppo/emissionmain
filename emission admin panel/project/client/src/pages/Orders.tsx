@@ -184,7 +184,7 @@ export default function Orders() {
                         {order.status}
                       </div>
                       <div className="flex flex-col gap-1">
-                        {JSON.parse((order as any).items || '[]').map((item: any, idx: number) => (
+                        {(typeof (order as any).items === 'string' ? JSON.parse((order as any).items || '[]') : (order as any).items || []).map((item: any, idx: number) => (
                           <span key={idx} className="text-[9px] font-bold text-gray-400 uppercase tracking-tight">
                             {item.name || 'Product'} {item.size ? `(${item.size})` : ''} x{item.quantity}
                           </span>
@@ -255,7 +255,7 @@ export default function Orders() {
 
                   <div className="bg-gray-50 rounded-[32px] p-8">
                     <div className="space-y-4">
-                      {JSON.parse((selectedOrder as any).items || '[]').map((item: any, i: number) => (
+                      {(typeof (selectedOrder as any).items === 'string' ? JSON.parse((selectedOrder as any).items || '[]') : (selectedOrder as any).items || []).map((item: any, i: number) => (
                         <div key={i} className="py-4 border-b border-gray-100 last:border-0 border-dashed">
                           <div className="flex justify-between items-start mb-2">
                             <div>
