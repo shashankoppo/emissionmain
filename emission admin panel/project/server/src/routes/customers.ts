@@ -1,7 +1,7 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import prisma from '../lib/db';
+import prisma from '../lib/db.js';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'emission_admin_secret_key_change_in_production';
