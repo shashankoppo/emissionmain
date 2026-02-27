@@ -95,14 +95,44 @@ router.put('/profile', customerAuth, async (req: any, res) => {
     }
 });
 
-// Get customer profile with orders
+// Get customer orders with enriched product details
 router.get('/orders', customerAuth, async (req: any, res) => {
     try {
-        const orders = await prisma.order.findMany({
+        const orders = await (prisma.order as any).findMany({
             where: { customerId: req.customerId },
             orderBy: { createdAt: 'desc' }
         });
-        res.json({ orders });
+
+        // Enrich each order's items with product names from the products table
+        const enriched = await Promise.all(orders.map(async (order: any) => {
+            let items: any[] = [];
+            try {
+                items = typeof order.items === 'string' ? JSON.parse(order.items || '[]') : (order.items || []);
+            } catch { items = []; }
+
+            const enrichedItems = await Promise.all(items.map(async (item: any) => {
+                if (item.name && item.name !== 'Product') return item;
+                if (!item.productId) return item;
+                try {
+                    const product = await (prisma.product as any).findUnique({
+                        where: { id: item.productId },
+                        select: { name: true, retailPrice: true, price: true }
+                    });
+                    if (product) {
+                        return {
+                            ...item,
+                            name: product.name,
+                            price: item.price || Number(product.retailPrice || product.price) || 0
+                        };
+                    }
+                } catch { }
+                return item;
+            }));
+
+            return { ...order, items: JSON.stringify(enrichedItems) };
+        }));
+
+        res.json({ orders: enriched });
     } catch (error) {
         console.error('Fetch orders error:', error);
         res.status(500).json({ error: 'Failed to fetch orders' });
