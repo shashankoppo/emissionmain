@@ -7,37 +7,30 @@ const router = Router();
 
 // Helper to get Razorpay instance with dynamic keys
 async function getRazorpayInstance() {
-    // First try env variables
-    let key_id = process.env.RAZORPAY_KEY_ID;
-    let key_secret = process.env.RAZORPAY_KEY_SECRET;
+    let key_id: string | undefined;
+    let key_secret: string | undefined;
 
-    console.log('--- RAZORPAY INIT ATTEMPT ---');
-    console.log('Current Time:', new Date().toISOString());
-    console.log('Env Key ID:', key_id ? 'EXISTS' : 'MISSING');
+    // Priority: Database settings (updated via Admin Panel) > Environment Variables
+    try {
+        const settings = await prisma.setting.findMany({
+            where: {
+                key: { in: ['RAZORPAY_KEY_ID', 'RAZORPAY_KEY_SECRET'] }
+            }
+        });
 
-    // If not in env, try database settings
-    if (!key_id || !key_secret) {
-        console.log('Fetching Razorpay keys from database...');
-        try {
-            const settings = await prisma.setting.findMany({
-                where: {
-                    key: { in: ['RAZORPAY_KEY_ID', 'RAZORPAY_KEY_SECRET'] }
-                }
-            });
+        const settingsMap = settings.reduce((acc: any, curr) => {
+            acc[curr.key] = curr.value;
+            return acc;
+        }, {});
 
-            const settingsMap = settings.reduce((acc: any, curr) => {
-                acc[curr.key] = curr.value;
-                return acc;
-            }, {});
+        key_id = settingsMap['RAZORPAY_KEY_ID'] || process.env.RAZORPAY_KEY_ID;
+        key_secret = settingsMap['RAZORPAY_KEY_SECRET'] || process.env.RAZORPAY_KEY_SECRET;
 
-            key_id = key_id || settingsMap['RAZORPAY_KEY_ID'];
-            key_secret = key_secret || settingsMap['RAZORPAY_KEY_SECRET'];
-
-            console.log('Database Key ID:', key_id ? 'FOUND' : 'NOT FOUND');
-            console.log('Database Secret:', key_secret ? 'FOUND (Length: ' + key_secret.length + ')' : 'NOT FOUND');
-        } catch (dbError) {
-            console.error('Database fetch failed during Razorpay init:', dbError);
-        }
+        console.log('Final Key ID Strategy:', key_id ? (settingsMap['RAZORPAY_KEY_ID'] ? 'DATABASE' : 'ENV') : 'NONE');
+    } catch (dbError) {
+        console.error('Database fetch failed during Razorpay init, falling back to Env:', dbError);
+        key_id = process.env.RAZORPAY_KEY_ID;
+        key_secret = process.env.RAZORPAY_KEY_SECRET;
     }
 
     if (!key_id || !key_secret) {
@@ -102,25 +95,44 @@ router.post('/create-order', async (req, res) => {
             });
         }
 
-        const { amount, currency = 'INR', receipt } = req.body;
-        // ... rest of the logic
+        const { amount, currency = 'INR', receipt, orderDetails, customerId } = req.body;
 
         if (!amount || amount <= 0) {
             return res.status(400).json({ error: 'Invalid amount' });
         }
 
         const options = {
-            amount: Math.round(amount * 100), // Convert to paise
+            amount: Math.round(amount * 100),
             currency,
             receipt: receipt || `receipt_${Date.now()}`,
-            payment_capture: 1, // Auto capture
         };
 
-        const order = await razorpay.orders.create(options);
+        const rzpOrder = await razorpay.orders.create(options);
+
+        // CREATE PENDING ORDER IN DATABASE IMMEDIATELY
+        // This ensures data is NOT lost if the verification crashes later.
+        let localOrder = null;
+        if (orderDetails) {
+            localOrder = await prisma.order.create({
+                data: {
+                    customerId: customerId || null,
+                    customerName: orderDetails.customerName || 'Guest',
+                    customerEmail: orderDetails.customerEmail || '',
+                    customerPhone: orderDetails.customerPhone || null,
+                    totalAmount: parseFloat(amount) || 0,
+                    status: 'pending',
+                    paymentId: rzpOrder.id, // Temporary link
+                    shippingAddress: orderDetails.shippingAddress || '',
+                    items: JSON.stringify(orderDetails.items || []),
+                    source: 'website'
+                },
+            });
+        }
 
         res.json({
             success: true,
-            order,
+            order: rzpOrder,
+            localOrderId: localOrder?.id
         });
     } catch (error: any) {
         console.error('Razorpay order creation failed:', error);
@@ -146,14 +158,12 @@ router.post('/verify-payment', async (req, res) => {
             return res.status(400).json({ error: 'Missing payment details' });
         }
 
-        // Verify signature
-        let key_secret = process.env.RAZORPAY_KEY_SECRET;
-        if (!key_secret) {
-            const setting = await prisma.setting.findUnique({ where: { key: 'RAZORPAY_KEY_SECRET' } });
-            key_secret = setting?.value;
-        }
+        // Verify signature - Prioritize DB Secret
+        const setting = await prisma.setting.findUnique({ where: { key: 'RAZORPAY_KEY_SECRET' } });
+        const key_secret = setting?.value || process.env.RAZORPAY_KEY_SECRET;
 
         if (!key_secret) {
+            console.error('CRITICAL: Payment verification failed - Razorpay secret missing');
             return res.status(500).json({ error: 'Razorpay secret not configured' });
         }
 
@@ -170,19 +180,35 @@ router.post('/verify-payment', async (req, res) => {
             });
         }
 
-        // Payment verified - Save order to database
-        const order = await prisma.order.create({
-            data: {
-                customerId: customerId || null,
-                customerName: orderDetails.customerName || 'Guest',
-                customerEmail: orderDetails.customerEmail || '',
-                totalAmount: parseFloat(orderDetails.totalAmount) || 0,
-                status: 'paid',
-                paymentId: razorpay_payment_id,
-                shippingAddress: orderDetails.shippingAddress || '',
-                items: JSON.stringify(orderDetails.items || []),
-            },
+        // Payment verified - Update existing order or create new one if missing
+        let order;
+        const existingOrder = await prisma.order.findFirst({
+            where: { paymentId: razorpay_order_id }
         });
+
+        if (existingOrder) {
+            order = await prisma.order.update({
+                where: { id: existingOrder.id },
+                data: {
+                    status: 'paid',
+                    paymentId: razorpay_payment_id, // Update to actual payment ID
+                }
+            });
+        } else {
+            // Fallback for edge cases (should not happen with new flow)
+            order = await prisma.order.create({
+                data: {
+                    customerId: customerId || null,
+                    customerName: orderDetails?.customerName || 'Guest',
+                    customerEmail: orderDetails?.customerEmail || '',
+                    totalAmount: parseFloat(orderDetails?.totalAmount) || 0,
+                    status: 'paid',
+                    paymentId: razorpay_payment_id,
+                    shippingAddress: orderDetails?.shippingAddress || '',
+                    items: JSON.stringify(orderDetails?.items || []),
+                },
+            });
+        }
 
         res.json({
             success: true,

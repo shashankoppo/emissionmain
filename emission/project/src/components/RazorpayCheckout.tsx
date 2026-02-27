@@ -64,7 +64,9 @@ export default function RazorpayCheckout({
                 {
                     amount,
                     currency: 'INR',
-                    receipt: `order_${Date.now()}`
+                    receipt: `order_${Date.now()}`,
+                    orderDetails,
+                    customerId,
                 }
             );
 
