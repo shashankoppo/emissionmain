@@ -8,6 +8,8 @@ interface ProductsProps {
   onNavigate: (page: PageType, productId?: string) => void;
   selectedCategory?: string;
   onAddToCart?: (productId: string, quantity: number, size?: string, color?: string) => void;
+  wishlist: string[];
+  onToggleWishlist: (productId: string) => void;
 }
 
 const categories = [
@@ -23,7 +25,7 @@ const categories = [
   }
 ];
 
-export default function Products({ onNavigate, selectedCategory, onAddToCart }: ProductsProps) {
+export default function Products({ onNavigate, selectedCategory, onAddToCart, wishlist, onToggleWishlist }: ProductsProps) {
   const [activeCategory, setActiveCategory] = useState(selectedCategory || 'all');
   const [activeSubcategory, setActiveSubcategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -296,7 +298,8 @@ export default function Products({ onNavigate, selectedCategory, onAddToCart }: 
                     key={product.id}
                     product={product}
                     onViewDetails={(id) => onNavigate('product-detail', id)}
-                    onEnquire={(id) => onNavigate('contact', id)}
+                    isWishlisted={wishlist.includes(product.id)}
+                    onToggleWishlist={onToggleWishlist}
                     onAddToCart={onAddToCart}
                   />
                 ))}

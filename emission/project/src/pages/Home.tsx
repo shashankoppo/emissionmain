@@ -6,10 +6,12 @@ import ProductCard from '../components/UI/ProductCard';
 
 interface HomeProps {
   onNavigate: (page: PageType, param?: string) => void;
-  onAddToCart?: (productId: string, quantity: number) => void;
+  onAddToCart?: (productId: string, quantity: number, size?: string, color?: string) => void;
+  wishlist: string[];
+  onToggleWishlist: (productId: string) => void;
 }
 
-export default function Home({ onNavigate, onAddToCart }: HomeProps) {
+export default function Home({ onNavigate, onAddToCart, wishlist, onToggleWishlist }: HomeProps) {
   const [bestSellers, setBestSellers] = useState<Product[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [collections, setCollections] = useState<FeaturedCollection[]>([]);
@@ -341,6 +343,8 @@ export default function Home({ onNavigate, onAddToCart }: HomeProps) {
                     product={product}
                     onViewDetails={(id) => onNavigate('product-detail', id)}
                     onAddToCart={onAddToCart}
+                    isWishlisted={wishlist.includes(product.id)}
+                    onToggleWishlist={onToggleWishlist}
                   />
                 </div>
               ))}

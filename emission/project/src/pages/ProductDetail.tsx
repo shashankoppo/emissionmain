@@ -14,9 +14,11 @@ interface ProductDetailProps {
   productId: string;
   onNavigate: (page: PageType, productId?: string) => void;
   onAddToCart?: (productId: string, quantity: number, size?: string, color?: string, embroidery?: EmbroideryCustomization | null) => void;
+  wishlist: string[];
+  onToggleWishlist: (productId: string) => void;
 }
 
-export default function ProductDetail({ productId, onNavigate, onAddToCart }: ProductDetailProps) {
+export default function ProductDetail({ productId, onNavigate, onAddToCart, wishlist, onToggleWishlist }: ProductDetailProps) {
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -271,10 +273,11 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart }: Pr
 
                   {/* Wishlist */}
                   <button
-                    onClick={() => onNavigate('contact', product.id)}
-                    className="p-3.5 border border-gray-200 rounded-xl hover:bg-gray-50 transition"
+                    onClick={() => onToggleWishlist(product.id)}
+                    className={`p-3.5 border rounded-xl transition-all duration-300 ${wishlist.includes(product.id) ? 'bg-red-500 border-red-500 text-white shadow-lg' : 'border-gray-200 hover:bg-gray-50 text-gray-900'}`}
+                    title={wishlist.includes(product.id) ? "Remove from Wishlist" : "Add to Wishlist"}
                   >
-                    <Heart className="w-5 h-5 text-gray-900" />
+                    <Heart className={`w-5 h-5 ${wishlist.includes(product.id) ? 'fill-current' : ''}`} />
                   </button>
                 </div>
 
@@ -400,7 +403,8 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart }: Pr
                   key={p.id}
                   product={p}
                   onViewDetails={(id) => onNavigate('product-detail', id)}
-                  onEnquire={(id) => onNavigate('contact', id)}
+                  isWishlisted={wishlist.includes(p.id)}
+                  onToggleWishlist={onToggleWishlist}
                   onAddToCart={onAddToCart}
                 />
               ))}

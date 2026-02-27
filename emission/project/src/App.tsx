@@ -23,6 +23,8 @@ import OrderDetail from './pages/OrderDetail';
 import TrackOrder from './pages/TrackOrder';
 import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
+import Wishlist from './pages/Wishlist';
+import PaymentSuccess from './pages/PaymentSuccess';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<PageType>('home');
@@ -32,6 +34,43 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [customerName, setCustomerName] = useState('');
   const [customer, setCustomer] = useState<any | null>(null);
+  const [wishlist, setWishlist] = useState<string[]>([]);
+
+  // Browser back button support
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state) {
+        setCurrentPage(event.state.page);
+        setPageParam(event.state.param);
+      } else {
+        setCurrentPage('home');
+        setPageParam(undefined);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    // Initial state
+    window.history.replaceState({ page: currentPage, param: pageParam }, '');
+
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Sync wishlist from localStorage
+  useEffect(() => {
+    const savedWishlist = localStorage.getItem('wishlist');
+    if (savedWishlist) {
+      try {
+        setWishlist(JSON.parse(savedWishlist));
+      } catch (err) {
+        console.error('Failed to parse wishlist', err);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('wishlist', JSON.stringify(wishlist));
+  }, [wishlist]);
 
   // Restore session from localStorage on app load
   useEffect(() => {
@@ -51,16 +90,31 @@ function App() {
   }, []);
 
   const handleNavigate = (page: PageType, param?: string) => {
-    // Gate cart and checkout — redirect to login if not logged in
-    if ((page === 'cart' || page === 'checkout') && !isLoggedIn) {
+    // Gate checkout — redirect to login if not logged in
+    if (page === 'checkout' && !isLoggedIn) {
       setCurrentPage('login');
       setPageParam(undefined);
+      window.history.pushState({ page: 'login', param: undefined }, '', '/login');
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
+
     setCurrentPage(page);
     setPageParam(param);
+
+    // Update browser history
+    const url = param ? `/${page}/${param}` : `/${page === 'home' ? '' : page}`;
+    window.history.pushState({ page, param }, '', url);
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleToggleWishlist = (productId: string) => {
+    setWishlist(prev =>
+      prev.includes(productId)
+        ? prev.filter(id => id !== productId)
+        : [...prev, productId]
+    );
   };
 
   const handleAddToCart = async (
@@ -147,6 +201,8 @@ function App() {
       register: 'Create Account - Emission',
       orders: 'My Orders - Emission',
       'track-order': 'Track Your Order - Emission',
+      wishlist: 'My Wishlist - Emission',
+      'payment-success': 'Order Placed Successfully - Emission',
     };
     document.title = pageTitles[currentPage] || 'Emission';
   }, [currentPage]);
@@ -154,11 +210,11 @@ function App() {
   const renderPage = () => {
     switch (currentPage) {
       case 'home':
-        return <Home onNavigate={handleNavigate} onAddToCart={handleAddToCart} />;
+        return <Home onNavigate={handleNavigate} onAddToCart={handleAddToCart} wishlist={wishlist} onToggleWishlist={handleToggleWishlist} />;
       case 'products':
-        return <Products onNavigate={handleNavigate} selectedCategory={pageParam} onAddToCart={handleAddToCart} />;
+        return <Products onNavigate={handleNavigate} selectedCategory={pageParam} onAddToCart={handleAddToCart} wishlist={wishlist} onToggleWishlist={handleToggleWishlist} />;
       case 'product-detail':
-        return <ProductDetail productId={pageParam || ''} onNavigate={handleNavigate} onAddToCart={handleAddToCart} />;
+        return <ProductDetail productId={pageParam || ''} onNavigate={handleNavigate} onAddToCart={handleAddToCart} wishlist={wishlist} onToggleWishlist={handleToggleWishlist} />;
       case 'industries':
         return <Industries onNavigate={handleNavigate} />;
       case 'oem':
@@ -175,7 +231,7 @@ function App() {
       case 'checkout':
         return <Cart onNavigate={handleNavigate} cartItems={cartItems} onUpdateCart={handleUpdateCart} customer={customer} />;
       case 'account':
-        return <Account onNavigate={handleNavigate} customer={customer} />;
+        return <Account onNavigate={handleNavigate} customer={customer} wishlist={wishlist} />;
       case 'login':
         return <Login onNavigate={handleNavigate} onLogin={handleLogin} />;
       case 'register':
@@ -187,12 +243,16 @@ function App() {
         return <OrderDetail orderId={pageParam || ''} onNavigate={handleNavigate} />;
       case 'track-order':
         return <TrackOrder onNavigate={handleNavigate} />;
+      case 'wishlist':
+        return <Wishlist onNavigate={handleNavigate} wishlist={wishlist} onToggleWishlist={handleToggleWishlist} onAddToCart={handleAddToCart} />;
+      case 'payment-success':
+        return <PaymentSuccess onNavigate={handleNavigate} />;
       case 'privacy':
         return <Privacy />;
       case 'terms':
         return <Terms />;
       default:
-        return <Home onNavigate={handleNavigate} />;
+        return <Home onNavigate={handleNavigate} onAddToCart={handleAddToCart} wishlist={wishlist} onToggleWishlist={handleToggleWishlist} />;
     }
   };
 
@@ -213,6 +273,7 @@ function App() {
             }
           }}
           onLogout={handleLogout}
+          wishlistCount={wishlist.length}
         />
       )}
 

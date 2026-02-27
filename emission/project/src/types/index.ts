@@ -134,4 +134,6 @@ export type PageType =
   | 'privacy'
   | 'terms'
   | 'returns'
-  | 'faq';
+  | 'faq'
+  | 'wishlist'
+  | 'payment-success';

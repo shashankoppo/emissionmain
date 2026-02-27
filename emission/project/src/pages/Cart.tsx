@@ -80,9 +80,8 @@ export default function Cart({ onNavigate, cartItems = [], onUpdateCart, custome
   const totalDue = Math.max(0, subtotal - discount);
 
   const handlePaymentSuccess = (_paymentId: string, _orderId: string) => {
-    alert('Order Placed Successfully!');
     if (onUpdateCart) onUpdateCart([]);
-    onNavigate('home');
+    onNavigate('payment-success');
   };
 
   const handlePaymentError = (error: string) => {

@@ -1,4 +1,4 @@
-import { Package, MapPin, LogOut, Settings, CreditCard, Loader2, X } from 'lucide-react';
+import { Package, MapPin, LogOut, Settings, Loader2, X } from 'lucide-react';
 import { PageType } from '../types';
 import { useState, useEffect } from 'react';
 import { customerAPI } from '../lib/api';
@@ -6,9 +6,10 @@ import { customerAPI } from '../lib/api';
 interface AccountProps {
   onNavigate: (page: PageType, param?: string) => void;
   customer: any;
+  wishlist: string[];
 }
 
-export default function Account({ onNavigate, customer }: AccountProps) {
+export default function Account({ onNavigate, customer, wishlist }: AccountProps) {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -111,7 +112,7 @@ export default function Account({ onNavigate, customer }: AccountProps) {
               <div className="bg-white rounded-2xl shadow-sm p-8">
                 <div className="flex items-center justify-between mb-8">
                   <h2 className="text-xl font-bold text-black uppercase tracking-tight">Edit Profile</h2>
-                  <button onClick={() => setIsEditing(false)} className="text-gray-400 hover:text-black">
+                  <button onClick={() => setIsEditing(false)} className="text-gray-400 hover:text-black" title="Close edit modal">
                     <X className="w-6 h-6" />
                   </button>
                 </div>
@@ -121,6 +122,7 @@ export default function Account({ onNavigate, customer }: AccountProps) {
                       <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Full Name</label>
                       <input
                         type="text"
+                        title="Full Name"
                         value={profile.name}
                         onChange={e => setProfile({ ...profile, name: e.target.value })}
                         className="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-black/5 outline-none"
@@ -130,6 +132,7 @@ export default function Account({ onNavigate, customer }: AccountProps) {
                       <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Phone</label>
                       <input
                         type="text"
+                        title="Phone Number"
                         value={profile.phone}
                         onChange={e => setProfile({ ...profile, phone: e.target.value })}
                         className="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-black/5 outline-none"
@@ -139,6 +142,7 @@ export default function Account({ onNavigate, customer }: AccountProps) {
                       <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Pincode</label>
                       <input
                         type="text"
+                        title="Pincode"
                         value={profile.pincode}
                         onChange={e => setProfile({ ...profile, pincode: e.target.value })}
                         className="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-black/5 outline-none"
@@ -147,6 +151,7 @@ export default function Account({ onNavigate, customer }: AccountProps) {
                     <div className="col-span-2">
                       <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Address</label>
                       <textarea
+                        title="Shipping Address"
                         value={profile.address}
                         onChange={e => setProfile({ ...profile, address: e.target.value })}
                         className="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-black/5 outline-none h-24"
@@ -156,6 +161,7 @@ export default function Account({ onNavigate, customer }: AccountProps) {
                       <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">City</label>
                       <input
                         type="text"
+                        title="City"
                         value={profile.city}
                         onChange={e => setProfile({ ...profile, city: e.target.value })}
                         className="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-black/5 outline-none"
@@ -165,6 +171,7 @@ export default function Account({ onNavigate, customer }: AccountProps) {
                       <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">State</label>
                       <input
                         type="text"
+                        title="State"
                         value={profile.state}
                         onChange={e => setProfile({ ...profile, state: e.target.value })}
                         className="w-full bg-gray-50 border-none rounded-xl py-3 px-4 text-sm focus:ring-2 focus:ring-black/5 outline-none"
@@ -201,8 +208,8 @@ export default function Account({ onNavigate, customer }: AccountProps) {
                     <p className="text-2xl font-bold text-black">{orders.filter(o => o.status === 'returned').length}</p>
                     <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">Returns</p>
                   </div>
-                  <div className="text-center flex-1">
-                    <p className="text-2xl font-bold text-black">0</p>
+                  <div className="text-center flex-1 cursor-pointer hover:bg-gray-50 transition" onClick={() => onNavigate('wishlist')}>
+                    <p className="text-2xl font-bold text-black">{wishlist.length}</p>
                     <p className="text-xs text-gray-500 uppercase tracking-wide mt-1">Wishlist</p>
                   </div>
                 </div>

@@ -11,6 +11,7 @@ interface HeaderProps {
   customerName?: string;
   onOpenCart?: () => void;
   onLogout?: () => void;
+  wishlistCount?: number;
 }
 
 export default function Header({
@@ -20,7 +21,8 @@ export default function Header({
   isLoggedIn = false,
   customerName = '',
   onOpenCart,
-  onLogout
+  onLogout,
+  wishlistCount = 0
 }: HeaderProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isShopDropdownOpen, setIsShopDropdownOpen] = useState(false);
@@ -168,11 +170,16 @@ export default function Header({
 
                 {/* Wishlist */}
                 <button
-                  onClick={() => onNavigate('products')}
-                  className="hidden sm:block p-2 text-gray-600 hover:text-black transition"
+                  onClick={() => onNavigate('wishlist')}
+                  className="hidden sm:block p-2 text-gray-600 hover:text-black transition relative"
                   title="Wishlist"
                 >
-                  <Heart className="w-[18px] h-[18px]" />
+                  <Heart className={`w-[18px] h-[18px] ${wishlistCount > 0 ? 'fill-black' : ''}`} />
+                  {wishlistCount > 0 && (
+                    <span className="absolute top-1.5 right-1.5 bg-red-500 text-white text-[8px] font-bold min-w-[14px] h-[14px] flex items-center justify-center rounded-full">
+                      {wishlistCount}
+                    </span>
+                  )}
                 </button>
 
                 {/* Account */}
@@ -331,6 +338,13 @@ export default function Header({
 
               {/* Mobile Quick Links */}
               <div className="mt-6 pt-6 border-t border-gray-200 space-y-1">
+                <button
+                  onClick={() => { onNavigate('wishlist'); setIsMenuOpen(false); }}
+                  className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
+                >
+                  <Heart className="w-4 h-4" />
+                  My Wishlist
+                </button>
                 <button
                   onClick={() => { onNavigate('track-order'); setIsMenuOpen(false); }}
                   className="flex items-center gap-3 w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"

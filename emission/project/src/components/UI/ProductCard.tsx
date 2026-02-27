@@ -5,11 +5,18 @@ import { Eye, Heart, Plus, Star } from 'lucide-react';
 interface ProductCardProps {
   product: Product;
   onViewDetails: (productId: string) => void;
-  onEnquire?: (productId: string) => void;
+  isWishlisted?: boolean;
+  onToggleWishlist?: (productId: string) => void;
   onAddToCart?: (productId: string, quantity: number, size?: string, color?: string) => void;
 }
 
-export default function ProductCard({ product, onViewDetails, onEnquire, onAddToCart }: ProductCardProps) {
+export default function ProductCard({
+  product,
+  onViewDetails,
+  isWishlisted = false,
+  onToggleWishlist,
+  onAddToCart
+}: ProductCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
 
@@ -72,12 +79,12 @@ export default function ProductCard({ product, onViewDetails, onEnquire, onAddTo
           <button
             onClick={(e) => {
               e.stopPropagation();
-              if (onEnquire) onEnquire(product.id);
+              if (onToggleWishlist) onToggleWishlist(product.id);
             }}
-            title="Add to Wishlist"
-            className="p-3 bg-white/90 backdrop-blur-md rounded-full text-gray-900 shadow-xl hover:bg-black hover:text-white transition-all duration-300"
+            title={isWishlisted ? "Remove from Wishlist" : "Add to Wishlist"}
+            className={`p-3 backdrop-blur-md rounded-full shadow-xl transition-all duration-300 ${isWishlisted ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-white/90 text-gray-900 hover:bg-black hover:text-white'}`}
           >
-            <Heart className="w-4 h-4" />
+            <Heart className={`w-4 h-4 ${isWishlisted ? 'fill-current' : ''}`} />
           </button>
           <button
             onClick={(e) => {
