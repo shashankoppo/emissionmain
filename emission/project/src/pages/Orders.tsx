@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, Eye, Truck, ChevronRight, ShoppingBag, Loader2, X } from 'lucide-react';
+import { Package, Truck, ChevronRight, ShoppingBag, Loader2, X } from 'lucide-react';
 import { PageType } from '../types';
 import { customerAPI } from '../lib/api';
 

@@ -93,6 +93,7 @@ export default function Orders() {
   const getStatusStyle = (status: string) => {
     switch (status.toLowerCase()) {
       case 'pending': return 'bg-orange-50 text-orange-600 border-orange-100';
+      case 'paid': return 'bg-emerald-50 text-emerald-600 border-emerald-100';
       case 'processing': return 'bg-blue-50 text-blue-600 border-blue-100';
       case 'shipped': return 'bg-purple-50 text-purple-600 border-purple-100';
       case 'delivered': return 'bg-green-50 text-green-600 border-green-100';
@@ -193,6 +194,7 @@ export default function Orders() {
                         className="bg-gray-50 border-none rounded-xl py-2 px-4 text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-black/5 outline-none transition"
                       >
                         <option value="pending">Pending</option>
+                        <option value="paid">Paid</option>
                         <option value="processing">Processing</option>
                         <option value="shipped">Shipped</option>
                         <option value="delivered">Delivered</option>
