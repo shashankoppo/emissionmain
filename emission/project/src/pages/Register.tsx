@@ -46,7 +46,7 @@ export default function Register({ onNavigate, onRegister }: RegisterProps) {
                 password: formData.password,
             });
             localStorage.setItem('customerToken', result.token);
-            localStorage.setItem('customerInfo', JSON.stringify(result.customer));
+            localStorage.setItem('customerUser', JSON.stringify(result.customer));
             onRegister(result.customer.name, result.customer.email);
         } catch (err: any) {
             const msg = err?.response?.data?.error || 'Registration failed. Please try again.';

@@ -66,6 +66,35 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// Get customer profile
+router.get('/profile', customerAuth, async (req: any, res) => {
+    try {
+        const customer = await prisma.customer.findUnique({
+            where: { id: req.customerId },
+            select: { id: true, name: true, email: true, phone: true, address: true, city: true, state: true, pincode: true }
+        });
+        res.json({ customer });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch profile' });
+    }
+});
+
+// Update customer profile
+router.put('/profile', customerAuth, async (req: any, res) => {
+    try {
+        const { name, phone, address, city, state, pincode } = req.body;
+        const customer = await prisma.customer.update({
+            where: { id: req.customerId },
+            data: { name, phone, address, city, state, pincode },
+            select: { id: true, name: true, email: true, phone: true, address: true, city: true, state: true, pincode: true }
+        });
+        res.json({ customer });
+    } catch (error) {
+        console.error('Update profile error:', error);
+        res.status(500).json({ error: 'Failed to update profile' });
+    }
+});
+
 // Get customer profile with orders
 router.get('/orders', customerAuth, async (req: any, res) => {
     try {

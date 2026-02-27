@@ -31,21 +31,21 @@ function App() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [customerName, setCustomerName] = useState('');
-  const [customer, setCustomer] = useState<{ id: string; name: string; email: string; phone?: string } | null>(null);
+  const [customer, setCustomer] = useState<any | null>(null);
 
   // Restore session from localStorage on app load
   useEffect(() => {
     const token = localStorage.getItem('customerToken');
-    const info = localStorage.getItem('customerInfo');
+    const info = localStorage.getItem('customerUser');
     if (token && info) {
       try {
         const customerData = JSON.parse(info);
         setIsLoggedIn(true);
         setCustomerName(customerData.name || '');
         setCustomer(customerData);
-      } catch {
+      } catch (err) {
         localStorage.removeItem('customerToken');
-        localStorage.removeItem('customerInfo');
+        localStorage.removeItem('customerUser');
       }
     }
   }, []);

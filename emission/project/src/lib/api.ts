@@ -208,11 +208,19 @@ export const couponAPI = {
 export const customerAPI = {
     register: async (data: { name: string; email: string; password: string; phone?: string }) => {
         const response = await api.post('/customers/register', data);
-        return response.data as { token: string; customer: { id: string; name: string; email: string; phone?: string } };
+        return response.data as { token: string; customer: any };
     },
     login: async (email: string, password: string) => {
         const response = await api.post('/customers/login', { email, password });
-        return response.data as { token: string; customer: { id: string; name: string; email: string; phone?: string } };
+        return response.data as { token: string; customer: any };
+    },
+    getProfile: async () => {
+        const response = await api.get('/customers/profile');
+        return response.data;
+    },
+    updateProfile: async (data: any) => {
+        const response = await api.put('/customers/profile', data);
+        return response.data;
     },
     getOrders: async () => {
         const response = await api.get('/customers/orders');

@@ -183,6 +183,13 @@ export default function Orders() {
                         {getStatusIcon(order.status)}
                         {order.status}
                       </div>
+                      <div className="flex flex-col gap-1">
+                        {JSON.parse((order as any).items || '[]').map((item: any, idx: number) => (
+                          <span key={idx} className="text-[9px] font-bold text-gray-400 uppercase tracking-tight">
+                            {item.name || 'Product'} {item.size ? `(${item.size})` : ''} x{item.quantity}
+                          </span>
+                        ))}
+                      </div>
                       <span className="text-[8px] font-black text-gray-300 uppercase tracking-[0.2em]">{order.source || 'Website'}</span>
                     </div>
                   </td>

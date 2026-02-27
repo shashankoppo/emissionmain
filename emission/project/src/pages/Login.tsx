@@ -23,7 +23,7 @@ export default function Login({ onNavigate, onLogin }: LoginProps) {
         try {
             const result = await customerAPI.login(email, password);
             localStorage.setItem('customerToken', result.token);
-            localStorage.setItem('customerInfo', JSON.stringify(result.customer));
+            localStorage.setItem('customerUser', JSON.stringify(result.customer));
             onLogin(result.customer.name, result.customer.email);
         } catch {
             setError('Invalid email or password. Please try again.');
