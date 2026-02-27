@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/db.js';
 import { authMiddleware } from '../middleware/auth.js';
 import fs from 'fs';
 import path from 'path';
@@ -10,7 +10,6 @@ const __dirname = path.dirname(__filename);
 const logFile = path.join(__dirname, '../../debug_settings.log');
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Get all settings (protected)
 router.get('/', authMiddleware, async (req, res) => {

@@ -15,14 +15,13 @@ import collectionRoutes from './routes/collections.js';
 import invoiceRoutes from './routes/invoices.js';
 import couponRoutes from './routes/coupons.js';
 import customerRoutes from './routes/customers.js';
-import { PrismaClient } from '@prisma/client';
+import prisma from './lib/db.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const prisma = new PrismaClient();
 
 // Trust proxy for Cloudflare/Nginx
 app.set('trust proxy', 1);

@@ -1,10 +1,9 @@
 import { Router } from 'express';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
-import { PrismaClient } from '@prisma/client';
+import prisma from '../lib/db.js';
 
 const router = Router();
-const prisma = new PrismaClient();
 
 // Helper to get Razorpay instance with dynamic keys
 async function getRazorpayInstance() {
@@ -12,28 +11,33 @@ async function getRazorpayInstance() {
     let key_id = process.env.RAZORPAY_KEY_ID;
     let key_secret = process.env.RAZORPAY_KEY_SECRET;
 
-    console.log('Razorpay Init - Env Key ID:', key_id ? 'EXISTS' : 'MISSING');
-    console.log('Razorpay Init - Env Key Secret:', key_secret ? 'EXISTS' : 'MISSING');
+    console.log('--- RAZORPAY INIT ATTEMPT ---');
+    console.log('Current Time:', new Date().toISOString());
+    console.log('Env Key ID:', key_id ? 'EXISTS' : 'MISSING');
 
     // If not in env, try database settings
     if (!key_id || !key_secret) {
         console.log('Fetching Razorpay keys from database...');
-        const settings = await prisma.setting.findMany({
-            where: {
-                key: { in: ['RAZORPAY_KEY_ID', 'RAZORPAY_KEY_SECRET'] }
-            }
-        });
+        try {
+            const settings = await prisma.setting.findMany({
+                where: {
+                    key: { in: ['RAZORPAY_KEY_ID', 'RAZORPAY_KEY_SECRET'] }
+                }
+            });
 
-        const settingsMap = settings.reduce((acc: any, curr) => {
-            acc[curr.key] = curr.value;
-            return acc;
-        }, {});
+            const settingsMap = settings.reduce((acc: any, curr) => {
+                acc[curr.key] = curr.value;
+                return acc;
+            }, {});
 
-        key_id = key_id || settingsMap['RAZORPAY_KEY_ID'];
-        key_secret = key_secret || settingsMap['RAZORPAY_KEY_SECRET'];
+            key_id = key_id || settingsMap['RAZORPAY_KEY_ID'];
+            key_secret = key_secret || settingsMap['RAZORPAY_KEY_SECRET'];
 
-        console.log('DB Key ID:', key_id ? 'FOUND' : 'NOT FOUND');
-        console.log('DB Key Secret:', key_secret ? 'FOUND' : 'NOT FOUND');
+            console.log('Database Key ID:', key_id ? 'FOUND' : 'NOT FOUND');
+            console.log('Database Secret:', key_secret ? 'FOUND (Length: ' + key_secret.length + ')' : 'NOT FOUND');
+        } catch (dbError) {
+            console.error('Database fetch failed during Razorpay init:', dbError);
+        }
     }
 
     if (!key_id || !key_secret) {
@@ -41,11 +45,43 @@ async function getRazorpayInstance() {
         return null;
     }
 
-    return new Razorpay({
-        key_id,
-        key_secret,
-    });
+    try {
+        const instance = new Razorpay({
+            key_id,
+            key_secret,
+        });
+        console.log('Razorpay instance created successfully');
+        return instance;
+    } catch (initError) {
+        console.error('Razorpay SDK failed to initialize with provided keys:', initError);
+        return null;
+    }
 }
+
+// Check Razorpay Configuration Status
+router.get('/status', async (req, res) => {
+    try {
+        const rzp = await getRazorpayInstance();
+        const settings = await prisma.setting.findMany({
+            where: { key: { in: ['RAZORPAY_KEY_ID', 'RAZORPAY_KEY_SECRET'] } }
+        });
+
+        const hasKey = settings.some(s => s.key === 'RAZORPAY_KEY_ID' && s.value && s.value.length > 5);
+        const hasSecret = settings.some(s => s.key === 'RAZORPAY_KEY_SECRET' && s.value && s.value.length > 5);
+
+        res.json({
+            configured: !!rzp,
+            details: {
+                hasKeyId: hasKey,
+                hasSecret: hasSecret,
+                envKeyId: !!process.env.RAZORPAY_KEY_ID,
+                envSecret: !!process.env.RAZORPAY_KEY_SECRET
+            }
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to check status' });
+    }
+});
 
 // Create Razorpay order
 router.post('/create-order', async (req, res) => {
