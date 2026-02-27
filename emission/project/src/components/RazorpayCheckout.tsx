@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../lib/api';
 
 interface RazorpayCheckoutProps {
     amount: number;
@@ -49,7 +49,7 @@ export default function RazorpayCheckout({
             }
 
             // 1. Fetch public Razorpay Key ID
-            const { data: settingsResponse } = await axios.get(`${import.meta.env.VITE_API_URL}/settings/public`);
+            const { data: settingsResponse } = await api.get('/settings/public');
             const razorpayKey = settingsResponse.RAZORPAY_KEY_ID;
 
             if (!razorpayKey) {
@@ -57,8 +57,8 @@ export default function RazorpayCheckout({
             }
 
             // 2. Create order on backend
-            const { data: orderResponse } = await axios.post(
-                `${import.meta.env.VITE_API_URL}/payment/create-order`,
+            const { data: orderResponse } = await api.post(
+                '/payment/create-order',
                 {
                     amount,
                     currency: 'INR',
@@ -86,8 +86,8 @@ export default function RazorpayCheckout({
                         setLoading(true);
 
                         // 3. Verify payment on backend
-                        const { data } = await axios.post(
-                            `${import.meta.env.VITE_API_URL}/payment/verify-payment`,
+                        const { data } = await api.post(
+                            '/payment/verify-payment',
                             {
                                 razorpay_order_id: response.razorpay_order_id,
                                 razorpay_payment_id: response.razorpay_payment_id,

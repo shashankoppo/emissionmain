@@ -66,16 +66,25 @@ router.get('/status', async (req, res) => {
             where: { key: { in: ['RAZORPAY_KEY_ID', 'RAZORPAY_KEY_SECRET'] } }
         });
 
-        const hasKey = settings.some(s => s.key === 'RAZORPAY_KEY_ID' && s.value && s.value.length > 5);
-        const hasSecret = settings.some(s => s.key === 'RAZORPAY_KEY_SECRET' && s.value && s.value.length > 5);
+        const rzpKey = settings.find(s => s.key === 'RAZORPAY_KEY_ID');
+        const rzpSecret = settings.find(s => s.key === 'RAZORPAY_KEY_SECRET');
+
+        const mask = (str: string | undefined) => {
+            if (!str || str.length < 8) return 'MISSING/TOO_SHORT';
+            return `${str.substring(0, 8)}...${str.substring(str.length - 4)}`;
+        };
 
         res.json({
             configured: !!rzp,
-            details: {
-                hasKeyId: hasKey,
-                hasSecret: hasSecret,
-                envKeyId: !!process.env.RAZORPAY_KEY_ID,
-                envSecret: !!process.env.RAZORPAY_KEY_SECRET
+            database_settings: {
+                total_settings: settings.length,
+                RAZORPAY_KEY_ID: mask(rzpKey?.value),
+                RAZORPAY_KEY_SECRET: mask(rzpSecret?.value),
+                all_keys_found: settings.map(s => s.key)
+            },
+            environment_variables: {
+                RAZORPAY_KEY_ID_EXISTS: !!process.env.RAZORPAY_KEY_ID,
+                RAZORPAY_KEY_SECRET_EXISTS: !!process.env.RAZORPAY_KEY_SECRET
             }
         });
     } catch (error) {
