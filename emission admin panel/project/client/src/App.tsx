@@ -15,6 +15,7 @@ import BannerManagement from './pages/Banners';
 import CollectionManagement from './pages/Collections';
 import InvoiceDesign from './pages/InvoiceDesign';
 import Coupons from './pages/Coupons';
+import MailTemplates from './pages/MailTemplates';
 
 function AdminLayout() {
   return (
@@ -34,6 +35,7 @@ function AdminLayout() {
           <Route path="/settings" element={<Settings />} />
           <Route path="/invoice-design" element={<InvoiceDesign />} />
           <Route path="/coupons" element={<Coupons />} />
+          <Route path="/mail-settings" element={<MailTemplates />} />
           <Route path="/" element={<Navigate to="/dashboard" />} />
         </Routes>
       </main>

@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../middleware/auth.js';
 
 import prisma from '../lib/db.js';
+import { sendEmail } from '../services/email.js';
 
 const router = Router();
 
@@ -66,6 +67,14 @@ router.post('/', async (req, res) => {
         source: source || 'website'
       }
     });
+
+    // Send order success email silently
+    sendEmail(order.customerEmail, 'order_success', {
+      customerName: order.customerName,
+      orderId: order.id,
+      amount: order.totalAmount.toString(),
+    });
+
     res.json(order);
   } catch (error) {
     console.error('Order creation error:', error);
@@ -79,6 +88,14 @@ router.patch('/:id/status', authMiddleware, async (req, res) => {
       where: { id: req.params.id },
       data: { status: req.body.status },
     });
+
+    if (req.body.status === 'rejected' || req.body.status === 'cancelled') {
+      sendEmail(order.customerEmail, 'order_rejected', {
+        customerName: order.customerName,
+        orderId: order.id,
+      });
+    }
+
     res.json(order);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update order' });

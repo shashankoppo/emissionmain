@@ -2,6 +2,7 @@ import { Router } from 'express';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import prisma from '../lib/db.js';
+import { sendEmail } from '../services/email.js';
 
 const router = Router();
 
@@ -216,6 +217,13 @@ router.post('/verify-payment', async (req, res) => {
             success: true,
             message: 'Payment verified successfully',
             order
+        });
+
+        // Send order success email
+        sendEmail(order.customerEmail, 'order_success', {
+            customerName: order.customerName,
+            orderId: order.id,
+            amount: order.totalAmount.toString(),
         });
     } catch (error: any) {
         console.error('Payment verification failed:', error);

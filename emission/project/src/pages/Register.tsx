@@ -73,7 +73,7 @@ export default function Register({ onNavigate, onRegister }: RegisterProps) {
                     <h1 className="text-5xl font-bold leading-tight mb-6">
                         Join the<br />movement.
                     </h1>
-                    <p className="text-lg text-gray-400 max-w-md">
+                    <p className="text-lg text-gray-300 max-w-md">
                         Create your account and unlock exclusive access to premium sportswear, medical wear, and personalized shopping.
                     </p>
                     <div className="mt-8 space-y-4">

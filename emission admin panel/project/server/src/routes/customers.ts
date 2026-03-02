@@ -2,6 +2,7 @@ import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../lib/db.js';
+import { sendEmail } from '../services/email.js';
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'emission_admin_secret_key_change_in_production';
@@ -35,6 +36,12 @@ router.post('/register', async (req, res) => {
         const customer = await prisma.customer.create({
             data: { name, email, password: hashedPassword, phone },
         });
+
+        // Send welcome email
+        sendEmail(customer.email, 'welcome_email', {
+            customerName: customer.name
+        });
+
         const token = jwt.sign({ id: customer.id, email: customer.email }, JWT_SECRET, { expiresIn: '30d' });
         res.json({ token, customer: { id: customer.id, name: customer.name, email: customer.email, phone: customer.phone } });
     } catch (error) {

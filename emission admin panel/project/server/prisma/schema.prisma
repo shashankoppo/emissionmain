@@ -139,7 +139,18 @@ model Banner {
   imageUrl  String
   link      String?  @default("/products")
   active    Boolean  @default(true)
+  category  String   @default("home")
   order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MailTemplate {
+  id        String   @id @default(uuid())
+  type      String   @unique
+  subject   String
+  body      String
+  active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

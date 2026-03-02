@@ -49,11 +49,11 @@ export default function Login({ onNavigate, onLogin }: LoginProps) {
                     <h1 className="text-5xl font-bold leading-tight mb-6">
                         Welcome<br />back.
                     </h1>
-                    <p className="text-lg text-gray-400 max-w-md">
+                    <p className="text-lg text-gray-300 max-w-md">
                         Sign in to your account to track orders, manage your wishlist, and enjoy a seamless shopping experience.
                     </p>
                 </div>
-                <div className="relative z-10 flex gap-8 text-sm text-gray-500">
+                <div className="relative z-10 flex gap-8 text-sm text-gray-400">
                     <div>
                         <p className="text-3xl font-bold text-white">10K+</p>
                         <p>Happy Customers</p>

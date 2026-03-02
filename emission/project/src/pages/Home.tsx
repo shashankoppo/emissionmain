@@ -35,7 +35,7 @@ export default function Home({ onNavigate, onAddToCart, wishlist, onToggleWishli
 
   const fetchBanners = async () => {
     try {
-      const data = await bannerAPI.getAll();
+      const data = await bannerAPI.getAll('home');
       setBanners(data);
     } catch (err) {
       console.error('Failed to fetch banners', err);

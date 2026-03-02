@@ -166,8 +166,9 @@ export interface Banner {
 }
 
 export const bannerAPI = {
-    getAll: async (): Promise<Banner[]> => {
-        const response = await api.get('/banners');
+    getAll: async (category?: string): Promise<Banner[]> => {
+        const url = category ? `/banners?category=${category}` : '/banners';
+        const response = await api.get(url);
         return response.data.map((b: any) => ({
             ...b,
             imageUrl: formatImageUrl(b.imageUrl)

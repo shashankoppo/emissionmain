@@ -382,7 +382,7 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart, wish
               <div className="mt-8 bg-black text-white p-6 rounded-2xl flex items-center justify-between group cursor-pointer hover:bg-gray-900 transition" onClick={() => onNavigate('contact')}>
                 <div>
                   <h3 className="font-bold text-lg mb-1">Buy for your Team?</h3>
-                  <p className="text-gray-400 text-sm">Get upto 40% OFF on bulk orders.</p>
+                  <p className="text-gray-300 text-sm font-medium">Get upto 40% OFF on bulk orders.</p>
                 </div>
                 <div className="bg-white/10 p-3 rounded-full group-hover:bg-white/20 transition">
                   <Package className="w-6 h-6" />

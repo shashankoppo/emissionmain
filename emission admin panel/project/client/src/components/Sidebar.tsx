@@ -1,4 +1,4 @@
-import { Package, MessageSquare, ShoppingCart, LogOut, LayoutDashboard, Settings as SettingsIcon, FileText, Zap, Truck, Image as ImageIcon, LayoutGrid, Palette, Tag } from 'lucide-react';
+import { Package, MessageSquare, ShoppingCart, LogOut, LayoutDashboard, Settings as SettingsIcon, FileText, Zap, Truck, Image as ImageIcon, LayoutGrid, Palette, Tag, Mail } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -20,6 +20,7 @@ export default function Sidebar() {
     { href: '/enquiries', icon: MessageSquare, label: 'Enquiries' },
     { href: '/invoice-design', icon: Palette, label: 'Invoice Design' },
     { href: '/coupons', icon: Tag, label: 'Promotions' },
+    { href: '/mail-settings', icon: Mail, label: 'Mail Settings' },
     { href: '/settings', icon: SettingsIcon, label: 'Settings' },
   ];
 

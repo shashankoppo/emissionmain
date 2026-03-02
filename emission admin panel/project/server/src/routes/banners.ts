@@ -8,8 +8,12 @@ const prisma = new PrismaClient();
 // Get all active banners (public)
 router.get('/', async (req, res) => {
     try {
+        const { category } = req.query;
         const banners = await prisma.banner.findMany({
-            where: { active: true },
+            where: {
+                active: true,
+                ...(category ? { category: String(category) } : {})
+            },
             orderBy: { order: 'asc' }
         });
         res.json(banners);
@@ -32,7 +36,7 @@ router.get('/admin', authMiddleware, async (req, res) => {
 
 // Admin: Create banner (protected)
 router.post('/', authMiddleware, async (req, res) => {
-    const { title, subtitle, imageUrl, link, active, order } = req.body;
+    const { title, subtitle, imageUrl, link, active, order, category } = req.body;
     try {
         const banner = await prisma.banner.create({
             data: {
@@ -41,6 +45,7 @@ router.post('/', authMiddleware, async (req, res) => {
                 imageUrl,
                 link,
                 active: active !== undefined ? active : true,
+                category: category || 'home',
                 order: parseInt(order as any) || 0
             }
         });
@@ -54,7 +59,7 @@ router.post('/', authMiddleware, async (req, res) => {
 // Admin: Update banner (protected)
 router.put('/:id', authMiddleware, async (req, res) => {
     const { id } = req.params;
-    const { title, subtitle, imageUrl, link, active, order } = req.body;
+    const { title, subtitle, imageUrl, link, active, order, category } = req.body;
     try {
         const banner = await prisma.banner.update({
             where: { id },
@@ -64,6 +69,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
                 imageUrl,
                 link,
                 active: active !== undefined ? active : true,
+                category: category || 'home',
                 order: parseInt(order as any) || 0
             }
         });

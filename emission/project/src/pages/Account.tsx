@@ -98,7 +98,7 @@ export default function Account({ onNavigate, customer, wishlist }: AccountProps
             </div>
             <div>
               <h1 className="text-3xl font-bold mb-1">Hello, {user.name}</h1>
-              <p className="text-gray-400">{user.email}</p>
+              <p className="text-gray-300">{user.email}</p>
             </div>
           </div>
         </div>

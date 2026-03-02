@@ -15,6 +15,7 @@ import collectionRoutes from './routes/collections.js';
 import invoiceRoutes from './routes/invoices.js';
 import couponRoutes from './routes/coupons.js';
 import customerRoutes from './routes/customers.js';
+import mailTemplateRoutes from './routes/mailTemplates.js';
 import prisma from './lib/db.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -53,6 +54,7 @@ app.use('/api/collections', collectionRoutes);
 app.use('/api/invoices', invoiceRoutes);
 app.use('/api/coupons', couponRoutes);
 app.use('/api/customers', customerRoutes);
+app.use('/api/mail-templates', mailTemplateRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Emission Admin API is running' });

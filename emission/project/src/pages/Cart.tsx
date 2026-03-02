@@ -262,8 +262,8 @@ export default function Cart({ onNavigate, cartItems = [], onUpdateCart, custome
                       <div className="flex-1">
                         <p className="font-bold text-sm line-clamp-1">{item.product?.name}</p>
                         <div className="flex gap-2 mt-2">
-                          {item.selectedSize && <span className="text-[8px] font-black text-gray-500 uppercase">S: {item.selectedSize}</span>}
-                          {item.selectedColor && <span className="text-[8px] font-black text-gray-500 uppercase">C: {item.selectedColor}</span>}
+                          {item.selectedSize && <span className="text-[8px] font-black text-gray-300 uppercase">S: {item.selectedSize}</span>}
+                          {item.selectedColor && <span className="text-[8px] font-black text-gray-300 uppercase">C: {item.selectedColor}</span>}
                         </div>
                       </div>
                       <p className="font-black text-sm tracking-tight text-white/80">₹{((Number(item.product?.retailPrice || item.product?.price) || 0) * item.quantity).toLocaleString()}</p>
@@ -272,7 +272,7 @@ export default function Cart({ onNavigate, cartItems = [], onUpdateCart, custome
                 </div>
 
                 <div className="space-y-4 border-t border-white/10 pt-8 mb-4 relative z-10">
-                  <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase tracking-widest">
+                  <div className="flex justify-between items-center text-xs font-bold text-gray-300 uppercase tracking-widest">
                     <span>Subtotal</span>
                     <span className="text-white">₹{subtotal.toLocaleString()}</span>
                   </div>
@@ -284,9 +284,9 @@ export default function Cart({ onNavigate, cartItems = [], onUpdateCart, custome
                     </div>
                   )}
 
-                  <div className="flex justify-between items-center text-xs font-bold text-gray-500 uppercase tracking-widest">
+                  <div className="flex justify-between items-center text-xs font-bold text-gray-300 uppercase tracking-widest">
                     <span>Shipping</span>
-                    <span className="text-blue-500">Complimentary</span>
+                    <span className="text-blue-400 font-black">Complimentary</span>
                   </div>
                   <div className="flex justify-between items-center pt-4 border-t border-white/10">
                     <span className="text-sm font-black uppercase tracking-[0.2em]">Total Due</span>
@@ -305,7 +305,7 @@ export default function Cart({ onNavigate, cartItems = [], onUpdateCart, custome
                           value={couponCode}
                           onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
                           placeholder="PROMO CODE"
-                          className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-[10px] font-black uppercase tracking-widest focus:ring-1 focus:ring-white/20 outline-none transition"
+                          className="w-full bg-white/10 border border-white/20 rounded-xl py-3 pl-10 pr-4 text-[10px] font-black text-white uppercase tracking-widest focus:ring-1 focus:ring-white/40 outline-none transition placeholder:text-gray-400"
                         />
                       </div>
                       <button
@@ -325,8 +325,8 @@ export default function Cart({ onNavigate, cartItems = [], onUpdateCart, custome
                         </div>
                         <span className="text-[10px] font-black uppercase tracking-widest text-green-500">{appliedCoupon} Applied</span>
                       </div>
-                      <button onClick={removeCoupon} title="Remove Coupon" className="p-1 hover:bg-white/10 rounded-lg transition">
-                        <X className="w-3 h-3 text-gray-400" />
+                      <button onClick={removeCoupon} title="Remove Coupon" className="p-1 hover:bg-white/20 rounded-lg transition">
+                        <X className="w-3 h-3 text-white" />
                       </button>
                     </div>
                   )}
@@ -359,7 +359,7 @@ export default function Cart({ onNavigate, cartItems = [], onUpdateCart, custome
                   </div>
                 ) : (
                   <div className="bg-white/5 border border-white/10 p-6 rounded-3xl text-center relative z-10">
-                    <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4">Verification Pending</p>
+                    <p className="text-[10px] font-black text-gray-300 uppercase tracking-widest mb-4">Verification Pending</p>
                     <p className="text-xs text-gray-400 font-medium leading-relaxed">Please complete the shipping details to proceed to secure payment.</p>
                   </div>
                 )}

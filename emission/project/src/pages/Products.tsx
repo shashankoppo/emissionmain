@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { PageType } from '../types';
 import { SlidersHorizontal, Search, X, ChevronRight, LayoutGrid, List } from 'lucide-react';
-import { productAPI, Product } from '../lib/api';
+import { productAPI, Product, bannerAPI, Banner } from '../lib/api';
 import ProductCard from '../components/UI/ProductCard';
 
 interface ProductsProps {
@@ -34,6 +34,7 @@ export default function Products({ onNavigate, selectedCategory, onAddToCart, wi
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('default');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [banners, setBanners] = useState<Banner[]>([]);
 
   useEffect(() => {
     fetchProducts();
@@ -45,6 +46,19 @@ export default function Products({ onNavigate, selectedCategory, onAddToCart, wi
       setActiveSubcategory('all');
     }
   }, [selectedCategory]);
+
+  useEffect(() => {
+    fetchBanners();
+  }, [activeCategory]);
+
+  const fetchBanners = async () => {
+    try {
+      const data = await bannerAPI.getAll(activeCategory);
+      setBanners(data);
+    } catch (err) {
+      console.error('Failed to fetch banners:', err);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -119,7 +133,10 @@ export default function Products({ onNavigate, selectedCategory, onAddToCart, wi
     <div className="min-h-screen bg-white">
       {/* Search & Hero Bar */}
       <div className="bg-black text-white relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80')] opacity-20 bg-cover bg-center"></div>
+        <div
+          className="absolute inset-0 opacity-20 bg-cover bg-center transition-all duration-1000"
+          style={{ backgroundImage: `url(${banners.length > 0 ? banners[0].imageUrl : 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80'})` }}
+        ></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
           <div className="max-w-3xl">
             <div className="flex items-center gap-4 mb-6">
@@ -129,7 +146,7 @@ export default function Products({ onNavigate, selectedCategory, onAddToCart, wi
             <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight">
               {activeCategory === 'all' ? 'THE COLLECTION' : activeCategory.toUpperCase()}
             </h1>
-            <p className="text-xl text-gray-400 font-medium mb-10 leading-relaxed">
+            <p className="text-xl text-gray-300 font-medium mb-10 leading-relaxed uppercase tracking-wide">
               Explore our range of premium {activeCategory === 'all' ? 'sportswear and medical wear' : activeCategory} manufactured for performance and durability.
             </p>
 

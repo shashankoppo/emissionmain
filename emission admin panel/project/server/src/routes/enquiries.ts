@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { authMiddleware } from '../middleware/auth.js';
 
 import prisma from '../lib/db.js';
+import { sendEmail } from '../services/email.js';
 
 const router = Router();
 
@@ -33,6 +34,18 @@ router.post('/', async (req, res) => {
         enquiryType: enquiryType || 'General',
         message
       }
+    });
+
+    // Send email notification to admin
+    const adminSetting = await prisma.setting.findUnique({ where: { key: 'smtp_from' } });
+    const adminEmail = adminSetting?.value || 'admin@emission.in';
+
+    sendEmail(adminEmail, 'new_enquiry_admin', {
+      name: enquiry.name,
+      email: enquiry.email,
+      phone: enquiry.phone,
+      enquiryType: enquiry.enquiryType,
+      message: enquiry.message
     });
 
     res.status(201).json(enquiry);

@@ -9,6 +9,7 @@ interface Banner {
     imageUrl: string;
     link: string | null;
     active: boolean;
+    category: string;
     order: number;
 }
 
@@ -23,6 +24,7 @@ export default function BannerManagement() {
         imageUrl: '',
         link: '/products',
         active: true,
+        category: 'home',
         order: 0
     });
 
@@ -51,7 +53,7 @@ export default function BannerManagement() {
             }
             setShowModal(false);
             setEditingId(null);
-            setFormData({ title: '', subtitle: '', imageUrl: '', link: '/products', active: true, order: 0 });
+            setFormData({ title: '', subtitle: '', imageUrl: '', link: '/products', active: true, category: 'home', order: 0 });
             fetchBanners();
         } catch (error) {
             alert('Failed to save banner');
@@ -78,7 +80,7 @@ export default function BannerManagement() {
                 <button
                     onClick={() => {
                         setEditingId(null);
-                        setFormData({ title: '', subtitle: '', imageUrl: '', link: '/products', active: true, order: banners.length });
+                        setFormData({ title: '', subtitle: '', imageUrl: '', link: '/products', active: true, category: 'home', order: banners.length });
                         setShowModal(true);
                     }}
                     className="flex items-center gap-3 bg-black text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-black/10 active:scale-95"
@@ -94,7 +96,10 @@ export default function BannerManagement() {
                         <div className="relative h-48 overflow-hidden">
                             <img src={banner.imageUrl} alt={banner.title || ''} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
                             <div className="absolute top-4 right-4 flex gap-2">
-                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${banner.active ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+                                <span className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-blue-500 text-white shadow-sm">
+                                    {banner.category || 'HOME'}
+                                </span>
+                                <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${banner.active ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
                                     {banner.active ? 'Active' : 'Hidden'}
                                 </span>
                             </div>
@@ -116,6 +121,7 @@ export default function BannerManagement() {
                                                 imageUrl: banner.imageUrl,
                                                 link: banner.link || '/products',
                                                 active: banner.active,
+                                                category: banner.category || 'home',
                                                 order: banner.order
                                             });
                                             setShowModal(true);
@@ -199,6 +205,20 @@ export default function BannerManagement() {
                                         onChange={(e) => setFormData({ ...formData, link: e.target.value })}
                                         className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-black/5 outline-none transition"
                                     />
+                                </div>
+                                <div className="col-span-2 md:col-span-1">
+                                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Category Page</label>
+                                    <select
+                                        title="Banner Category"
+                                        value={formData.category}
+                                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                        className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-black/5 outline-none transition"
+                                    >
+                                        <option value="home">Home Page</option>
+                                        <option value="all">All Products</option>
+                                        <option value="sportswear">Sportswear</option>
+                                        <option value="medicalwear">Medical Wear</option>
+                                    </select>
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Display Order</label>
