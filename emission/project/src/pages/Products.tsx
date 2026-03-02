@@ -35,6 +35,7 @@ export default function Products({ onNavigate, selectedCategory, onAddToCart, wi
   const [sortBy, setSortBy] = useState('default');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [currentBanner, setCurrentBanner] = useState(0);
 
   useEffect(() => {
     fetchProducts();
@@ -49,7 +50,17 @@ export default function Products({ onNavigate, selectedCategory, onAddToCart, wi
 
   useEffect(() => {
     fetchBanners();
+    setCurrentBanner(0);
   }, [activeCategory]);
+
+  useEffect(() => {
+    if (banners.length > 1) {
+      const timer = setInterval(() => {
+        setCurrentBanner(prev => (prev + 1) % banners.length);
+      }, 5000);
+      return () => clearInterval(timer);
+    }
+  }, [banners.length]);
 
   const fetchBanners = async () => {
     try {
@@ -134,9 +145,10 @@ export default function Products({ onNavigate, selectedCategory, onAddToCart, wi
       {/* Search & Hero Bar */}
       <div className="bg-black text-white relative overflow-hidden">
         <div
-          className="absolute inset-0 opacity-20 bg-cover bg-center transition-all duration-1000"
-          style={{ backgroundImage: `url(${banners.length > 0 ? banners[0].imageUrl : 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80'})` }}
+          className="absolute inset-0 opacity-50 bg-cover bg-center transition-all duration-1000"
+          style={{ backgroundImage: `url(${banners.length > 0 ? banners[currentBanner].imageUrl : 'https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&q=80'})` }}
         ></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/40 to-transparent"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
           <div className="max-w-3xl">
             <div className="flex items-center gap-4 mb-6">
@@ -171,6 +183,20 @@ export default function Products({ onNavigate, selectedCategory, onAddToCart, wi
             </div>
           </div>
         </div>
+
+        {/* Carousel Dots */}
+        {banners.length > 1 && (
+          <div className="absolute bottom-10 right-10 flex gap-2 z-20">
+            {banners.map((_, i) => (
+              <button
+                key={i}
+                title={`Slide ${i + 1}`}
+                onClick={() => setCurrentBanner(i)}
+                className={`h-1 rounded-full transition-all duration-500 ${currentBanner === i ? 'w-8 bg-blue-500' : 'w-2 bg-white/20 hover:bg-white/40'}`}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 mb-20">

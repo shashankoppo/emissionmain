@@ -15,7 +15,7 @@ export default function Sidebar() {
     { href: '/invoices', icon: FileText, label: 'Invoices' },
     { href: '/pos', icon: Zap, label: 'POS Terminal' },
     { href: '/courier', icon: Truck, label: 'Delivery' },
-    { href: '/banners', icon: ImageIcon, label: 'Hero Banners' },
+    { href: '/banners', icon: ImageIcon, label: 'Banner Management' },
     { href: '/collections', icon: LayoutGrid, label: 'Masterpieces' },
     { href: '/enquiries', icon: MessageSquare, label: 'Enquiries' },
     { href: '/invoice-design', icon: Palette, label: 'Invoice Design' },

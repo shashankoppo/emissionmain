@@ -53,6 +53,16 @@ router.post('/seed', authMiddleware, async (req, res) => {
                 type: 'order_rejected',
                 subject: 'Order Update - Emission',
                 body: '<h1>Order Cancellation</h1><p>Dear {{customerName}}, your order <strong>{{orderId}}</strong> has been rejected/cancelled.</p><p>If you have any questions, please contact our support.</p>',
+            },
+            {
+                type: 'welcome_email',
+                subject: 'Welcome to Emission',
+                body: '<h1>Welcome, {{customerName}}!</h1><p>Thank you for joining our community. We are excited to have you with us.</p>',
+            },
+            {
+                type: 'new_enquiry_admin',
+                subject: 'New Enquiry Received',
+                body: '<h1>New Enquiry</h1><p>You have received a new enquiry from <strong>{{name}}</strong> ({{email}}).</p><p>Message: {{message}}</p>',
             }
         ];
 

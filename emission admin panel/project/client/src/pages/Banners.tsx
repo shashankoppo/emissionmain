@@ -215,10 +215,11 @@ export default function BannerManagement() {
                                         className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-black/5 outline-none transition"
                                     >
                                         <option value="home">Home Page</option>
-                                        <option value="all">All Products</option>
-                                        <option value="sportswear">Sportswear</option>
-                                        <option value="medicalwear">Medical Wear</option>
+                                        <option value="all">All Products (Shop Page)</option>
+                                        <option value="sportswear">Sportswear Category</option>
+                                        <option value="medicalwear">Medical Wear Category</option>
                                     </select>
+                                    <p className="text-[10px] text-gray-400 mt-2 font-medium">Select "All Products" to update the banner on the main Shop page.</p>
                                 </div>
                                 <div>
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Display Order</label>
