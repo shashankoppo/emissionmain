@@ -226,6 +226,7 @@ export default function BannerManagement() {
                                 <input
                                     type="text"
                                     required
+                                    title="Image URL"
                                     value={formData.imageUrl}
                                     onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
                                     className="w-full mt-2 bg-gray-50 border-none rounded-2xl py-3 px-6 text-xs font-bold focus:ring-2 focus:ring-black/5 outline-none transition"
@@ -237,6 +238,7 @@ export default function BannerManagement() {
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Title</label>
                                     <input
                                         type="text"
+                                        title="Banner Title"
                                         value={formData.title}
                                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                         className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-black/5 outline-none transition"
@@ -246,6 +248,7 @@ export default function BannerManagement() {
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Subtitle</label>
                                     <input
                                         type="text"
+                                        title="Banner Subtitle"
                                         value={formData.subtitle}
                                         onChange={(e) => setFormData({ ...formData, subtitle: e.target.value })}
                                         className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-black/5 outline-none transition"
@@ -256,6 +259,7 @@ export default function BannerManagement() {
                                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Link</label>
                                 <input
                                     type="text"
+                                    title="Banner Redirect Link"
                                     value={formData.link}
                                     onChange={(e) => setFormData({ ...formData, link: e.target.value })}
                                     className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-black/5 outline-none transition"
@@ -280,6 +284,7 @@ export default function BannerManagement() {
                                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Display Order</label>
                                     <input
                                         type="number"
+                                        title="Display Order"
                                         value={formData.order}
                                         onChange={(e) => setFormData({ ...formData, order: Number(e.target.value) })}
                                         className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-black/5 outline-none transition"
