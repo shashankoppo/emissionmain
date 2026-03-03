@@ -6,7 +6,7 @@ import { customerAPI } from '../lib/api';
 
 interface LoginProps {
     onNavigate: (page: PageType) => void;
-    onLogin: (name: string, email: string) => void;
+    onLogin: (customer: any) => void;
 }
 
 export default function Login({ onNavigate, onLogin }: LoginProps) {
@@ -24,7 +24,7 @@ export default function Login({ onNavigate, onLogin }: LoginProps) {
             const result = await customerAPI.login(email, password);
             localStorage.setItem('customerToken', result.token);
             localStorage.setItem('customerUser', JSON.stringify(result.customer));
-            onLogin(result.customer.name, result.customer.email);
+            onLogin(result.customer);
         } catch {
             setError('Invalid email or password. Please try again.');
         } finally {

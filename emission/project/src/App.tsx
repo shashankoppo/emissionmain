@@ -174,29 +174,25 @@ function App() {
     setCartItems(items);
   };
 
-  const handleLogin = (name: string, email: string) => {
-    const info = localStorage.getItem('customerInfo');
-    if (info) {
-      setCustomer(JSON.parse(info));
-    }
+  const handleLogin = (customerData: any) => {
+    setCustomer(customerData);
     setIsLoggedIn(true);
-    setCustomerName(name);
+    setCustomerName(customerData.name || '');
+    localStorage.setItem('customerUser', JSON.stringify(customerData));
     handleNavigate('home');
   };
 
-  const handleRegister = (name: string, email: string) => {
-    const info = localStorage.getItem('customerInfo');
-    if (info) {
-      setCustomer(JSON.parse(info));
-    }
+  const handleRegister = (customerData: any) => {
+    setCustomer(customerData);
     setIsLoggedIn(true);
-    setCustomerName(name);
+    setCustomerName(customerData.name || '');
+    localStorage.setItem('customerUser', JSON.stringify(customerData));
     handleNavigate('home');
   };
 
   const handleLogout = () => {
     localStorage.removeItem('customerToken');
-    localStorage.removeItem('customerInfo');
+    localStorage.removeItem('customerUser');
     setIsLoggedIn(false);
     setCustomerName('');
     setCustomer(null);

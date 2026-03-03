@@ -52,14 +52,15 @@ router.get('/', authMiddleware, async (req, res) => {
 });
 // Create order
 router.post('/', async (req, res) => {
-    const { customerName, customerEmail, customerPhone, totalAmount, status, paymentId, shippingAddress, items, source } = req.body;
+    const { customerId, customerName, customerEmail, customerPhone, totalAmount, status, paymentId, shippingAddress, items, source } = req.body;
     try {
         const order = await prisma.order.create({
             data: {
+                customerId: customerId || null,
                 customerName,
                 customerEmail,
                 customerPhone,
-                totalAmount,
+                totalAmount: parseFloat(String(totalAmount)) || 0,
                 status: status || 'pending',
                 paymentId,
                 shippingAddress,
@@ -67,12 +68,17 @@ router.post('/', async (req, res) => {
                 source: source || 'website'
             }
         });
-        // Send order success email silently
-        sendEmail(order.customerEmail, 'order_success', {
-            customerName: order.customerName,
-            orderId: order.id,
-            amount: order.totalAmount.toString(),
-        });
+
+        try {
+            await sendEmail(order.customerEmail, 'order_success', {
+                customerName: order.customerName,
+                orderId: order.id,
+                amount: order.totalAmount.toString(),
+            });
+        } catch (mailErr) {
+            console.error('Background order email failed:', mailErr);
+        }
+
         res.json(order);
     }
     catch (error) {

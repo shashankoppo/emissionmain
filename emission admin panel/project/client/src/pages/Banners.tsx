@@ -197,7 +197,7 @@ export default function BannerManagement() {
                             <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">
                                 {editingId ? 'Edit Banner' : 'New Banner'}
                             </h2>
-                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-black">
+                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-black" title="Close Modal">
                                 <XCircle className="w-6 h-6" />
                             </button>
                         </div>

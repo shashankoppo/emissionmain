@@ -386,7 +386,7 @@ export default function MailTemplates() {
                     <div className="bg-white rounded-[40px] w-full max-w-xl p-8 shadow-2xl animate-in zoom-in duration-300 max-h-[90vh] overflow-y-auto">
                         <div className="flex items-center justify-between mb-6">
                             <h2 className="text-xl font-black text-gray-900 uppercase tracking-tight">New Template</h2>
-                            <button onClick={() => setShowCreateModal(false)} className="p-2 text-gray-400 hover:text-black transition">
+                            <button onClick={() => setShowCreateModal(false)} className="p-2 text-gray-400 hover:text-black transition" title="Close Modal">
                                 <X className="w-5 h-5" />
                             </button>
                         </div>

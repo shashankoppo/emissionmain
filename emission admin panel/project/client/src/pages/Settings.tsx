@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
-import { Save, RefreshCw, AlertCircle, CheckCircle2, Upload, Image as ImageIcon, ShieldCheck, Key, ShoppingBag, Palette } from 'lucide-react';
+import { Save, RefreshCw, AlertCircle, Upload, Image as ImageIcon, ShieldCheck, Key, ShoppingBag, Palette } from 'lucide-react';
 
 const API_BASE = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : '';
 
@@ -351,6 +351,8 @@ export default function Settings() {
                                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 italic">Site Title</label>
                                 <input
                                     type="text"
+                                    title="Site Title"
+                                    placeholder="Enter site title"
                                     value={settings.SITE_TITLE}
                                     onChange={(e) => setSettings({ ...settings, SITE_TITLE: e.target.value })}
                                     className="w-full bg-gray-50 border-none rounded-2xl py-5 px-8 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 outline-none transition"
@@ -359,6 +361,8 @@ export default function Settings() {
                             <div>
                                 <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 italic">Meta Description</label>
                                 <textarea
+                                    title="Meta Description"
+                                    placeholder="Enter meta description"
                                     value={settings.SITE_DESCRIPTION}
                                     onChange={(e) => setSettings({ ...settings, SITE_DESCRIPTION: e.target.value })}
                                     rows={3}

@@ -6,7 +6,7 @@ import { customerAPI } from '../lib/api';
 
 interface RegisterProps {
     onNavigate: (page: PageType) => void;
-    onRegister: (name: string, email: string) => void;
+    onRegister: (customer: any) => void;
 }
 
 export default function Register({ onNavigate, onRegister }: RegisterProps) {
@@ -47,7 +47,7 @@ export default function Register({ onNavigate, onRegister }: RegisterProps) {
             });
             localStorage.setItem('customerToken', result.token);
             localStorage.setItem('customerUser', JSON.stringify(result.customer));
-            onRegister(result.customer.name, result.customer.email);
+            onRegister(result.customer);
         } catch (err: any) {
             const msg = err?.response?.data?.error || 'Registration failed. Please try again.';
             setError(msg);
