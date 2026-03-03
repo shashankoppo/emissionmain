@@ -7,6 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// MOVED TO TOP AND RENAMED TO AppEmail
+model AppEmail {
+  id        String   @id @default(uuid())
+  type      String   @unique
+  subject   String
+  body      String
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 model Admin {
   id       String @id @default(uuid())
   email    String @unique
@@ -141,16 +152,6 @@ model Banner {
   active    Boolean  @default(true)
   category  String   @default("home")
   order     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model EmailTemplate {
-  id        String   @id @default(uuid())
-  type      String   @unique
-  subject   String
-  body      String
-  active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

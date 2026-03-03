@@ -5,12 +5,12 @@ export const runStartupTasks = async () => {
     console.log('--- STARTING STARTUP TASKS ---');
 
     const availableModels = Object.keys(prisma).filter(k => !k.startsWith('_'));
-    console.log('Available Prisma Models:', availableModels);
+    console.log('Detected Prisma Models in Client:', availableModels);
 
     try {
         // 1. Migrate SMTP keys (Uppercase -> Lowercase)
-        const keysToMigrate = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM'];
         if (prisma.setting) {
+            const keysToMigrate = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM'];
             for (const oldKey of keysToMigrate) {
                 const setting = await prisma.setting.findUnique({ where: { key: oldKey } });
                 if (setting) {
@@ -25,7 +25,7 @@ export const runStartupTasks = async () => {
             }
         }
 
-        // 2. Auto-Seed/Fix Email Templates (model name: emailTemplate)
+        // 2. Auto-Seed Email Templates (model name: appEmail)
         const defaultTemplates = [
             {
                 type: 'order_success',
@@ -54,7 +54,8 @@ export const runStartupTasks = async () => {
             }
         ];
 
-        const templateModel = (prisma as any).emailTemplate;
+        // Explicit lookup for the plural or singular name
+        const templateModel = (prisma as any).appEmail || (prisma as any).emailTemplate || (prisma as any).mailTemplate;
 
         if (templateModel) {
             for (const t of defaultTemplates) {
@@ -64,17 +65,17 @@ export const runStartupTasks = async () => {
                     create: { type: t.type, subject: t.subject, body: t.body, active: true }
                 });
             }
-            console.log('✅ Email templates seeded/updated.');
+            console.log('✅ Email templates seeded successfully.');
         } else {
-            console.warn('⚠️ Warning: emailTemplate model not found. Skipping seeding.');
+            console.warn('⚠️ Warning: No Email model found in the generated client. Skipping seeding.');
         }
 
-        // 3. Seed default site settings
-        const defaultSettings = [
-            { key: 'SITE_TITLE', value: 'Emission - Premium Sportswear & Medical Wear' },
-            { key: 'SITE_DESCRIPTION', value: 'Premium OEM manufacturer of sportswear and medical wear engineered with precision. Born in Jabalpur, India.' },
-        ];
+        // 3. Seed site settings
         if (prisma.setting) {
+            const defaultSettings = [
+                { key: 'SITE_TITLE', value: 'Emission - Premium Sportswear & Medical Wear' },
+                { key: 'SITE_DESCRIPTION', value: 'Premium OEM manufacturer of sportswear and medical wear engineered with precision. Born in Jabalpur, India.' },
+            ];
             for (const s of defaultSettings) {
                 await prisma.setting.upsert({
                     where: { key: s.key },
@@ -85,11 +86,11 @@ export const runStartupTasks = async () => {
             console.log('✅ Site settings seeded.');
         }
 
-        // 4. Initialize Email Transporter
+        // 4. Initialize Transporter
         await initTransporter();
 
     } catch (error) {
-        console.error('CRITICAL: Startup tasks failed but continuing:', error);
+        console.error('CRITICAL: Startup tasks failed:', error);
     }
 
     console.log('--- STARTUP TASKS COMPLETED ---');
