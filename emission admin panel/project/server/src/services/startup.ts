@@ -3,6 +3,7 @@ import { initTransporter } from './email.js';
 
 export const runStartupTasks = async () => {
     console.log('--- STARTING STARTUP TASKS ---');
+    console.log('Available Prisma Models:', Object.keys(prisma).filter(k => !k.startsWith('_')));
 
     try {
         // 1. Migrate SMTP keys (Uppercase -> Lowercase)
@@ -50,11 +51,16 @@ export const runStartupTasks = async () => {
         ];
 
         for (const t of defaultTemplates) {
-            await prisma.mailTemplate.upsert({
-                where: { type: t.type },
-                update: { subject: t.subject, body: t.body, active: true },
-                create: { type: t.type, subject: t.subject, body: t.body, active: true }
-            });
+            const modelName = 'mailTemplate';
+            if (prisma[modelName]) {
+                await prisma[modelName].upsert({
+                    where: { type: t.type },
+                    update: { subject: t.subject, body: t.body, active: true },
+                    create: { type: t.type, subject: t.subject, body: t.body, active: true }
+                });
+            } else {
+                console.warn(`⚠️ Warning: Prisma model "${modelName}" not found in current client. Skipping template seeding.`);
+            }
         }
         console.log('✅ Mail templates seeded/updated.');
 
@@ -64,11 +70,14 @@ export const runStartupTasks = async () => {
             { key: 'SITE_DESCRIPTION', value: 'Premium OEM manufacturer of sportswear and medical wear engineered with precision. Born in Jabalpur, India.' },
         ];
         for (const s of defaultSettings) {
-            await prisma.setting.upsert({
-                where: { key: s.key },
-                update: {},
-                create: { key: s.key, value: s.value },
-            });
+            const settingModel = 'setting';
+            if (prisma[settingModel]) {
+                await prisma[settingModel].upsert({
+                    where: { key: s.key },
+                    update: {},
+                    create: { key: s.key, value: s.value },
+                });
+            }
         }
         console.log('✅ Site settings seeded.');
 

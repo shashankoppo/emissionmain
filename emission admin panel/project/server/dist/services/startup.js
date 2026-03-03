@@ -1,7 +1,10 @@
 import prisma from '../lib/db.js';
 import { initTransporter } from './email.js';
+
 export const runStartupTasks = async () => {
     console.log('--- STARTING STARTUP TASKS ---');
+    console.log('Available Prisma Models:', Object.keys(prisma).filter(k => !k.startsWith('_')));
+
     try {
         // 1. Migrate SMTP keys (Uppercase -> Lowercase)
         const keysToMigrate = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM'];
@@ -17,6 +20,7 @@ export const runStartupTasks = async () => {
                 console.log(`Migrated ${oldKey} to ${newKey}`);
             }
         }
+
         // 2. Auto-Seed/Fix Mail Templates (always ensure correct content)
         const defaultTemplates = [
             {
@@ -45,32 +49,44 @@ export const runStartupTasks = async () => {
                 body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:24px">Payment Received! ✅</h1><p style="color:#555">We have successfully received your payment.</p><div style="background:#f9fafb;border-radius:8px;padding:16px;margin:20px 0"><p style="margin:0"><strong>Order ID:</strong> #{{orderId}}</p><p style="margin:8px 0 0"><strong>Amount Paid:</strong> ₹{{amount}}</p></div><p style="color:#555">Your order is now being processed. Thank you for shopping with <strong>Emission</strong>.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:12px">Technical Platform by ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
             }
         ];
+
         for (const t of defaultTemplates) {
-            await prisma.mailTemplate.upsert({
-                where: { type: t.type },
-                update: { subject: t.subject, body: t.body, active: true },
-                create: { type: t.type, subject: t.subject, body: t.body, active: true }
-            });
+            const modelName = 'mailTemplate';
+            if (prisma[modelName]) {
+                await prisma[modelName].upsert({
+                    where: { type: t.type },
+                    update: { subject: t.subject, body: t.body, active: true },
+                    create: { type: t.type, subject: t.subject, body: t.body, active: true }
+                });
+            } else {
+                console.warn(`⚠️ Warning: Prisma model "${modelName}" not found in current client. Skipping template seeding.`);
+            }
         }
         console.log('✅ Mail templates seeded/updated.');
+
         // 3. Seed default site settings
         const defaultSettings = [
             { key: 'SITE_TITLE', value: 'Emission - Premium Sportswear & Medical Wear' },
             { key: 'SITE_DESCRIPTION', value: 'Premium OEM manufacturer of sportswear and medical wear engineered with precision. Born in Jabalpur, India.' },
         ];
         for (const s of defaultSettings) {
-            await prisma.setting.upsert({
-                where: { key: s.key },
-                update: {},
-                create: { key: s.key, value: s.value },
-            });
+            const settingModel = 'setting';
+            if (prisma[settingModel]) {
+                await prisma[settingModel].upsert({
+                    where: { key: s.key },
+                    update: {},
+                    create: { key: s.key, value: s.value },
+                });
+            }
         }
         console.log('✅ Site settings seeded.');
+
         // 4. Initialize Email Transporter
         await initTransporter();
-    }
-    catch (error) {
+
+    } catch (error) {
         console.error('CRITICAL: Startup tasks failed:', error);
     }
+
     console.log('--- STARTUP TASKS COMPLETED ---');
 };
