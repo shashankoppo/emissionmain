@@ -12,7 +12,7 @@ export const runStartupTasks = async () => {
         if (prisma.setting) {
             const defaults = [
                 { key: 'smtp_host', value: 'smtp.hostinger.com' },
-                { key: 'smtp_port', value: '587' },
+                { key: 'smtp_port', value: '465' },
                 { key: 'smtp_user', value: 'care@emissionfit.com' },
                 { key: 'smtp_pass', value: 'Mohit@121212' },
                 { key: 'smtp_from', value: 'care@emissionfit.com' }
