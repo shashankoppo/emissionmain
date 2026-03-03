@@ -172,7 +172,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
         ...(shortDescription !== undefined && { shortDescription }),
         ...(price !== undefined && { price: parseFloat(price) }),
         ...(wholesalePrice !== undefined && { wholesalePrice: parseFloat(wholesalePrice) }),
-        ...(retailPrice !== undefined && { retailPrice: retailPrice ? parseFloat(retailPrice) : null }),
+        ...(retailPrice !== undefined && { retailPrice: retailPrice ? parseFloat(retailPrice) : parseFloat(price || existingProduct.price) }),
         ...(images && { images }),
         ...(features && { features }),
         ...(specifications && { specifications }),

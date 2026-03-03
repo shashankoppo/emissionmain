@@ -3,6 +3,7 @@ import { PageType, CartItem, EmbroideryCustomization } from './types';
 import { productAPI } from './lib/api';
 import Header from './components/Layout/Header';
 import Footer from './components/Layout/Footer';
+import SEO from './components/UI/SEO';
 import CartDrawer from './components/Layout/CartDrawer';
 import WhatsAppButton from './components/UI/WhatsAppButton';
 import Home from './pages/Home';
@@ -35,6 +36,20 @@ function App() {
   const [customerName, setCustomerName] = useState('');
   const [customer, setCustomer] = useState<any | null>(null);
   const [wishlist, setWishlist] = useState<string[]>([]);
+  const [siteSettings, setSiteSettings] = useState<any>(null);
+
+  // Fetch Public Settings
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await productAPI.getPublicSettings();
+        setSiteSettings(response);
+      } catch (err) {
+        console.error('Failed to fetch site settings', err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   // Browser back button support
   useEffect(() => {
@@ -258,6 +273,10 @@ function App() {
 
   return (
     <div className="min-h-screen flex flex-col font-sans">
+      <SEO
+        title={siteSettings?.SITE_TITLE}
+        description={siteSettings?.SITE_DESCRIPTION}
+      />
       {currentPage !== 'login' && currentPage !== 'register' && (
         <Header
           currentPage={currentPage}

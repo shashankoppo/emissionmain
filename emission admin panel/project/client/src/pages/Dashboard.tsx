@@ -31,7 +31,7 @@ export default function Dashboard() {
       ]);
 
       const totalRevenue = ordersRes.data.reduce(
-        (sum: number, order: any) => sum + parseFloat(order.totalAmount),
+        (sum: number, order: any) => sum + Number(order.totalAmount || 0),
         0
       );
 

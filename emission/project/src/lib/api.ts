@@ -131,6 +131,11 @@ export const productAPI = {
         const products = await productAPI.getAll();
         return products.filter(p => p.category === category);
     },
+
+    getPublicSettings: async () => {
+        const response = await api.get('/settings/public');
+        return response.data;
+    },
 };
 
 // Enquiry API

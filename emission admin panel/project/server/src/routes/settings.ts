@@ -25,14 +25,27 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 });
 
-// Get public settings (for frontend Key ID)
+// Get public settings (for frontend)
 router.get('/public', async (req, res) => {
     try {
-        const setting = await prisma.setting.findUnique({
-            where: { key: 'RAZORPAY_KEY_ID' }
+        const publicKeys = ['RAZORPAY_KEY_ID', 'SITE_TITLE', 'SITE_DESCRIPTION', 'SITE_LOGO', 'SITE_FAVICON', 'EMBROIDERY_PRICE'];
+        const settings = await prisma.setting.findMany({
+            where: {
+                key: { in: publicKeys }
+            }
         });
-        const keyId = setting?.value || process.env.RAZORPAY_KEY_ID || '';
-        res.json({ RAZORPAY_KEY_ID: keyId });
+
+        const publicSettings = settings.reduce((acc: Record<string, string>, curr) => {
+            acc[curr.key] = curr.value;
+            return acc;
+        }, {});
+
+        // Fallbacks for critical keys
+        if (!publicSettings.RAZORPAY_KEY_ID) {
+            publicSettings.RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID || '';
+        }
+
+        res.json(publicSettings);
     } catch (error) {
         res.json({ RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID || '' });
     }

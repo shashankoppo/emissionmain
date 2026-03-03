@@ -64,6 +64,20 @@ export const runStartupTasks = async () => {
         }
         console.log('Mail templates verified/seeded.');
 
+        // 4. Default SEO Settings
+        const seoSettings = [
+            { key: 'SITE_TITLE', value: 'Emission - Premium Sportswear & Medical Wear' },
+            { key: 'SITE_DESCRIPTION', value: 'Premium OEM manufacturer of sportswear and medical wear engineered with precision.' }
+        ];
+
+        for (const s of seoSettings) {
+            const exists = await prisma.setting.findUnique({ where: { key: s.key } });
+            if (!exists) {
+                await prisma.setting.create({ data: s });
+                console.log(`Seeded SEO setting: ${s.key}`);
+            }
+        }
+
         // 3. Initialize Email Transporter
         await initTransporter();
 

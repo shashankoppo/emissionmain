@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
-import { Save, Key, ShieldCheck, AlertCircle, ShoppingBag, Palette } from 'lucide-react';
+import { Save, RefreshCw, AlertCircle, CheckCircle2, Upload, Image as ImageIcon, ShieldCheck, Key, ShoppingBag, Palette } from 'lucide-react';
+
+const API_BASE = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : '';
 
 export default function Settings() {
     const [settings, setSettings] = useState({
@@ -15,9 +17,14 @@ export default function Settings() {
         SMTP_USER: '',
         SMTP_PASS: '',
         SMTP_FROM: '',
+        SITE_TITLE: 'Emission - Premium Sportswear & Medical Wear',
+        SITE_DESCRIPTION: 'Premium OEM manufacturer of sportswear and medical wear engineered with precision.',
+        SITE_LOGO: '',
+        SITE_FAVICON: '',
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [uploading, setUploading] = useState({ logo: false, favicon: false });
     const [message, setMessage] = useState({ type: '', text: '' });
 
     useEffect(() => {
@@ -39,12 +46,35 @@ export default function Settings() {
                 SMTP_USER: response.data.SMTP_USER || '',
                 SMTP_PASS: response.data.SMTP_PASS || '',
                 SMTP_FROM: response.data.SMTP_FROM || '',
+                SITE_TITLE: response.data.SITE_TITLE || 'Emission - Premium Sportswear & Medical Wear',
+                SITE_DESCRIPTION: response.data.SITE_DESCRIPTION || 'Premium OEM manufacturer of sportswear and medical wear engineered with precision.',
+                SITE_LOGO: response.data.SITE_LOGO || '',
+                SITE_FAVICON: response.data.SITE_FAVICON || '',
             });
         } catch (error) {
             console.error('Failed to fetch settings:', error);
             setMessage({ type: 'error', text: 'Failed to load settings' });
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, key: 'SITE_LOGO' | 'SITE_FAVICON') => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setUploading(prev => ({ ...prev, [key === 'SITE_LOGO' ? 'logo' : 'favicon']: true }));
+        const fData = new FormData();
+        fData.append('file', file);
+        try {
+            const res = await api.post('/upload', fData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            setSettings(prev => ({ ...prev, [key]: res.data.url }));
+        } catch (error) {
+            alert('Upload failed');
+        } finally {
+            setUploading(prev => ({ ...prev, [key === 'SITE_LOGO' ? 'logo' : 'favicon']: false }));
         }
     };
 
@@ -260,15 +290,98 @@ export default function Settings() {
                         </div>
                     </div>
                 </div>
+                {/* SEO & Branding */}
+                <div className="bg-white rounded-[40px] border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-10 py-8">
+                        <h2 className="text-xl font-black text-white uppercase tracking-tight">SEO & Branding</h2>
+                        <p className="text-blue-100 text-xs font-bold uppercase tracking-widest mt-1 opacity-80">Manage site identity and metadata</p>
+                    </div>
+                    <div className="p-10 space-y-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 italic">Site Logo</label>
+                                <div className="flex items-center gap-6">
+                                    <div className="w-24 h-24 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden">
+                                        {settings.SITE_LOGO ? (
+                                            <img src={`${API_BASE}${settings.SITE_LOGO}`} alt="Logo" className="w-full h-full object-contain p-2" />
+                                        ) : (
+                                            <ImageIcon className="w-8 h-8 text-gray-200" />
+                                        )}
+                                    </div>
+                                    <label className="flex-1 border-2 border-dashed border-gray-100 rounded-2xl p-6 hover:bg-gray-50 transition cursor-pointer flex flex-col items-center justify-center gap-2">
+                                        <input type="file" className="hidden" accept="image/*" onChange={(e) => handleFileUpload(e, 'SITE_LOGO')} />
+                                        {uploading.logo ? (
+                                            <RefreshCw className="w-5 h-5 animate-spin text-blue-600" />
+                                        ) : (
+                                            <>
+                                                <Upload className="w-5 h-5 text-gray-400" />
+                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Update Logo</span>
+                                            </>
+                                        )}
+                                    </label>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 italic">Favicon</label>
+                                <div className="flex items-center gap-6">
+                                    <div className="w-16 h-16 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden">
+                                        {settings.SITE_FAVICON ? (
+                                            <img src={`${API_BASE}${settings.SITE_FAVICON}`} alt="Favicon" className="w-full h-full object-contain p-3" />
+                                        ) : (
+                                            <ImageIcon className="w-6 h-6 text-gray-200" />
+                                        )}
+                                    </div>
+                                    <label className="flex-1 border-2 border-dashed border-gray-100 rounded-2xl p-4 hover:bg-gray-50 transition cursor-pointer flex flex-col items-center justify-center gap-1">
+                                        <input type="file" className="hidden" accept="image/x-icon,image/png" onChange={(e) => handleFileUpload(e, 'SITE_FAVICON')} />
+                                        {uploading.favicon ? (
+                                            <RefreshCw className="w-4 h-4 animate-spin text-blue-600" />
+                                        ) : (
+                                            <>
+                                                <Upload className="w-4 h-4 text-gray-400" />
+                                                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Update Favicon</span>
+                                            </>
+                                        )}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
 
-                <div className="flex justify-end pt-4">
+                        <div className="grid grid-cols-1 gap-6">
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 italic">Site Title</label>
+                                <input
+                                    type="text"
+                                    value={settings.SITE_TITLE}
+                                    onChange={(e) => setSettings({ ...settings, SITE_TITLE: e.target.value })}
+                                    className="w-full bg-gray-50 border-none rounded-2xl py-5 px-8 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 outline-none transition"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 italic">Meta Description</label>
+                                <textarea
+                                    value={settings.SITE_DESCRIPTION}
+                                    onChange={(e) => setSettings({ ...settings, SITE_DESCRIPTION: e.target.value })}
+                                    rows={3}
+                                    className="w-full bg-gray-50 border-none rounded-2xl py-5 px-8 text-sm font-bold focus:ring-2 focus:ring-blue-600/10 outline-none transition resize-none"
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Save Button */}
+                <div className="flex justify-end pt-8">
                     <button
                         type="submit"
                         disabled={saving}
-                        className="flex items-center gap-3 bg-black text-white px-12 py-5 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] hover:bg-blue-600 transition-all shadow-2xl shadow-black/10 active:scale-95 disabled:bg-gray-200 disabled:cursor-not-allowed"
+                        className="bg-black text-white px-12 py-5 rounded-[24px] font-black text-xs uppercase tracking-[0.2em] hover:bg-blue-600 transition-all shadow-2xl shadow-black/10 flex items-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed group active:scale-95"
                     >
-                        <Save className="w-5 h-5" />
-                        {saving ? 'Synchronizing...' : 'Commit Changes'}
+                        {saving ? (
+                            <RefreshCw className="w-4 h-4 animate-spin" />
+                        ) : (
+                            <Save className="w-4 h-4 transition-transform group-hover:scale-125" />
+                        )}
+                        {saving ? 'Updating...' : 'Save All Settings'}
                     </button>
                 </div>
             </form>
