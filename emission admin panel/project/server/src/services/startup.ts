@@ -33,7 +33,7 @@ export const runStartupTasks = async () => {
             const keysToMigrate = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM'];
             for (const oldKey of keysToMigrate) {
                 const setting = await prisma.setting.findUnique({ where: { key: oldKey } });
-                if (setting) {
+                if (setting && setting.value) {
                     const newKey = oldKey.toLowerCase();
                     await prisma.setting.upsert({
                         where: { key: newKey },
