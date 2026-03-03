@@ -93,5 +93,5 @@ export const sendEmail = async (to: string, type: string, variables: Record<stri
     }
 };
 
-// Initialize on startup
-initTransporter();
+// Initialized via startup tasks
+// initTransporter();

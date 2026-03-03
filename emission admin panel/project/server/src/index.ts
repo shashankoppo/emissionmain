@@ -17,6 +17,7 @@ import couponRoutes from './routes/coupons.js';
 import customerRoutes from './routes/customers.js';
 import mailTemplateRoutes from './routes/mailTemplates.js';
 import prisma from './lib/db.js';
+import { runStartupTasks } from './services/startup.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -96,9 +97,12 @@ app.post('/api/admin/backfill-orders', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`Server is running on http://localhost:${PORT}`);
   console.log(`API available at http://localhost:${PORT}/api`);
+
+  // Run automated startup tasks (migrations, seeding, etc)
+  await runStartupTasks();
 });
 
 process.on('SIGINT', async () => {
