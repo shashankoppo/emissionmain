@@ -8,8 +8,28 @@ export const runStartupTasks = async () => {
     console.log('Detected Prisma Models in Client:', availableModels);
 
     try {
-        // 1. Migrate SMTP keys (Uppercase -> Lowercase)
+        // 1. Migrate SMTP keys and set defaults
         if (prisma.setting) {
+            const defaults = [
+                { key: 'smtp_host', value: 'smtp.hostinger.com' },
+                { key: 'smtp_port', value: '587' },
+                { key: 'smtp_user', value: 'care@emissionfit.com' },
+                { key: 'smtp_pass', value: 'Mohit@121212' },
+                { key: 'smtp_from', value: 'care@emissionfit.com' }
+            ];
+
+            for (const d of defaults) {
+                const existing = await prisma.setting.findUnique({ where: { key: d.key } });
+                if (!existing || !existing.value) {
+                    await prisma.setting.upsert({
+                        where: { key: d.key },
+                        update: { value: d.value },
+                        create: { key: d.key, value: d.value }
+                    });
+                    console.log(`Set default SMTP setting: ${d.key}`);
+                }
+            }
+
             const keysToMigrate = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM'];
             for (const oldKey of keysToMigrate) {
                 const setting = await prisma.setting.findUnique({ where: { key: oldKey } });
@@ -35,7 +55,7 @@ export const runStartupTasks = async () => {
             {
                 type: 'order_rejected',
                 subject: 'Order Update from Emission',
-                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:24px">Order Update</h1><p style="color:#555">Dear {{customerName}}, we regret to inform you that your order <strong>#{{orderId}}</strong> has been cancelled or rejected.</p><p style="color:#555">If you believe this is an error, please contact our support team at genesis@emission.in.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:12px">Technical Platform by ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
+                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:24px">Order Update</h1><p style="color:#555">Dear {{customerName}}, we regret to inform you that your order <strong>#{{orderId}}</strong> has been cancelled or rejected.</p><p style="color:#555">If you believe this is an error, please contact our support team at care@emissionfit.com.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:12px">Technical Platform by ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
             },
             {
                 type: 'welcome_email',

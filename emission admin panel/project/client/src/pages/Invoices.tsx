@@ -92,7 +92,7 @@ export default function Invoices() {
             companyName: 'EMISSION',
             companyAddress: 'Jabalpur, Madhya Pradesh',
             companyPhone: '+91 0000000000',
-            companyEmail: 'support@emission.in',
+            companyEmail: 'care@emissionfit.com',
             terms: 'Thank you for choosing EMISSION. We appreciate your business!',
             primaryColor: '#1a1a1a',
             accentColor: '#3b82f6'
@@ -221,7 +221,10 @@ export default function Invoices() {
                         <Download className="w-4 h-4" />
                         Export All
                     </button>
-                    <button className="flex items-center gap-3 bg-black text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-black/10 active:scale-95">
+                    <button
+                        title="Generate Report"
+                        className="flex items-center gap-3 bg-black text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-black/10 active:scale-95"
+                    >
                         <Printer className="w-5 h-5" />
                         Report
                     </button>
@@ -374,7 +377,11 @@ export default function Invoices() {
                     <div className="bg-white rounded-[40px] w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in zoom-in-95 duration-300">
                         <div className="p-8 border-b border-gray-50 flex items-center justify-between">
                             <h2 className="text-xl font-black uppercase tracking-tight">Invoice Details</h2>
-                            <button onClick={() => setSelectedOrder(null)} className="text-gray-400 hover:text-black">
+                            <button
+                                onClick={() => setSelectedOrder(null)}
+                                className="text-gray-400 hover:text-black"
+                                title="Close Modal"
+                            >
                                 <XCircle className="w-6 h-6" />
                             </button>
                         </div>
