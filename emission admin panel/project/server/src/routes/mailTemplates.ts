@@ -5,7 +5,11 @@ import { initTransporter } from '../services/email.js';
 
 const router = Router();
 
-// Get all mail templates
+// =====================================================
+// IMPORTANT: Named routes MUST come before /:id routes
+// =====================================================
+
+// GET all mail templates
 router.get('/', authMiddleware, async (req, res) => {
     try {
         const templates = await prisma.mailTemplate.findMany({
@@ -18,89 +22,7 @@ router.get('/', authMiddleware, async (req, res) => {
     }
 });
 
-// Update a mail template
-router.put('/:id', authMiddleware, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { subject, body, active } = req.body;
-
-        const template = await prisma.mailTemplate.update({
-            where: { id },
-            data: {
-                subject,
-                body,
-                active,
-            }
-        });
-
-        res.json(template);
-    } catch (error) {
-        console.error('Failed to update mail template:', error);
-        res.status(500).json({ error: 'Failed to update mail template' });
-    }
-});
-
-// Seed default templates if and only if they don't exist
-router.post('/seed', authMiddleware, async (req, res) => {
-    try {
-        const defaultTemplates = [
-            {
-                type: 'order_success',
-                subject: 'Order Confirmation - Emission',
-                body: '<h1>Thank you for your order, {{customerName}}!</h1><p>Your order ID is <strong>{{orderId}}</strong> for an amount of ₹{{amount}}.</p><p>We will notify you once it ships.</p>',
-            },
-            {
-                type: 'order_rejected',
-                subject: 'Order Update - Emission',
-                body: '<h1>Order Cancellation</h1><p>Dear {{customerName}}, your order <strong>{{orderId}}</strong> has been rejected/cancelled.</p><p>If you have any questions, please contact our support.</p>',
-            },
-            {
-                type: 'welcome_email',
-                subject: 'Welcome to Emission',
-                body: '<h1>Welcome, {{customerName}}!</h1><p>Thank you for joining our community. We are excited to have you with us.</p>',
-            },
-            {
-                type: 'new_enquiry_admin',
-                subject: 'New Enquiry Received',
-                body: '<h1>New Enquiry</h1><p>You have received a new enquiry from <strong>{{name}}</strong> ({{email}}).</p><p>Message: {{message}}</p>',
-            },
-            {
-                type: 'payment_success',
-                subject: 'Payment Successful - Emission',
-                body: '<h1>Payment Received!</h1><p>We have successfully received your payment of ₹{{amount}} for order #{{orderId}}.</p><p>We are processing your order now.</p>',
-            }
-        ];
-
-        let seeded = 0;
-        for (const t of defaultTemplates) {
-            try {
-                // Force update content if it's currently empty or strictly the default placeholder
-                await prisma.mailTemplate.upsert({
-                    where: { type: t.type },
-                    update: {
-                        subject: t.subject,
-                        body: t.body,
-                    },
-                    create: {
-                        type: t.type,
-                        subject: t.subject,
-                        body: t.body,
-                        active: true,
-                    }
-                });
-                seeded++;
-            } catch (err) {
-                console.error(`Failed to seed template ${t.type}:`, err);
-            }
-        }
-        res.json({ success: true, message: `Verified/Seeded ${seeded} templates.` });
-    } catch (error: any) {
-        console.error('Global seed error:', error);
-        res.status(500).json({ error: 'Failed to seed mail templates', details: error.message });
-    }
-});
-
-// Get SMTP Settings
+// GET SMTP Settings — must be before /:id
 router.get('/smtp', authMiddleware, async (req, res) => {
     try {
         const settings = await prisma.setting.findMany({
@@ -110,15 +32,13 @@ router.get('/smtp', authMiddleware, async (req, res) => {
                 }
             }
         });
-
         const config = settings.reduce((acc: any, curr) => {
             acc[curr.key] = curr.value;
             return acc;
         }, {});
-
         res.json({
             smtp_host: config.smtp_host || '',
-            smtp_port: config.smtp_port || '',
+            smtp_port: config.smtp_port || '587',
             smtp_user: config.smtp_user || '',
             smtp_pass: config.smtp_pass || '',
             smtp_from: config.smtp_from || ''
@@ -129,12 +49,11 @@ router.get('/smtp', authMiddleware, async (req, res) => {
     }
 });
 
-// Update SMTP Settings
+// POST Update SMTP Settings — must be before /:id
 router.post('/smtp', authMiddleware, async (req, res) => {
     try {
         const { smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from } = req.body;
         const keys = { smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from };
-
         for (const [key, value] of Object.entries(keys)) {
             await prisma.setting.upsert({
                 where: { key },
@@ -142,14 +61,74 @@ router.post('/smtp', authMiddleware, async (req, res) => {
                 create: { key, value: value?.toString() || '' },
             });
         }
-
-        // Re-initialize transporter with new settings
         await initTransporter();
-
         res.json({ success: true, message: 'SMTP settings updated successfully.' });
     } catch (error) {
         console.error('Failed to update SMTP settings:', error);
         res.status(500).json({ error: 'Failed to update SMTP settings' });
+    }
+});
+
+// POST Seed default templates — must be before /:id
+router.post('/seed', authMiddleware, async (req, res) => {
+    try {
+        const defaultTemplates = [
+            {
+                type: 'order_success',
+                subject: 'Your Emission Order is Confirmed! 🎉',
+                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:24px">Thank you, {{customerName}}! 🎉</h1><p style="color:#555">Your order has been confirmed and is being processed.</p><div style="background:#f9fafb;border-radius:8px;padding:16px;margin:20px 0"><p style="margin:0"><strong>Order ID:</strong> {{orderId}}</p><p style="margin:8px 0 0"><strong>Amount:</strong> ₹{{amount}}</p></div><p style="color:#555">We will notify you once your order ships. Thank you for choosing <strong>Emission</strong>.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:12px">Technical Platform by ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
+            },
+            {
+                type: 'order_rejected',
+                subject: 'Order Update from Emission',
+                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:24px">Order Update</h1><p style="color:#555">Dear {{customerName}}, we regret to inform you that your order <strong>#{{orderId}}</strong> has been cancelled or rejected.</p><p style="color:#555">If you believe this is an error, please contact our support team at genesis@emission.in.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:12px">Technical Platform by ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
+            },
+            {
+                type: 'welcome_email',
+                subject: 'Welcome to Emission — Your Account is Ready!',
+                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:24px">Welcome, {{customerName}}! 👋</h1><p style="color:#555">Your account has been created on <strong>Emission</strong>, the leading OEM manufacturer of sportswear and medical wear from Jabalpur, India.</p><p style="color:#555">You can now browse and order our products, track your shipments, and manage your account easily.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:12px">Technical Platform by ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
+            },
+            {
+                type: 'new_enquiry_admin',
+                subject: 'New Enquiry Received — Emission Admin',
+                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:20px">New Enquiry Received</h1><div style="background:#f9fafb;border-radius:8px;padding:16px;margin:20px 0"><p style="margin:0"><strong>Name:</strong> {{name}}</p><p style="margin:8px 0 0"><strong>Email:</strong> {{email}}</p><p style="margin:8px 0 0"><strong>Message:</strong> {{message}}</p></div><p style="color:#999;font-size:12px">Emission Admin — ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
+            },
+            {
+                type: 'payment_success',
+                subject: 'Payment Received — Emission',
+                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:24px">Payment Received! ✅</h1><p style="color:#555">We have successfully received your payment.</p><div style="background:#f9fafb;border-radius:8px;padding:16px;margin:20px 0"><p style="margin:0"><strong>Order ID:</strong> #{{orderId}}</p><p style="margin:8px 0 0"><strong>Amount Paid:</strong> ₹{{amount}}</p></div><p style="color:#555">Your order is now being processed. Thank you for shopping with <strong>Emission</strong>.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:12px">Technical Platform by ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
+            }
+        ];
+
+        let seeded = 0;
+        for (const t of defaultTemplates) {
+            await prisma.mailTemplate.upsert({
+                where: { type: t.type },
+                update: { subject: t.subject, body: t.body, active: true },
+                create: { type: t.type, subject: t.subject, body: t.body, active: true }
+            });
+            seeded++;
+        }
+        res.json({ success: true, message: `Seeded/updated ${seeded} templates.` });
+    } catch (error: any) {
+        console.error('Seed error:', error);
+        res.status(500).json({ error: 'Failed to seed mail templates', details: error.message });
+    }
+});
+
+// PUT Update a mail template — /:id must be LAST
+router.put('/:id', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { subject, body, active } = req.body;
+        const template = await prisma.mailTemplate.update({
+            where: { id },
+            data: { subject, body, active }
+        });
+        res.json(template);
+    } catch (error) {
+        console.error('Failed to update mail template:', error);
+        res.status(500).json({ error: 'Failed to update mail template' });
     }
 });
 
