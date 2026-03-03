@@ -78,8 +78,9 @@ export default function MailTemplates() {
         try {
             await api.post('/mail-templates/seed');
             fetchData();
-        } catch (error) {
-            alert('Failed to seed templates');
+        } catch (error: any) {
+            console.error('Seed error:', error);
+            alert(error.response?.data?.error || 'Failed to seed templates');
         }
     };
 

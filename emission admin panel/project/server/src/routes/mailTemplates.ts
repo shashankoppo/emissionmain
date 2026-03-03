@@ -63,25 +63,36 @@ router.post('/seed', authMiddleware, async (req, res) => {
                 type: 'new_enquiry_admin',
                 subject: 'New Enquiry Received',
                 body: '<h1>New Enquiry</h1><p>You have received a new enquiry from <strong>{{name}}</strong> ({{email}}).</p><p>Message: {{message}}</p>',
+            },
+            {
+                type: 'payment_success',
+                subject: 'Payment Successful - Emission',
+                body: '<h1>Payment Received!</h1><p>We have successfully received your payment of ₹{{amount}} for order #{{orderId}}.</p><p>We are processing your order now.</p>',
             }
         ];
 
+        let seeded = 0;
         for (const t of defaultTemplates) {
-            await prisma.mailTemplate.upsert({
-                where: { type: t.type },
-                update: {},
-                create: {
-                    type: t.type,
-                    subject: t.subject,
-                    body: t.body,
-                    active: true,
-                }
-            });
+            try {
+                await prisma.mailTemplate.upsert({
+                    where: { type: t.type },
+                    update: {},
+                    create: {
+                        type: t.type,
+                        subject: t.subject,
+                        body: t.body,
+                        active: true,
+                    }
+                });
+                seeded++;
+            } catch (err) {
+                console.error(`Failed to seed template ${t.type}:`, err);
+            }
         }
-        res.json({ success: true, message: 'Default templates verified/seeded.' });
-    } catch (error) {
-        console.error('Failed to seed mail templates:', error);
-        res.status(500).json({ error: 'Failed to seed mail templates' });
+        res.json({ success: true, message: `Verified/Seeded ${seeded} templates.` });
+    } catch (error: any) {
+        console.error('Global seed error:', error);
+        res.status(500).json({ error: 'Failed to seed mail templates', details: error.message });
     }
 });
 
