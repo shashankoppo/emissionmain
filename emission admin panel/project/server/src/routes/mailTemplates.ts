@@ -12,7 +12,11 @@ const router = Router();
 // GET all mail templates
 router.get('/', authMiddleware, async (req, res) => {
     try {
-        const templates = await prisma.mailTemplate.findMany({
+        const model = (prisma as any).emailTemplate;
+        if (!model) {
+            return res.status(503).json({ error: 'Email template model not ready. Please check server logs.' });
+        }
+        const templates = await model.findMany({
             orderBy: { createdAt: 'asc' }
         });
         res.json(templates);
@@ -72,6 +76,11 @@ router.post('/smtp', authMiddleware, async (req, res) => {
 // POST Seed default templates — must be before /:id
 router.post('/seed', authMiddleware, async (req, res) => {
     try {
+        const model = (prisma as any).emailTemplate;
+        if (!model) {
+            return res.status(503).json({ error: 'Email template model not ready. Please check server logs.' });
+        }
+
         const defaultTemplates = [
             {
                 type: 'order_success',
@@ -102,7 +111,7 @@ router.post('/seed', authMiddleware, async (req, res) => {
 
         let seeded = 0;
         for (const t of defaultTemplates) {
-            await prisma.mailTemplate.upsert({
+            await model.upsert({
                 where: { type: t.type },
                 update: { subject: t.subject, body: t.body, active: true },
                 create: { type: t.type, subject: t.subject, body: t.body, active: true }
@@ -119,11 +128,15 @@ router.post('/seed', authMiddleware, async (req, res) => {
 // POST Create a new custom mail template
 router.post('/', authMiddleware, async (req, res) => {
     try {
+        const model = (prisma as any).emailTemplate;
+        if (!model) {
+            return res.status(503).json({ error: 'Email template model not ready.' });
+        }
         const { type, subject, body, active } = req.body;
         if (!type || !subject || !body) {
             return res.status(400).json({ error: 'type, subject, and body are required.' });
         }
-        const template = await prisma.mailTemplate.create({
+        const template = await model.create({
             data: { type, subject, body, active: active ?? true }
         });
         res.json(template);
@@ -139,9 +152,12 @@ router.post('/', authMiddleware, async (req, res) => {
 // PUT Update a mail template — /:id must be AFTER named routes
 router.put('/:id', authMiddleware, async (req, res) => {
     try {
+        const model = (prisma as any).emailTemplate;
+        if (!model) return res.status(503).json({ error: 'Email template model not ready.' });
+
         const { id } = req.params;
         const { subject, body, active } = req.body;
-        const template = await prisma.mailTemplate.update({
+        const template = await model.update({
             where: { id },
             data: { subject, body, active }
         });
@@ -155,8 +171,11 @@ router.put('/:id', authMiddleware, async (req, res) => {
 // DELETE a mail template
 router.delete('/:id', authMiddleware, async (req, res) => {
     try {
+        const model = (prisma as any).emailTemplate;
+        if (!model) return res.status(503).json({ error: 'Email template model not ready.' });
+
         const { id } = req.params;
-        await prisma.mailTemplate.delete({ where: { id } });
+        await model.delete({ where: { id } });
         res.json({ success: true });
     } catch (error) {
         console.error('Failed to delete mail template:', error);
@@ -165,4 +184,3 @@ router.delete('/:id', authMiddleware, async (req, res) => {
 });
 
 export default router;
-

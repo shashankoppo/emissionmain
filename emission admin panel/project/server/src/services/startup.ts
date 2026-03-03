@@ -3,25 +3,29 @@ import { initTransporter } from './email.js';
 
 export const runStartupTasks = async () => {
     console.log('--- STARTING STARTUP TASKS ---');
-    console.log('Available Prisma Models:', Object.keys(prisma).filter(k => !k.startsWith('_')));
+
+    const availableModels = Object.keys(prisma).filter(k => !k.startsWith('_'));
+    console.log('Available Prisma Models:', availableModels);
 
     try {
         // 1. Migrate SMTP keys (Uppercase -> Lowercase)
         const keysToMigrate = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM'];
-        for (const oldKey of keysToMigrate) {
-            const setting = await prisma.setting.findUnique({ where: { key: oldKey } });
-            if (setting) {
-                const newKey = oldKey.toLowerCase();
-                await prisma.setting.upsert({
-                    where: { key: newKey },
-                    update: { value: setting.value },
-                    create: { key: newKey, value: setting.value }
-                });
-                console.log(`Migrated ${oldKey} to ${newKey}`);
+        if (prisma.setting) {
+            for (const oldKey of keysToMigrate) {
+                const setting = await prisma.setting.findUnique({ where: { key: oldKey } });
+                if (setting) {
+                    const newKey = oldKey.toLowerCase();
+                    await prisma.setting.upsert({
+                        where: { key: newKey },
+                        update: { value: setting.value },
+                        create: { key: newKey, value: setting.value }
+                    });
+                    console.log(`Migrated ${oldKey} to ${newKey}`);
+                }
             }
         }
 
-        // 2. Auto-Seed/Fix Mail Templates (always ensure correct content)
+        // 2. Auto-Seed/Fix Email Templates (model name: emailTemplate)
         const defaultTemplates = [
             {
                 type: 'order_success',
@@ -50,42 +54,42 @@ export const runStartupTasks = async () => {
             }
         ];
 
-        for (const t of defaultTemplates) {
-            const modelName = 'mailTemplate';
-            if (prisma[modelName]) {
-                await prisma[modelName].upsert({
+        const templateModel = (prisma as any).emailTemplate;
+
+        if (templateModel) {
+            for (const t of defaultTemplates) {
+                await templateModel.upsert({
                     where: { type: t.type },
                     update: { subject: t.subject, body: t.body, active: true },
                     create: { type: t.type, subject: t.subject, body: t.body, active: true }
                 });
-            } else {
-                console.warn(`⚠️ Warning: Prisma model "${modelName}" not found in current client. Skipping template seeding.`);
             }
+            console.log('✅ Email templates seeded/updated.');
+        } else {
+            console.warn('⚠️ Warning: emailTemplate model not found. Skipping seeding.');
         }
-        console.log('✅ Mail templates seeded/updated.');
 
         // 3. Seed default site settings
         const defaultSettings = [
             { key: 'SITE_TITLE', value: 'Emission - Premium Sportswear & Medical Wear' },
             { key: 'SITE_DESCRIPTION', value: 'Premium OEM manufacturer of sportswear and medical wear engineered with precision. Born in Jabalpur, India.' },
         ];
-        for (const s of defaultSettings) {
-            const settingModel = 'setting';
-            if (prisma[settingModel]) {
-                await prisma[settingModel].upsert({
+        if (prisma.setting) {
+            for (const s of defaultSettings) {
+                await prisma.setting.upsert({
                     where: { key: s.key },
                     update: {},
                     create: { key: s.key, value: s.value },
                 });
             }
+            console.log('✅ Site settings seeded.');
         }
-        console.log('✅ Site settings seeded.');
 
         // 4. Initialize Email Transporter
         await initTransporter();
 
     } catch (error) {
-        console.error('CRITICAL: Startup tasks failed:', error);
+        console.error('CRITICAL: Startup tasks failed but continuing:', error);
     }
 
     console.log('--- STARTUP TASKS COMPLETED ---');

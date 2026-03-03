@@ -145,7 +145,7 @@ model Banner {
   updatedAt DateTime @updatedAt
 }
 
-model MailTemplate {
+model EmailTemplate {
   id        String   @id @default(uuid())
   type      String   @unique
   subject   String
