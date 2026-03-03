@@ -47,7 +47,11 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="p-4 border-t border-gray-800">
+      <div className="p-4 border-t border-gray-800 space-y-4">
+        <div className="px-4">
+          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Technical Partner</p>
+          <p className="text-[10px] font-black text-blue-400 mt-1 uppercase tracking-wider leading-tight">ELSxGlobal Divission of Evolucentsphere Private Limited</p>
+        </div>
         <button
           onClick={logout}
           className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-300 hover:bg-gray-800 w-full transition"
