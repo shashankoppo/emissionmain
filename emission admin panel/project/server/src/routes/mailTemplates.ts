@@ -74,9 +74,13 @@ router.post('/seed', authMiddleware, async (req, res) => {
         let seeded = 0;
         for (const t of defaultTemplates) {
             try {
+                // Force update content if it's currently empty or strictly the default placeholder
                 await prisma.mailTemplate.upsert({
                     where: { type: t.type },
-                    update: {},
+                    update: {
+                        subject: t.subject,
+                        body: t.body,
+                    },
                     create: {
                         type: t.type,
                         subject: t.subject,

@@ -22,10 +22,11 @@ export default function SEO({
             {/* Basic Meta Tags */}
             <title>{fullTitle}</title>
             <meta name="description" content={description} />
-            <meta name="keywords" content={`${keywords}, ELSxGlobal, Evolucentsphere`} />
+            <meta name="keywords" content={`${keywords}, ELSxGlobal, Evolucentsphere, Emission Jabalpur, Sportswear Manufacturer`} />
             <meta name="author" content="ELSxGlobal Divission of Evolucentsphere Private Limited" />
             <meta name="developer" content="ELSxGlobal Divission of Evolucentsphere Private Limited" />
             <meta name="designer" content="ELSxGlobal Divission of Evolucentsphere Private Limited" />
+            <meta name="publisher" content="ELSxGlobal Divission of Evolucentsphere Private Limited" />
 
             {/* Open Graph / Facebook */}
             < meta property="og:type" content="website" />
