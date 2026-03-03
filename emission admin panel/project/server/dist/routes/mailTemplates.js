@@ -12,7 +12,7 @@ router.get('/', authMiddleware, async (req, res) => {
         if (!model) return res.status(503).json({ error: 'Email model not ready.' });
         const templates = await model.findMany({ orderBy: { createdAt: 'asc' } });
         res.json(templates);
-    } catch { res.status(500).json({ error: 'Failed' }); }
+    } catch { res.status(500).json({ error: 'Failed to fetch templates' }); }
 });
 
 router.get('/smtp', authMiddleware, async (req, res) => {
@@ -20,17 +20,32 @@ router.get('/smtp', authMiddleware, async (req, res) => {
         const settings = await prisma.setting.findMany({ where: { key: { in: ['smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from'] } } });
         const config = settings.reduce((acc, curr) => { acc[curr.key] = curr.value; return acc; }, {});
         res.json({ smtp_host: config.smtp_host || '', smtp_port: config.smtp_port || '587', smtp_user: config.smtp_user || '', smtp_pass: config.smtp_pass || '', smtp_from: config.smtp_from || '' });
-    } catch { res.status(500).json({ error: 'Failed' }); }
+    } catch { res.status(500).json({ error: 'Failed to fetch SMTP settings' }); }
 });
 
 router.post('/smtp', authMiddleware, async (req, res) => {
     try {
         const { smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from } = req.body;
         const keys = { smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from };
-        for (const [key, value] of Object.entries(keys)) { await prisma.setting.upsert({ where: { key }, update: { value: String(value || '') }, create: { key, value: String(value || '') } }); }
+
+        console.log('Updating SMTP Settings:', { host: smtp_host, user: smtp_user, from: smtp_from });
+
+        for (const [key, value] of Object.entries(keys)) {
+            await prisma.setting.upsert({
+                where: { key },
+                update: { value: String(value || '') },
+                create: { key, value: String(value || '') }
+            });
+        }
+
+        // initTransporter will now handle timeouts internally
         await initTransporter();
-        res.json({ success: true });
-    } catch { res.status(500).json({ error: 'Failed' }); }
+
+        res.json({ success: true, message: 'SMTP settings updated successfully.' });
+    } catch (error) {
+        console.error('Failed to update SMTP settings:', error);
+        res.status(500).json({ error: 'Failed to update SMTP settings', details: error.message });
+    }
 });
 
 router.post('/seed', authMiddleware, async (req, res) => {

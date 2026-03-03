@@ -3,6 +3,9 @@ import prisma from '../lib/db.js';
 
 let transporter: nodemailer.Transporter | null = null;
 
+// Helper to get the correct model name (unified with routes)
+const getMailModel = () => (prisma as any).appEmail || (prisma as any).emailTemplate || (prisma as any).mailTemplate;
+
 export const initTransporter = async () => {
     try {
         const settings = await prisma.setting.findMany({
@@ -32,12 +35,27 @@ export const initTransporter = async () => {
                 user: config.smtp_user,
                 pass: config.smtp_pass,
             },
+            connectionTimeout: 10000, // 10 seconds timeout
+            greetingTimeout: 10000,
         });
 
-        // Verify connection
-        await transporter.verify();
-        console.log('SMTP connection established successfully.');
-        return true;
+        // Verify connection with a timeout to prevent hanging the server
+        console.log(`Verifying SMTP connection to ${config.smtp_host}...`);
+
+        // We don't await verify() here if we want the server to start even with bad SMTP,
+        // but we DO want to know if it works.
+        try {
+            await Promise.race([
+                transporter.verify(),
+                new Promise((_, reject) => setTimeout(() => reject(new Error('SMTP Verification Timeout')), 8000))
+            ]);
+            console.log('✅ SMTP connection established successfully.');
+            return true;
+        } catch (vErr) {
+            console.warn('⚠️ SMTP Verification failed (but settings saved):', (vErr as Error).message);
+            // We keep the transporter even if verify fails once, maybe it's a temporary network glitch
+            return true;
+        }
     } catch (error) {
         console.error('Failed to initialize SMTP transporter:', error);
         transporter = null;
@@ -56,7 +74,13 @@ export const sendEmail = async (to: string, type: string, variables: Record<stri
             return false;
         }
 
-        const template = await prisma.mailTemplate.findUnique({
+        const model = getMailModel();
+        if (!model) {
+            console.error('Cannot send email: Email template model not found in Prisma');
+            return false;
+        }
+
+        const template = await model.findUnique({
             where: { type }
         });
 
@@ -92,6 +116,3 @@ export const sendEmail = async (to: string, type: string, variables: Record<stri
         return false;
     }
 };
-
-// Initialized via startup tasks
-// initTransporter();

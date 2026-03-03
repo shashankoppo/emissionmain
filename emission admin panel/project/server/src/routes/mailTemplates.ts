@@ -43,12 +43,25 @@ router.post('/smtp', authMiddleware, async (req, res) => {
     try {
         const { smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from } = req.body;
         const keys = { smtp_host, smtp_port, smtp_user, smtp_pass, smtp_from };
+
+        console.log('Admin updating SMTP Settings...');
+
         for (const [key, value] of Object.entries(keys)) {
-            await prisma.setting.upsert({ where: { key }, update: { value: String(value || '') }, create: { key, value: String(value || '') } });
+            await prisma.setting.upsert({
+                where: { key },
+                update: { value: String(value || '') },
+                create: { key, value: String(value || '') }
+            });
         }
+
+        // Re-init transporter (now has timeout safety)
         await initTransporter();
-        res.json({ success: true });
-    } catch { res.status(500).json({ error: 'Failed' }); }
+
+        res.json({ success: true, message: 'SMTP settings updated successfully.' });
+    } catch (error: any) {
+        console.error('Failed to update SMTP settings:', error);
+        res.status(500).json({ error: 'Failed to update SMTP settings', details: error.message });
+    }
 });
 
 // POST Seed
