@@ -1,0 +1,147 @@
+import express from 'express';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
+import prisma from '../lib/db.js';
+import { sendEmail } from '../services/email.js';
+const router = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET || 'emission_admin_secret_key_change_in_production';
+// Auth middleware for customers
+const customerAuth = async (req, res, next) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token)
+            return res.status(401).json({ error: 'Unauthorized' });
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.customerId = decoded.id;
+        next();
+    }
+    catch (error) {
+        res.status(401).json({ error: 'Unauthorized' });
+    }
+};
+// Register a new customer
+router.post('/register', async (req, res) => {
+    try {
+        const { name, email, password, phone } = req.body;
+        if (!name || !email || !password) {
+            return res.status(400).json({ error: 'Name, email and password are required' });
+        }
+        const existing = await prisma.customer.findUnique({ where: { email } });
+        if (existing) {
+            return res.status(400).json({ error: 'An account with this email already exists' });
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const customer = await prisma.customer.create({
+            data: { name, email, password: hashedPassword, phone },
+        });
+        // Send welcome email
+        sendEmail(customer.email, 'welcome_email', {
+            customerName: customer.name
+        });
+        const token = jwt.sign({ id: customer.id, email: customer.email }, JWT_SECRET, { expiresIn: '30d' });
+        res.json({ token, customer: { id: customer.id, name: customer.name, email: customer.email, phone: customer.phone } });
+    }
+    catch (error) {
+        console.error('Customer register error:', error);
+        res.status(500).json({ error: 'Registration failed' });
+    }
+});
+// Login an existing customer
+router.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(400).json({ error: 'Email and password are required' });
+        }
+        const customer = await prisma.customer.findUnique({ where: { email } });
+        if (!customer) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+        const isValid = await bcrypt.compare(password, customer.password);
+        if (!isValid) {
+            return res.status(401).json({ error: 'Invalid email or password' });
+        }
+        const token = jwt.sign({ id: customer.id, email: customer.email }, JWT_SECRET, { expiresIn: '30d' });
+        res.json({ token, customer: { id: customer.id, name: customer.name, email: customer.email, phone: customer.phone } });
+    }
+    catch (error) {
+        console.error('Customer login error:', error);
+        res.status(500).json({ error: 'Login failed' });
+    }
+});
+// Get customer profile
+router.get('/profile', customerAuth, async (req, res) => {
+    try {
+        const customer = await prisma.customer.findUnique({
+            where: { id: req.customerId },
+            select: { id: true, name: true, email: true, phone: true, address: true, city: true, state: true, pincode: true }
+        });
+        res.json({ customer });
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to fetch profile' });
+    }
+});
+// Update customer profile
+router.put('/profile', customerAuth, async (req, res) => {
+    try {
+        const { name, phone, address, city, state, pincode } = req.body;
+        const customer = await prisma.customer.update({
+            where: { id: req.customerId },
+            data: { name, phone, address, city, state, pincode },
+            select: { id: true, name: true, email: true, phone: true, address: true, city: true, state: true, pincode: true }
+        });
+        res.json({ customer });
+    }
+    catch (error) {
+        console.error('Update profile error:', error);
+        res.status(500).json({ error: 'Failed to update profile' });
+    }
+});
+// Get customer orders with enriched product details
+router.get('/orders', customerAuth, async (req, res) => {
+    try {
+        const orders = await prisma.order.findMany({
+            where: { customerId: req.customerId },
+            orderBy: { createdAt: 'desc' }
+        });
+        // Enrich each order's items with product names from the products table
+        const enriched = await Promise.all(orders.map(async (order) => {
+            let items = [];
+            try {
+                items = typeof order.items === 'string' ? JSON.parse(order.items || '[]') : (order.items || []);
+            }
+            catch {
+                items = [];
+            }
+            const enrichedItems = await Promise.all(items.map(async (item) => {
+                if (item.name && item.name !== 'Product')
+                    return item;
+                if (!item.productId)
+                    return item;
+                try {
+                    const product = await prisma.product.findUnique({
+                        where: { id: item.productId },
+                        select: { name: true, retailPrice: true, price: true }
+                    });
+                    if (product) {
+                        return {
+                            ...item,
+                            name: product.name,
+                            price: item.price || Number(product.retailPrice || product.price) || 0
+                        };
+                    }
+                }
+                catch { }
+                return item;
+            }));
+            return { ...order, items: JSON.stringify(enrichedItems) };
+        }));
+        res.json({ orders: enriched });
+    }
+    catch (error) {
+        console.error('Fetch orders error:', error);
+        res.status(500).json({ error: 'Failed to fetch orders' });
+    }
+});
+export default router;

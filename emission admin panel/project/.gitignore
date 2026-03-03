@@ -7,8 +7,9 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
-dist-ssr
+# Allow server/dist to be committed (Docker uses it)
+client/dist
+client/dist-ssr
 *.local
 
 .vscode/*
