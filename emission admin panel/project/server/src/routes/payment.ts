@@ -220,11 +220,15 @@ router.post('/verify-payment', async (req, res) => {
         });
 
         // Send order success email
-        sendEmail(order.customerEmail, 'order_success', {
-            customerName: order.customerName,
-            orderId: order.id,
-            amount: order.totalAmount.toString(),
-        });
+        try {
+            await sendEmail(order.customerEmail, 'order_success', {
+                customerName: order.customerName,
+                orderId: order.id,
+                amount: order.totalAmount.toString(),
+            });
+        } catch (mailErr) {
+            console.error('Background payment email failed:', mailErr);
+        }
     } catch (error: any) {
         console.error('Payment verification failed:', error);
         res.status(500).json({
