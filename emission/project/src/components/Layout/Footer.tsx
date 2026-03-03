@@ -1,4 +1,4 @@
-import { MapPin, Award } from 'lucide-react';
+import { MapPin, Award, Code2 } from 'lucide-react';
 import { PageType } from '../../types';
 import EmissionLogo from '../UI/EmissionLogo';
 
@@ -82,21 +82,23 @@ export default function Footer({ onNavigate }: FooterProps) {
         </div>
       </div>
 
-      {/* Legal & Local Pride */}
-      <div className="border-t border-white/5 py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="flex items-center gap-6">
-              <p className="text-[8px] font-black uppercase tracking-[0.4em]">
-                © {new Date().getFullYear()} EMISSION LABORATORY.
+      {/* Technical Partner Banner */}
+      <div className="border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8">
+              <p className="text-[8px] font-black uppercase tracking-[0.4em] text-white/40">
+                © {new Date().getFullYear()} EMISSION LABORATORY. ENGINEERED IN JABALPUR, INDIA.
               </p>
               <div className="h-4 w-[1px] bg-white/10 hidden md:block" />
-              <p className="text-[8px] font-black uppercase tracking-[0.4em] text-white/40">
-                ENGINEERED WITH PASSION IN JABALPUR, INDIA.
-              </p>
-              <div className="h-4 w-[1px] bg-white/10 hidden md:block" />
-              <p className="text-[8px] font-black uppercase tracking-[0.4em] text-white/40">
-                Technical Partner: <span className="text-blue-500">ELSxGlobal</span> Divission of Evolucentsphere Private Limited
+              <div className="flex items-center gap-2">
+                <Code2 className="w-3 h-3 text-blue-400" />
+                <p className="text-[8px] font-black uppercase tracking-[0.4em]">
+                  Technology Partner: <span className="text-blue-400">ELSxGlobal</span>
+                </p>
+              </div>
+              <p className="text-[7px] font-bold uppercase tracking-[0.3em] text-white/30">
+                Divission of Evolucentsphere Private Limited
               </p>
             </div>
 

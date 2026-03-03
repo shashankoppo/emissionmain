@@ -16,6 +16,7 @@ import CollectionManagement from './pages/Collections';
 import InvoiceDesign from './pages/InvoiceDesign';
 import Coupons from './pages/Coupons';
 import MailTemplates from './pages/MailTemplates';
+import SEOSettings from './pages/SEOSettings';
 
 function AdminLayout() {
   return (
@@ -36,6 +37,7 @@ function AdminLayout() {
           <Route path="/invoice-design" element={<InvoiceDesign />} />
           <Route path="/coupons" element={<Coupons />} />
           <Route path="/mail-settings" element={<MailTemplates />} />
+          <Route path="/seo" element={<SEOSettings />} />
           <Route path="/" element={<Navigate to="/dashboard" />} />
         </Routes>
       </main>
