@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
-import { FileText, Download, Printer, Search, Eye, Filter, MoreVertical, Calendar, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { FileText, Download, Printer, Search, Eye, Filter, MoreVertical, Calendar, CheckCircle, Clock, XCircle, Mail, Loader2 } from 'lucide-react';
 
 interface Order {
     id: string;
@@ -21,6 +21,8 @@ export default function Invoices() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [sendingEmail, setSendingEmail] = useState<string | null>(null);
+    const [emailStatus, setEmailStatus] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
     useEffect(() => {
         Promise.all([fetchOrders(), fetchTemplate()]).finally(() => {
@@ -190,6 +192,20 @@ export default function Invoices() {
         }, 500);
     };
 
+    const sendInvoiceEmail = async (orderId: string) => {
+        setSendingEmail(orderId);
+        setEmailStatus(null);
+        try {
+            await api.post(`/invoices/send/${orderId}`);
+            setEmailStatus({ type: 'success', text: 'Invoice emailed successfully!' });
+            setTimeout(() => setEmailStatus(null), 3000);
+        } catch (error) {
+            setEmailStatus({ type: 'error', text: 'Failed to send email.' });
+        } finally {
+            setSendingEmail(null);
+        }
+    };
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
@@ -211,6 +227,13 @@ export default function Invoices() {
                     </button>
                 </div>
             </div>
+
+            {emailStatus && (
+                <div className={`mb-8 p-4 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 ${emailStatus.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                    {emailStatus.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                    <p className="text-sm font-black uppercase tracking-widest">{emailStatus.text}</p>
+                </div>
+            )}
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
@@ -315,6 +338,14 @@ export default function Invoices() {
                                                 <Eye className="w-4 h-4" />
                                             </button>
                                             <button
+                                                onClick={() => sendInvoiceEmail(order.id)}
+                                                disabled={sendingEmail === order.id}
+                                                title="Email Invoice"
+                                                className="p-3 bg-white border border-gray-100 text-gray-900 rounded-xl hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-50"
+                                            >
+                                                {sendingEmail === order.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                                            </button>
+                                            <button
                                                 onClick={() => printInvoice(order)}
                                                 title="Print Invoice"
                                                 className="p-3 bg-black text-white rounded-xl hover:bg-blue-600 transition-all shadow-lg shadow-black/10"
@@ -410,8 +441,16 @@ export default function Invoices() {
                         </div>
                         <div className="p-8 border-t border-gray-50 flex justify-center gap-4 bg-white">
                             <button
+                                onClick={() => sendInvoiceEmail(selectedOrder.id)}
+                                disabled={sendingEmail === selectedOrder.id}
+                                className="flex items-center gap-3 bg-blue-600 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-xl shadow-blue-600/20 disabled:opacity-50"
+                            >
+                                {sendingEmail === selectedOrder.id ? <Loader2 className="w-5 h-5 animate-spin" /> : <Mail className="w-5 h-5" />}
+                                {sendingEmail === selectedOrder.id ? 'Sending...' : 'Mail Invoice'}
+                            </button>
+                            <button
                                 onClick={() => printInvoice(selectedOrder)}
-                                className="flex items-center gap-3 bg-black text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl shadow-black/10"
+                                className="flex items-center gap-3 bg-black text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-900 transition-all shadow-xl shadow-black/10"
                             >
                                 <Printer className="w-5 h-5" />
                                 Print Now

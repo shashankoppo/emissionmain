@@ -51,6 +51,11 @@ export const runStartupTasks = async () => {
                 type: 'payment_success',
                 subject: 'Payment Received — Emission',
                 body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:24px">Payment Received! ✅</h1><p style="color:#555">We have successfully received your payment.</p><div style="background:#f9fafb;border-radius:8px;padding:16px;margin:20px 0"><p style="margin:0"><strong>Order ID:</strong> #{{orderId}}</p><p style="margin:8px 0 0"><strong>Amount Paid:</strong> ₹{{amount}}</p></div><p style="color:#555">Your order is now being processed. Thank you for shopping with <strong>Emission</strong>.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:12px">Technical Platform by ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
+            },
+            {
+                type: 'invoice_manual',
+                subject: 'Invoice for your order #{{orderId}} — Emission',
+                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:20px text-transform:uppercase">Digital Invoice</h1><p style="color:#555">Dear {{customerName}}, please find the transaction details for your recently cleared order <strong>#{{orderId}}</strong>.</p><div style="background:#f9fafb;border-radius:8px;padding:24px;margin:20px 0"><p style="margin:0;font-size:12px;color:#999;text-transform:uppercase">Total Amount Paid</p><p style="margin:4px 0 0;font-size:32px;font-weight:900;color:#000">₹{{amount}}</p></div><p style="color:#555">This is a system generated acknowledgement for your records. You can also download the PDF from your dashboard.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:10px">Issued by Emission — Premium Retail Division. Jabalpur, MP.</p></div>`,
             }
         ];
 

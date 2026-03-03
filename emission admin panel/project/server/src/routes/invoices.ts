@@ -77,4 +77,30 @@ router.put('/template', authMiddleware, async (req, res) => {
     }
 });
 
+// Send Manual Invoice Email
+router.post('/send/:orderId', authMiddleware, async (req, res) => {
+    try {
+        const { orderId } = req.params;
+        const order = await (prisma as any).order.findUnique({ where: { id: orderId } });
+
+        if (!order) return res.status(404).json({ error: 'Order not found' });
+
+        const { sendEmail } = await import('../services/email.js');
+        const success = await sendEmail(order.customerEmail, 'invoice_manual', {
+            customerName: order.customerName,
+            orderId: order.invoiceId || order.id.slice(0, 8).toUpperCase(),
+            amount: Number(order.totalAmount).toLocaleString(),
+        });
+
+        if (success) {
+            res.json({ success: true, message: 'Invoice sent successfully' });
+        } else {
+            res.status(500).json({ error: 'Failed to send invoice email' });
+        }
+    } catch (error: any) {
+        console.error('Invoice manual send error:', error);
+        res.status(500).json({ error: 'Internal Server Error', details: error.message });
+    }
+});
+
 export default router;
