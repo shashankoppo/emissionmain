@@ -98,11 +98,15 @@ app.post('/api/admin/backfill-orders', async (req, res) => {
 });
 
 app.listen(PORT, async () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-  console.log(`API available at http://localhost:${PORT}/api`);
+  console.log(`🚀 SERVER RUNNING AT http://localhost:${PORT}`);
+  console.log(`📡 API ENDPOINT: http://localhost:${PORT}/api`);
 
-  // Run automated startup tasks (migrations, seeding, etc)
-  await runStartupTasks();
+  try {
+    // Run automated startup tasks (migrations, seeding, etc)
+    await runStartupTasks();
+  } catch (err) {
+    console.error('❌ CRITICAL: Could not complete startup tasks:', err);
+  }
 });
 
 process.on('SIGINT', async () => {
