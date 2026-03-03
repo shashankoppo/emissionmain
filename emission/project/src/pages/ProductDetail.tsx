@@ -4,6 +4,7 @@ import { PageType } from '../types';
 import api, { productAPI, Product } from '../lib/api';
 import Button from '../components/UI/Button';
 import ProductCard from '../components/UI/ProductCard';
+import SEO from '../components/UI/SEO';
 import SizeChart from '../components/UI/SizeChart';
 import PincodeChecker from '../components/UI/PincodeChecker';
 import SizeSelector from '../components/UI/SizeSelector';
@@ -120,7 +121,15 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart, wish
   }
 
   return (
-    <div className="min-h-screen bg-white pb-32 lg:pb-0">
+    <div className="pt-24 min-h-screen bg-white pb-32 lg:pb-0">
+      {product && (
+        <SEO
+          title={`${product.name} - Premium ${product.category}`}
+          description={product.description || product.shortDescription}
+          image={product.image}
+          keywords={`${product.name}, ${product.category}, ${product.subcategory}, Emission sportswear, Emission medical wear`}
+        />
+      )}
       <SizeChart
         isOpen={isSizeChartOpen}
         onClose={() => setIsSizeChartOpen(false)}

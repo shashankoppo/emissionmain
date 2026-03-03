@@ -3,6 +3,7 @@ import { ArrowRight, Package, Shield, Truck, CheckCircle, Clock, Award, ChevronL
 import { PageType } from '../types';
 import { productAPI, Product, bannerAPI, Banner, collectionAPI, FeaturedCollection } from '../lib/api';
 import ProductCard from '../components/UI/ProductCard';
+import SEO from '../components/UI/SEO';
 
 interface HomeProps {
   onNavigate: (page: PageType, param?: string) => void;
@@ -69,6 +70,7 @@ export default function Home({ onNavigate, onAddToCart, wishlist, onToggleWishli
 
   return (
     <div className="font-sans selection:bg-black selection:text-white">
+      <SEO />
       {/* Hero Section - Dynamic Banners */}
       <div className="relative h-[90vh] bg-black overflow-hidden flex items-center">
         {banners.length > 0 ? (

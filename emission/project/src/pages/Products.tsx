@@ -3,6 +3,7 @@ import { PageType } from '../types';
 import { SlidersHorizontal, Search, X, ChevronRight, LayoutGrid, List } from 'lucide-react';
 import { productAPI, Product, bannerAPI, Banner } from '../lib/api';
 import ProductCard from '../components/UI/ProductCard';
+import SEO from '../components/UI/SEO';
 
 interface ProductsProps {
   onNavigate: (page: PageType, productId?: string) => void;
@@ -142,6 +143,10 @@ export default function Products({ onNavigate, selectedCategory, onAddToCart, wi
 
   return (
     <div className="min-h-screen bg-white">
+      <SEO
+        title={`${activeCategory === 'all' ? 'All Products' : activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)} Collection`}
+        description={`Explore our premium collection of ${activeCategory === 'all' ? 'sportswear and medical wear' : activeCategory}. High-quality manufacturing from Jabalpur.`}
+      />
       {/* Search & Hero Bar */}
       <div className="bg-black text-white relative overflow-hidden">
         <div

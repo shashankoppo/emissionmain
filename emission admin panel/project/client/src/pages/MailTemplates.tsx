@@ -29,19 +29,22 @@ export default function MailTemplates() {
     }, []);
 
     const fetchData = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
-            const [tempRes, smtpRes] = await Promise.all([
-                api.get('/mail-templates'),
-                api.get('/mail-templates/smtp')
-            ]);
-            setTemplates(tempRes.data);
+            const tempRes = await api.get('/mail-templates');
+            console.log('Fetched templates:', tempRes.data);
+            setTemplates(Array.isArray(tempRes.data) ? tempRes.data : []);
+        } catch (error) {
+            console.error('Failed to fetch mail templates', error);
+        }
+
+        try {
+            const smtpRes = await api.get('/mail-templates/smtp');
             setSmtpSettings(smtpRes.data);
         } catch (error) {
-            console.error('Failed to fetch mail data', error);
-        } finally {
-            setLoading(false);
+            console.error('Failed to fetch SMTP settings', error);
         }
+        setLoading(false);
     };
 
     const handleSaveSmtp = async (e: React.FormEvent) => {
@@ -195,7 +198,13 @@ export default function MailTemplates() {
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         <div className="lg:col-span-1 space-y-4">
-                            {templates.map(t => (
+                            {loading && templates.length === 0 && (
+                                <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                                    <RefreshCw className="w-8 h-8 animate-spin mb-2" />
+                                    <p className="text-sm">Loading templates...</p>
+                                </div>
+                            )}
+                            {!loading && templates.map(t => (
                                 <div
                                     key={t.id}
                                     onClick={() => setEditingTemplate(t)}
@@ -208,8 +217,10 @@ export default function MailTemplates() {
                                     <p className="text-xs text-gray-500 truncate">{t.subject}</p>
                                 </div>
                             ))}
-                            {templates.length === 0 && (
-                                <p className="text-sm text-gray-500 italic">No templates found. Click "Seed Default Templates" to generate basic templates.</p>
+                            {!loading && templates.length === 0 && (
+                                <p className="text-sm text-gray-500 italic p-4 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                                    No templates found. Click "Seed Default Templates" to generate them.
+                                </p>
                             )}
                         </div>
 

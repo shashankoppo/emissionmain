@@ -94,6 +94,10 @@ export default function Footer({ onNavigate }: FooterProps) {
               <p className="text-[8px] font-black uppercase tracking-[0.4em] text-white/40">
                 ENGINEERED WITH PASSION IN JABALPUR, INDIA.
               </p>
+              <div className="h-4 w-[1px] bg-white/10 hidden md:block" />
+              <p className="text-[8px] font-black uppercase tracking-[0.4em] text-white/40">
+                Technical Partner: <span className="text-blue-500">ELSxGlobal</span> Divission of Evolucentsphere Private Limited
+              </p>
             </div>
 
             <div className="flex items-center gap-6 opacity-40 hover:opacity-100 transition-opacity">
