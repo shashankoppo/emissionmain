@@ -116,7 +116,27 @@ router.post('/seed', authMiddleware, async (req, res) => {
     }
 });
 
-// PUT Update a mail template — /:id must be LAST
+// POST Create a new custom mail template
+router.post('/', authMiddleware, async (req, res) => {
+    try {
+        const { type, subject, body, active } = req.body;
+        if (!type || !subject || !body) {
+            return res.status(400).json({ error: 'type, subject, and body are required.' });
+        }
+        const template = await prisma.mailTemplate.create({
+            data: { type, subject, body, active: active ?? true }
+        });
+        res.json(template);
+    } catch (error: any) {
+        console.error('Failed to create mail template:', error);
+        if (error.code === 'P2002') {
+            return res.status(409).json({ error: `A template with type "${req.body.type}" already exists.` });
+        }
+        res.status(500).json({ error: 'Failed to create mail template' });
+    }
+});
+
+// PUT Update a mail template — /:id must be AFTER named routes
 router.put('/:id', authMiddleware, async (req, res) => {
     try {
         const { id } = req.params;
@@ -132,4 +152,17 @@ router.put('/:id', authMiddleware, async (req, res) => {
     }
 });
 
+// DELETE a mail template
+router.delete('/:id', authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        await prisma.mailTemplate.delete({ where: { id } });
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Failed to delete mail template:', error);
+        res.status(500).json({ error: 'Failed to delete mail template' });
+    }
+});
+
 export default router;
+
