@@ -38,6 +38,13 @@ export default function SizeChart({ isOpen, onClose, category }: SizeChartProps)
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 <tr>
+                                    <td className="py-3 px-4 font-bold text-left">XXS</td>
+                                    <td className="py-3 px-4">32-34</td>
+                                    <td className="py-3 px-4">26-28</td>
+                                    <td className="py-3 px-4">25</td>
+                                    <td className="py-3 px-4">16</td>
+                                </tr>
+                                <tr>
                                     <td className="py-3 px-4 font-bold text-left">XS</td>
                                     <td className="py-3 px-4">34-36</td>
                                     <td className="py-3 px-4">28-30</td>

@@ -30,7 +30,7 @@ interface ProductFormProps {
   onClose: () => void;
 }
 
-const COMMON_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', '5XL'];
+const COMMON_SIZES = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', '5XL'];
 const COMMON_COLORS = [
   { name: 'Black', hex: '#000000' },
   { name: 'White', hex: '#FFFFFF' },

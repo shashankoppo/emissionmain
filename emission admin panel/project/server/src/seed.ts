@@ -28,7 +28,7 @@ const products = [
     specifications: JSON.stringify({
       'Material': '100% Polyester',
       'GSM': '180-220',
-      'Sizes': 'XS to 5XL',
+      'Sizes': 'XXS to 5XL',
       'MOQ': '50 pieces',
       'Customization': 'Logo, Colors, Design'
     }),
@@ -88,7 +88,7 @@ const products = [
     specifications: JSON.stringify({
       'Material': '100% Polyester',
       'GSM': '140-160',
-      'Sizes': 'XS to 3XL',
+      'Sizes': 'XXS to 3XL',
       'MOQ': '25 pieces',
       'Customization': 'Numbers, names, logos'
     }),
@@ -148,7 +148,7 @@ const products = [
     specifications: JSON.stringify({
       'Material': 'Poly-cotton blend',
       'GSM': '180-200',
-      'Sizes': 'XS to 4XL',
+      'Sizes': 'XXS to 4XL',
       'MOQ': '100 sets',
       'Customization': 'Colors and embroidery'
     }),
