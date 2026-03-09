@@ -109,10 +109,13 @@ export const sendEmail = async (to: string, type: string, variables: Record<stri
             html,
         });
 
-        console.log(`Email sent: ${info.messageId}`);
+        console.log(`✅ Email sent successfully: ${info.messageId}`);
         return true;
-    } catch (error) {
-        console.error(`Failed to send email (${type}) to ${to}:`, error);
+    } catch (error: any) {
+        console.error(`❌ FAILED to send email (${type}) to ${to}:`, error.message);
+        if (error.code === 'EENVELOPE') console.error('  - Possible cause: Invalid sender or recipient address.');
+        if (error.code === 'ETIMEDOUT') console.error('  - Possible cause: Firewall blocking outgoing port or wrong SMTP host.');
+        if (error.code === 'EAUTH') console.error('  - Possible cause: SMTP authentication failed. Check credentials.');
         return false;
     }
 };

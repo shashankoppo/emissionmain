@@ -70,17 +70,51 @@ router.post('/seed', authMiddleware, async (req, res) => {
         const model = getMailModel();
         if (!model) return res.status(503).json({ error: 'Email model not ready.' });
         const templates = [
-            { type: 'order_success', subject: 'Your Order is Confirmed!', body: '...' },
-            { type: 'order_rejected', subject: 'Order Update', body: '...' },
-            { type: 'welcome_email', subject: 'Welcome!', body: '...' },
-            { type: 'new_enquiry_admin', subject: 'New Enquiry', body: '...' },
-            { type: 'payment_success', subject: 'Payment Received!', body: '...' }
+            {
+                type: 'order_success',
+                subject: 'Your Emission Order is Confirmed! 🎉',
+                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:24px">Thank you, {{customerName}}! 🎉</h1><p style="color:#555">Your order has been confirmed and is being processed.</p><div style="background:#f9fafb;border-radius:8px;padding:16px;margin:20px 0"><p style="margin:0"><strong>Order ID:</strong> {{orderId}}</p><p style="margin:8px 0 0"><strong>Amount:</strong> ₹{{amount}}</p></div><p style="color:#555">We will notify you once your order ships. Thank you for choosing <strong>Emission</strong>.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:12px">Technical Platform by ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
+            },
+            {
+                type: 'order_rejected',
+                subject: 'Order Update from Emission',
+                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:24px">Order Update</h1><p style="color:#555">Dear {{customerName}}, we regret to inform you that your order <strong>#{{orderId}}</strong> has been cancelled or rejected.</p><p style="color:#555">If you believe this is an error, please contact our support team at care@emissionfit.com.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:12px">Technical Platform by ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
+            },
+            {
+                type: 'welcome_email',
+                subject: 'Welcome to Emission — Your Account is Ready!',
+                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:24px">Welcome, {{customerName}}! 👋</h1><p style="color:#555">Your account has been created on <strong>Emission</strong>, the leading OEM manufacturer of sportswear and medical wear from Jabalpur, India.</p><p style="color:#555">You can now browse and order our products, track your shipments, and manage your account easily.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:12px">Technical Platform by ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
+            },
+            {
+                type: 'new_enquiry_admin',
+                subject: 'New Enquiry Received — Emission Admin',
+                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:20px">New Enquiry Received</h1><div style="background:#f9fafb;border-radius:8px;padding:16px;margin:20px 0"><p style="margin:0"><strong>Name:</strong> {{name}}</p><p style="margin:8px 0 0"><strong>Email:</strong> {{email}}</p><p style="margin:8px 0 0"><strong>Message:</strong> {{message}}</p></div><p style="color:#999;font-size:12px">Emission Admin Panel — ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
+            },
+            {
+                type: 'payment_success',
+                subject: 'Payment Received — Emission',
+                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:24px">Payment Received! ✅</h1><p style="color:#555">We have successfully received your payment.</p><div style="background:#f9fafb;border-radius:8px;padding:16px;margin:20px 0"><p style="margin:0"><strong>Order ID:</strong> #{{orderId}}</p><p style="margin:8px 0 0"><strong>Amount Paid:</strong> ₹{{amount}}</p></div><p style="color:#555">Your order is now being processed. Thank you for shopping with <strong>Emission</strong>.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:12px">Technical Platform by ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
+            }
         ];
         for (const t of templates) {
-            await model.upsert({ where: { type: t.type }, update: { subject: t.subject, body: t.body }, create: { type: t.type, subject: t.subject, body: t.body } });
+            await model.upsert({ where: { type: t.type }, update: { subject: t.subject, body: t.body, active: true }, create: { type: t.type, subject: t.subject, body: t.body, active: true } });
         }
-        res.json({ success: true });
-    } catch (error) { res.status(500).json({ error: 'Failed' }); }
+        res.json({ success: true, message: 'Default templates seeded successfully!' });
+    } catch (error) { res.status(500).json({ error: 'Failed to seed templates.' }); }
+});
+
+// POST Test SMTP Connection
+router.post('/test-smtp', authMiddleware, async (req, res) => {
+    try {
+        const success = await initTransporter();
+        if (success) {
+            res.json({ success: true, message: 'SMTP connection verified successfully!' });
+        } else {
+            res.status(500).json({ error: 'SMTP connection failed. Check your credentials and server firewall.' });
+        }
+    } catch (error: any) {
+        res.status(500).json({ error: 'SMTP Test Exception', details: error.message });
+    }
 });
 
 // CRUD routes

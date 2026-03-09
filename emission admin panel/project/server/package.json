@@ -10,7 +10,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "migrate-smtp": "tsx src/migrate_smtp_keys.ts",
-    "seed": "tsx src/seed.ts"
+    "seed": "tsx src/seed.ts",
+    "seed-mail": "tsx src/seed_mail.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.0.0",

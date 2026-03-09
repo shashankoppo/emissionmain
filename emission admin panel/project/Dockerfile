@@ -30,19 +30,13 @@ RUN npx tsc --outDir dist --target ES2020 --module ESNext --moduleResolution nod
 
 EXPOSE 3001
 
-# IMPROVED STARTUP: 
-# 1. Ensures data directory exists
-# 2. Migrates DB from old volume if necessary
-# 3. Tries to push DB schema changes
+# CMD ensures DB is synced and volume is mapped correctly
 CMD sh -c "mkdir -p /app/data && \
     if [ -f /app/server/prisma/dev.db ] && [ ! -f /app/data/dev.db ]; then \
     echo 'Migrating database to new volume...'; \
     mv /app/server/prisma/dev.db /app/data/dev.db; \
     fi && \
     echo 'Syncing Database...' && \
-    (npx prisma db push --accept-data-loss || echo 'Warning: DB Push failed...') && \
-    if [ -f dist/index.js ]; then \
-    echo 'Starting Production Server (dist)...' && node dist/index.js; \
-    else \
-    echo 'Falling back to Development Server (tsx)...' && npx tsx src/index.ts; \
-    fi"
+    npx prisma db push --accept-data-loss && \
+    echo 'Starting Production Server...' && \
+    node dist/index.js"

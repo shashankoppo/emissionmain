@@ -131,6 +131,18 @@ export default function MailTemplates() {
         }
     };
 
+    const handleTestSmtp = async () => {
+        setSaving(true);
+        try {
+            const res = await api.post('/mail-templates/test-smtp');
+            showToast('success', res.data.message || 'SMTP connected!');
+        } catch (error: any) {
+            showToast('error', error.response?.data?.error || 'SMTP Connection Failed');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     const typeLabel = (type: string) => type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 
     return (
@@ -372,10 +384,21 @@ export default function MailTemplates() {
                                 <input type="text" value={smtpSettings.smtp_from} onChange={e => setSmtpSettings({ ...smtpSettings, smtp_from: e.target.value })} className="w-full bg-gray-50 border-none rounded-2xl py-4 px-6 text-sm font-bold focus:ring-2 focus:ring-blue-500/10 outline-none" placeholder='Emission Orders <orders@emission.in>' />
                             </div>
                         </div>
-                        <button type="submit" disabled={saving} className="bg-black text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl flex items-center gap-2 disabled:opacity-50">
-                            {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                            {saving ? 'Saving...' : 'Save Configuration'}
-                        </button>
+                        <div className="flex items-center gap-4">
+                            <button type="submit" disabled={saving} className="bg-black text-white px-10 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-xl flex items-center gap-2 disabled:opacity-50">
+                                {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                                {saving ? 'Saving...' : 'Save Configuration'}
+                            </button>
+                            <button
+                                type="button"
+                                onClick={handleTestSmtp}
+                                disabled={saving}
+                                className="bg-blue-50 text-blue-700 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-100 transition-all flex items-center gap-2 disabled:opacity-50"
+                            >
+                                <RefreshCw className={`w-4 h-4 ${saving ? 'animate-spin' : ''}`} />
+                                Test Connection
+                            </button>
+                        </div>
                     </form>
                 </div>
             )}

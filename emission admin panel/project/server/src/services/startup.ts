@@ -2,13 +2,14 @@ import prisma from '../lib/db.js';
 import { initTransporter } from './email.js';
 
 export const runStartupTasks = async () => {
-    console.log('--- STARTING STARTUP TASKS ---');
+    console.log('--- 🚀 STARTING BACKEND INITIALIZATION ---');
 
     const availableModels = Object.keys(prisma).filter(k => !k.startsWith('_'));
-    console.log('Detected Prisma Models in Client:', availableModels);
+    console.log('Detected Prisma Models:', availableModels);
 
     try {
-        // 1. Migrate SMTP keys and set defaults
+        // 1. Force fix SMTP defaults if they are missing or using placeholders
+        // Using Hostinger settings as per project requirements
         if (prisma.setting) {
             const defaults = [
                 { key: 'smtp_host', value: 'smtp.hostinger.com' },
@@ -20,32 +21,20 @@ export const runStartupTasks = async () => {
 
             for (const d of defaults) {
                 const existing = await prisma.setting.findUnique({ where: { key: d.key } });
-                if (!existing || !existing.value) {
+                // We overwrite if it's completely missing or just an empty string
+                if (!existing || !existing.value || existing.value.trim() === '') {
                     await prisma.setting.upsert({
                         where: { key: d.key },
                         update: { value: d.value },
                         create: { key: d.key, value: d.value }
                     });
-                    console.log(`Set default SMTP setting: ${d.key}`);
-                }
-            }
-
-            const keysToMigrate = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'SMTP_FROM'];
-            for (const oldKey of keysToMigrate) {
-                const setting = await prisma.setting.findUnique({ where: { key: oldKey } });
-                if (setting && setting.value) {
-                    const newKey = oldKey.toLowerCase();
-                    await prisma.setting.upsert({
-                        where: { key: newKey },
-                        update: { value: setting.value },
-                        create: { key: newKey, value: setting.value }
-                    });
-                    console.log(`Migrated ${oldKey} to ${newKey}`);
+                    console.log(`✅ Set SMTP default: ${d.key} = ${d.key.includes('pass') ? '***' : d.value}`);
                 }
             }
         }
 
-        // 2. Auto-Seed Email Templates (model name: appEmail)
+        // 2. Auto-Seed Email Templates with HEAVY validation
+        // This fixes the issue where templates exist but have no HTML body
         const defaultTemplates = [
             {
                 type: 'order_success',
@@ -71,52 +60,33 @@ export const runStartupTasks = async () => {
                 type: 'payment_success',
                 subject: 'Payment Received — Emission',
                 body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:24px">Payment Received! ✅</h1><p style="color:#555">We have successfully received your payment.</p><div style="background:#f9fafb;border-radius:8px;padding:16px;margin:20px 0"><p style="margin:0"><strong>Order ID:</strong> #{{orderId}}</p><p style="margin:8px 0 0"><strong>Amount Paid:</strong> ₹{{amount}}</p></div><p style="color:#555">Your order is now being processed. Thank you for shopping with <strong>Emission</strong>.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:12px">Technical Platform by ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
-            },
-            {
-                type: 'invoice_manual',
-                subject: 'Invoice for your order #{{orderId}} — Emission',
-                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:20px text-transform:uppercase">Digital Invoice</h1><p style="color:#555">Dear {{customerName}}, please find the transaction details for your recently cleared order <strong>#{{orderId}}</strong>.</p><div style="background:#f9fafb;border-radius:8px;padding:24px;margin:20px 0"><p style="margin:0;font-size:12px;color:#999;text-transform:uppercase">Total Amount Paid</p><p style="margin:4px 0 0;font-size:32px;font-weight:900;color:#000">₹{{amount}}</p></div><p style="color:#555">This is a system generated acknowledgement for your records. You can also download the PDF from your dashboard.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:10px">Issued by Emission — Premium Retail Division. Jabalpur, MP.</p></div>`,
             }
         ];
 
-        // Explicit lookup for the plural or singular name
         const templateModel = (prisma as any).appEmail || (prisma as any).emailTemplate || (prisma as any).mailTemplate;
 
         if (templateModel) {
             for (const t of defaultTemplates) {
-                await templateModel.upsert({
-                    where: { type: t.type },
-                    update: { subject: t.subject, body: t.body, active: true },
-                    create: { type: t.type, subject: t.subject, body: t.body, active: true }
-                });
+                const existing = await templateModel.findUnique({ where: { type: t.type } });
+
+                // CRITICAL FIX: If template body is empty or too short, force update it
+                if (!existing || !existing.body || existing.body.length < 50) {
+                    await templateModel.upsert({
+                        where: { type: t.type },
+                        update: { subject: t.subject, body: t.body, active: true },
+                        create: { type: t.type, subject: t.subject, body: t.body, active: true }
+                    });
+                    console.log(`✅ Seeded/Fixed template: ${t.type}`);
+                }
             }
-            console.log('✅ Email templates seeded successfully.');
-        } else {
-            console.warn('⚠️ Warning: No Email model found in the generated client. Skipping seeding.');
         }
 
-        // 3. Seed site settings
-        if (prisma.setting) {
-            const defaultSettings = [
-                { key: 'SITE_TITLE', value: 'Emission - Premium Sportswear & Medical Wear' },
-                { key: 'SITE_DESCRIPTION', value: 'Premium OEM manufacturer of sportswear and medical wear engineered with precision. Born in Jabalpur, India.' },
-            ];
-            for (const s of defaultSettings) {
-                await prisma.setting.upsert({
-                    where: { key: s.key },
-                    update: {},
-                    create: { key: s.key, value: s.value },
-                });
-            }
-            console.log('✅ Site settings seeded.');
-        }
-
-        // 4. Initialize Transporter
+        // 3. Initialize Transporter
         await initTransporter();
 
     } catch (error) {
-        console.error('CRITICAL: Startup tasks failed:', error);
+        console.error('❌ CRITICAL: Startup tasks failed:', error);
     }
 
-    console.log('--- STARTUP TASKS COMPLETED ---');
+    console.log('--- ✅ BACKEND INITIALIZATION COMPLETED ---');
 };
