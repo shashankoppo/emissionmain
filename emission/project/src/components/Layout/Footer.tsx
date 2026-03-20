@@ -91,15 +91,22 @@ export default function Footer({ onNavigate }: FooterProps) {
                 © {new Date().getFullYear()} EMISSION LABORATORY. ENGINEERED IN JABALPUR, INDIA.
               </p>
               <div className="h-4 w-[1px] bg-white/10 hidden md:block" />
-              <div className="flex items-center gap-2">
-                <Code2 className="w-3 h-3 text-blue-400" />
-                <p className="text-[8px] font-black uppercase tracking-[0.4em]">
-                  Technology Partner: <span className="text-blue-400">ELSxGlobal</span>
+              <a 
+                href="https://evolucentsphere.com" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="flex items-center gap-4 md:gap-8 hover:opacity-80 transition-opacity group"
+              >
+                <div className="flex items-center gap-2">
+                  <Code2 className="w-3 h-3 text-blue-400 group-hover:scale-110 transition-transform" />
+                  <p className="text-[8px] font-black uppercase tracking-[0.4em]">
+                    Technology Partner: <span className="text-blue-400">ELSxGlobal</span>
+                  </p>
+                </div>
+                <p className="text-[7px] font-bold uppercase tracking-[0.3em] text-white/30 group-hover:text-white/50 transition-colors">
+                  Division of Evolucentsphere Private Limited
                 </p>
-              </div>
-              <p className="text-[7px] font-bold uppercase tracking-[0.3em] text-white/30">
-                Divission of Evolucentsphere Private Limited
-              </p>
+              </a>
             </div>
 
             <div className="flex items-center gap-6 opacity-40 hover:opacity-100 transition-opacity">

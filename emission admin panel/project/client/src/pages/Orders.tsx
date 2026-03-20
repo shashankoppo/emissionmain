@@ -19,15 +19,25 @@ export default function Orders() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [backfilling, setBackfilling] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalOrders, setTotalOrders] = useState(0);
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    fetchOrders(page);
+  }, [page]);
 
-  const fetchOrders = async () => {
+  const fetchOrders = async (pageNum = 1) => {
+    setLoading(true);
     try {
-      const response = await api.get('/orders');
-      setOrders(response.data);
+      const response = await api.get(`/orders?page=${pageNum}&limit=20`);
+      if (response.data.data) {
+        setOrders(response.data.data);
+        setTotalPages(response.data.pagination.pages);
+        setTotalOrders(response.data.pagination.total);
+      } else {
+        setOrders(response.data); // Fallback
+      }
     } catch (error) {
       console.error('Failed to fetch orders:', error);
     } finally {
@@ -221,6 +231,7 @@ export default function Orders() {
                     <div className="flex items-center justify-end gap-3">
                       <select
                         value={order.status}
+                        title="Change order status"
                         onChange={(e) => updateStatus(order.id, e.target.value)}
                         className="bg-gray-50 border-none rounded-xl py-2 px-4 text-[10px] font-black uppercase tracking-widest focus:ring-2 focus:ring-black/5 outline-none transition"
                       >
@@ -255,7 +266,7 @@ export default function Orders() {
                     <h2 className="text-3xl font-black text-gray-900 tracking-tight uppercase">Order Details</h2>
                     <p className="text-gray-400 font-mono text-xs mt-1">#{selectedOrder.id}</p>
                   </div>
-                  <button onClick={() => setSelectedOrder(null)} className="p-3 hover:bg-gray-100 rounded-2xl transition">
+                  <button onClick={() => setSelectedOrder(null)} title="Close" className="p-3 hover:bg-gray-100 rounded-2xl transition">
                     <XCircle className="w-6 h-6 text-gray-400" />
                   </button>
                 </div>
@@ -332,7 +343,6 @@ export default function Orders() {
             </div>
           </div>
         )}
-
         {filteredOrders.length === 0 && !loading && (
           <div className="py-24 text-center">
             <ShoppingCart className="w-16 h-16 text-gray-100 mx-auto mb-6" />
@@ -340,6 +350,31 @@ export default function Orders() {
           </div>
         )}
       </div>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="mt-8 flex items-center justify-between bg-white px-8 py-6 rounded-[32px] border border-gray-100 shadow-sm">
+          <p className="text-xs font-black text-gray-400 uppercase tracking-widest">
+            Showing page {page} of {totalPages} ({totalOrders} total)
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-6 py-3 bg-gray-50 text-gray-900 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-black hover:text-white transition disabled:opacity-30"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-6 py-3 bg-gray-50 text-gray-900 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-black hover:text-white transition disabled:opacity-30"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

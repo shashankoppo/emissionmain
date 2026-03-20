@@ -47,6 +47,10 @@ export interface Product {
     allowsEmbroidery?: boolean;
     gstPercentage?: number;
     shippingIncluded?: boolean;
+    sizeChart?: string;
+    metaTitle?: string;
+    metaDescription?: string;
+    metaKeywords?: string;
 }
 
 export interface Enquiry {
@@ -84,9 +88,10 @@ const safeJSONParse = (val: any, fallback: any) => {
 
 // Product API
 export const productAPI = {
-    getAll: async (): Promise<Product[]> => {
-        const response = await api.get('/products');
-        return response.data.map((p: any) => {
+    getAll: async (params?: { page?: number; limit?: number; category?: string; stock?: string; search?: string }): Promise<Product[] | { data: Product[], pagination: any }> => {
+        const response = await api.get('/products', { params });
+        const data = response.data.data || response.data;
+        const products = data.map((p: any) => {
             let images = safeJSONParse(p.images, []);
             if (Array.isArray(images)) {
                 images = images.map((img: string) => formatImageUrl(img));
@@ -102,8 +107,14 @@ export const productAPI = {
                 price: parseFloat(p.price) || 0,
                 retailPrice: p.retailPrice ? parseFloat(p.retailPrice) : undefined,
                 wholesalePrice: p.wholesalePrice ? parseFloat(p.wholesalePrice) : undefined,
+                sizeChart: p.sizeChart ? formatImageUrl(p.sizeChart) : undefined
             };
         });
+
+        if (response.data.pagination) {
+            return { data: products, pagination: response.data.pagination };
+        }
+        return products;
     },
 
     getById: async (id: string): Promise<Product> => {
@@ -124,12 +135,13 @@ export const productAPI = {
             price: parseFloat(p.price) || 0,
             retailPrice: p.retailPrice ? parseFloat(p.retailPrice) : undefined,
             wholesalePrice: p.wholesalePrice ? parseFloat(p.wholesalePrice) : undefined,
+            sizeChart: p.sizeChart ? formatImageUrl(p.sizeChart) : undefined
         };
     },
 
     getByCategory: async (category: string): Promise<Product[]> => {
-        const products = await productAPI.getAll();
-        return products.filter(p => p.category === category);
+        const result = await productAPI.getAll({ category });
+        return Array.isArray(result) ? result : result.data;
     },
 
     getPublicSettings: async () => {

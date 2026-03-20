@@ -42,15 +42,30 @@ export default function Products() {
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterStock, setFilterStock] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    fetchProducts(page);
+  }, [page, filterCategory, filterStock]);
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (pageNum = 1) => {
+    setLoading(true);
     try {
-      const response = await api.get('/products');
-      setProducts(response.data);
+      let url = `/products?page=${pageNum}&limit=20`;
+      if (filterCategory !== 'all') url += `&category=${filterCategory}`;
+      if (filterStock !== 'all') url += `&stock=${filterStock}`;
+      if (searchTerm) url += `&search=${searchTerm}`;
+      
+      const response = await api.get(url);
+      if (response.data.data) {
+        setProducts(response.data.data);
+        setTotalPages(response.data.pagination.pages);
+        setTotalProducts(response.data.pagination.total);
+      } else {
+        setProducts(response.data);
+      }
     } catch (error) {
       console.error('Failed to fetch products:', error);
     } finally {
@@ -62,7 +77,7 @@ export default function Products() {
     if (!confirm('Are you sure you want to delete this product? This action cannot be undone.')) return;
     try {
       await api.delete(`/products/${id}`);
-      setProducts(products.filter((p) => p.id !== id));
+      fetchProducts(page);
     } catch (error) {
       alert('Failed to delete product');
     }
@@ -71,34 +86,19 @@ export default function Products() {
   const handleFormClose = () => {
     setShowForm(false);
     setSelectedProduct(null);
-    fetchProducts();
+    fetchProducts(page);
   };
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.subcategory.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === 'all' || product.category === filterCategory;
-    const matchesStock = filterStock === 'all' ||
-      (filterStock === 'instock' && product.inStock) ||
-      (filterStock === 'outofstock' && !product.inStock);
-    return matchesSearch && matchesCategory && matchesStock;
-  });
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  // We still keep a small local filter for the current page results if search term changes mid-page
+  const filteredProducts = products; 
 
   return (
-    <div>
+    <div className="pb-20">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Products</h1>
-          <p className="text-gray-600 mt-1">Manage your retail product catalog • {products.length} products</p>
+          <p className="text-gray-600 mt-1">Manage your retail product catalog • {totalProducts} products</p>
         </div>
         <button
           onClick={() => {
@@ -113,15 +113,15 @@ export default function Products() {
       </div>
 
       {/* Stats Strip */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
         <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
           <div className="flex items-center gap-3">
             <div className="bg-blue-50 p-2 rounded-lg">
               <Package className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-xs text-gray-500 font-medium">Total Products</p>
-              <p className="text-xl font-bold text-gray-900">{products.length}</p>
+              <p className="text-xs text-gray-500 font-medium">Total Catalog</p>
+              <p className="text-xl font-bold text-gray-900">{totalProducts}</p>
             </div>
           </div>
         </div>
@@ -131,19 +131,19 @@ export default function Products() {
               <Tag className="w-5 h-5 text-green-600" />
             </div>
             <div>
-              <p className="text-xs text-gray-500 font-medium">In Stock</p>
-              <p className="text-xl font-bold text-green-600">{products.filter(p => p.inStock).length}</p>
+              <p className="text-xs text-gray-500 font-medium">Page Size</p>
+              <p className="text-xl font-bold text-green-600">{products.length}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+        <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm shadow-orange-100/50">
           <div className="flex items-center gap-3">
             <div className="bg-orange-50 p-2 rounded-lg">
               <Tag className="w-5 h-5 text-orange-600" />
             </div>
             <div>
-              <p className="text-xs text-gray-500 font-medium">Out of Stock</p>
-              <p className="text-xl font-bold text-orange-600">{products.filter(p => !p.inStock).length}</p>
+              <p className="text-xs text-gray-500 font-medium">Pages</p>
+              <p className="text-xl font-bold text-orange-600">{totalPages}</p>
             </div>
           </div>
         </div>
@@ -153,12 +153,8 @@ export default function Products() {
               <IndianRupee className="w-5 h-5 text-purple-600" />
             </div>
             <div>
-              <p className="text-xs text-gray-500 font-medium">Avg. Price</p>
-              <p className="text-xl font-bold text-gray-900">
-                ₹{products.length > 0
-                  ? Math.round(products.reduce((sum, p) => sum + p.price, 0) / products.length)
-                  : 0}
-              </p>
+              <p className="text-xs text-gray-500 font-medium">View Mode</p>
+              <p className="text-sm font-bold text-gray-900 uppercase tracking-widest">{viewMode}</p>
             </div>
           </div>
         </div>
@@ -166,7 +162,7 @@ export default function Products() {
 
       {/* Filters & Search Bar */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-        <div className="flex items-center gap-4 flex-wrap">
+        <form onSubmit={(e) => { e.preventDefault(); setPage(1); fetchProducts(1); }} className="flex items-center gap-4 flex-wrap">
           <div className="relative flex-1 min-w-[250px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <input
@@ -179,7 +175,7 @@ export default function Products() {
           </div>
           <select
             value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
+            onChange={(e) => { setFilterCategory(e.target.value); setPage(1); }}
             title="Filter by category"
             className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
           >
@@ -189,7 +185,7 @@ export default function Products() {
           </select>
           <select
             value={filterStock}
-            onChange={(e) => setFilterStock(e.target.value)}
+            onChange={(e) => { setFilterStock(e.target.value); setPage(1); }}
             title="Filter by stock status"
             className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"
           >
@@ -197,25 +193,33 @@ export default function Products() {
             <option value="instock">In Stock</option>
             <option value="outofstock">Out of Stock</option>
           </select>
-          <div className="flex items-center gap-1 border border-gray-300 rounded-lg overflow-hidden">
+          <button type="submit" className="px-6 py-2 bg-black text-white rounded-lg text-sm font-bold uppercase tracking-widest hover:bg-gray-800 transition">Search</button>
+          <div className="flex items-center gap-1 border border-gray-300 rounded-lg overflow-hidden ml-auto">
             <button
+              type="button"
               onClick={() => setViewMode('grid')}
               className={`p-2 text-sm ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+              title="Grid View"
             >
               Grid
             </button>
             <button
+              type="button"
               onClick={() => setViewMode('table')}
               className={`p-2 text-sm ${viewMode === 'table' ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+              title="Table View"
             >
               Table
             </button>
           </div>
-        </div>
+        </form>
       </div>
 
-      {/* Product Grid View */}
-      {filteredProducts.length === 0 ? (
+      {loading ? (
+        <div className="flex items-center justify-center py-24">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      ) : filteredProducts.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
           <Package className="w-12 h-12 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-600 text-lg font-medium">No products found</p>
@@ -227,7 +231,6 @@ export default function Products() {
             const imageUrl = getImageUrl(product.images);
             return (
               <div key={product.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden group hover:shadow-lg transition-all duration-300">
-                {/* Product Image */}
                 <div className="relative aspect-[4/3] bg-gray-100 overflow-hidden">
                   {imageUrl ? (
                     <img
@@ -240,18 +243,15 @@ export default function Products() {
                       <Package className="w-12 h-12 text-gray-300" />
                     </div>
                   )}
-                  {/* Status Badge */}
                   <span className={`absolute top-3 left-3 text-xs font-bold px-2.5 py-1 rounded-full ${product.inStock
                     ? 'bg-green-500 text-white'
                     : 'bg-red-500 text-white'
                     }`}>
                     {product.inStock ? 'In Stock' : 'Out of Stock'}
                   </span>
-                  {/* Category Badge */}
                   <span className="absolute top-3 right-3 bg-black/70 text-white text-xs font-medium px-2.5 py-1 rounded-full backdrop-blur-sm">
                     {product.category === 'sportswear' ? 'Sportswear' : 'Medical Wear'}
                   </span>
-                  {/* Hover Actions */}
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                     <button
                       onClick={() => {
@@ -272,7 +272,6 @@ export default function Products() {
                     </button>
                   </div>
                 </div>
-                {/* Product Info */}
                 <div className="p-4">
                   <p className="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1">
                     {product.subcategory}
@@ -294,7 +293,6 @@ export default function Products() {
           })}
         </div>
       ) : (
-        /* Table View */
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <table className="w-full">
             <thead className="bg-gray-50 border-b border-gray-200">
@@ -354,12 +352,14 @@ export default function Products() {
                           setShowForm(true);
                         }}
                         className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 mr-3 text-sm"
+                        title="Edit Product"
                       >
                         <Edit2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(product.id)}
                         className="inline-flex items-center gap-1 text-red-600 hover:text-red-700 text-sm"
+                        title="Delete Product"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -369,6 +369,31 @@ export default function Products() {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="mt-8 flex items-center justify-between bg-white px-6 py-4 rounded-xl border border-gray-200 shadow-sm">
+          <p className="text-sm text-gray-600">
+            Page {page} of {totalPages}
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
         </div>
       )}
 

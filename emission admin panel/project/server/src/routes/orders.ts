@@ -38,13 +38,34 @@ async function enrichItems(rawItems: string | any[]): Promise<any[]> {
 
 router.get('/', authMiddleware, async (req, res) => {
   try {
-    const orders = await prisma.order.findMany({ orderBy: { createdAt: 'desc' } });
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
+    const [orders, total] = await Promise.all([
+      prisma.order.findMany({
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.order.count()
+    ]);
+
     // Enrich each order's items with product names
     const enriched = await Promise.all(orders.map(async (order) => {
       const items = await enrichItems((order as any).items);
       return { ...order, items: JSON.stringify(items), parsedItems: items };
     }));
-    res.json(enriched);
+
+    res.json({
+      data: enriched,
+      pagination: {
+        total,
+        pages: Math.ceil(total / limit),
+        page,
+        limit
+      }
+    });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch orders' });
   }

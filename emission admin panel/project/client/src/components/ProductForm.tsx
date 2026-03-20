@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../lib/api';
-import { X, Upload, Plus, Trash2, Tag, Shirt, Palette } from 'lucide-react';
+import { X, Upload, Plus, Trash2, Tag, Shirt, Palette, Globe } from 'lucide-react';
 
 interface Product {
   id?: string;
@@ -23,6 +23,10 @@ interface Product {
   allowsEmbroidery: boolean;
   gstPercentage: number;
   shippingIncluded: boolean;
+  sizeChart: string | null;
+  metaTitle: string;
+  metaDescription: string;
+  metaKeywords: string;
 }
 
 interface ProductFormProps {
@@ -51,6 +55,8 @@ const SUBCATEGORIES: Record<string, string[]> = {
   medicalwear: ['Scrubs', 'Lab Coats', 'Hospital Uniforms', 'PPE Clothing', 'Surgical Gowns', 'Aprons'],
 };
 
+const API_BASE = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : '';
+
 export default function ProductForm({ product, onClose }: ProductFormProps) {
   const [formData, setFormData] = useState<Product>({
     name: '',
@@ -72,13 +78,17 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
     allowsEmbroidery: false,
     gstPercentage: 18,
     shippingIncluded: true,
+    sizeChart: null,
+    metaTitle: '',
+    metaDescription: '',
+    metaKeywords: '',
   });
 
   const [newSpecKey, setNewSpecKey] = useState('');
   const [newSpecValue, setNewSpecValue] = useState('');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'basic' | 'pricing' | 'media' | 'details' | 'variants'>('basic');
+  const [activeTab, setActiveTab] = useState<'basic' | 'pricing' | 'media' | 'details' | 'variants' | 'seo'>('basic');
   const [customColor, setCustomColor] = useState('');
 
   useEffect(() => {
@@ -94,6 +104,10 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
         gstPercentage: product.gstPercentage || 18,
         shippingIncluded: product.shippingIncluded !== undefined ? product.shippingIncluded : true,
         allowsEmbroidery: product.allowsEmbroidery || false,
+        sizeChart: product.sizeChart || null,
+        metaTitle: product.metaTitle || '',
+        metaDescription: product.metaDescription || '',
+        metaKeywords: product.metaKeywords || '',
       });
     }
   }, [product]);
@@ -140,6 +154,30 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
     } catch (error: any) {
       console.error('Upload failed:', error);
       alert(error.response?.data?.error || 'Failed to upload image. Please try again.');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSizeChartUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    const uploadFormData = new FormData();
+    uploadFormData.append('file', file);
+
+    try {
+      const response = await api.post('/upload', uploadFormData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setFormData((prev) => ({
+        ...prev,
+        sizeChart: response.data.url,
+      }));
+    } catch (error: any) {
+      console.error('Size chart upload failed:', error);
+      alert('Failed to upload size chart.');
     } finally {
       setUploading(false);
     }
@@ -271,9 +309,10 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
   const tabs = [
     { id: 'basic' as const, label: 'Basic Info', icon: Tag },
     { id: 'pricing' as const, label: 'Pricing & Stock', icon: Tag },
-    { id: 'media' as const, label: 'Images', icon: Upload },
+    { id: 'media' as const, label: 'Images & Size Chart', icon: Upload },
     { id: 'details' as const, label: 'Features & Specs', icon: Tag },
     { id: 'variants' as const, label: 'Sizes & Colors', icon: Shirt },
+    { id: 'seo' as const, label: 'SEO', icon: Globe },
   ];
 
   return (
@@ -287,7 +326,7 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
             </h2>
             <p className="text-sm text-gray-500 mt-1">Fill in the product details for your retail catalog</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition">
+          <button onClick={onClose} title="Close form" className="p-2 hover:bg-gray-100 rounded-lg transition">
             <X className="w-6 h-6" />
           </button>
         </div>
@@ -298,6 +337,7 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
             {tabs.map((tab) => (
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition ${activeTab === tab.id
                   ? 'border-blue-600 text-blue-600'
@@ -487,6 +527,7 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
                   </label>
                   <select
                     name="gstPercentage"
+                    title="Select GST percentage"
                     value={formData.gstPercentage}
                     onChange={(e) => setFormData(prev => ({ ...prev, gstPercentage: parseFloat(e.target.value) }))}
                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -534,9 +575,9 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
             </div>
           )}
 
-          {/* Images Tab */}
+          {/* Media Tab */}
           {activeTab === 'media' && (
-            <div className="space-y-6">
+            <div className="space-y-8">
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   Product Images <span className="text-red-500">*</span>
@@ -548,7 +589,7 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
                   {formData.images.map((image, index) => (
                     <div key={index} className="relative group">
                       <img
-                        src={image.startsWith('http') ? image : `${api.defaults.baseURL?.replace('/api', '')}${image}`}
+                        src={image.startsWith('http') ? image : `${API_BASE}${image}`}
                         alt={`Product ${index + 1}`}
                         className="w-36 h-36 object-cover rounded-xl border-2 border-gray-200 shadow-sm"
                       />
@@ -581,9 +622,37 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
                       <>
                         <Upload className="w-8 h-8 text-gray-400 mb-2" />
                         <span className="text-xs text-gray-500 font-medium">Upload Image</span>
-                        <span className="text-xs text-gray-400 mt-1">Max 5MB</span>
                       </>
                     )}
+                  </label>
+                </div>
+              </div>
+
+              <div className="pt-8 border-t border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Size Chart Image</h3>
+                <p className="text-sm text-gray-500 mb-4">Upload an image showcasing the size dimensions for this product.</p>
+                <div className="flex items-center gap-6">
+                  {formData.sizeChart && (
+                    <div className="relative group">
+                      <img
+                        src={formData.sizeChart.startsWith('http') ? formData.sizeChart : `${API_BASE}${formData.sizeChart}`}
+                        alt="Size Chart"
+                        className="w-48 h-32 object-contain bg-gray-50 rounded-xl border border-gray-200"
+                      />
+                      <button
+                        type="button"
+                        title="Remove size chart"
+                        onClick={() => setFormData(prev => ({ ...prev, sizeChart: null }))}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-lg"
+                      >
+                        <X className="w-3 h-4" />
+                      </button>
+                    </div>
+                  )}
+                  <label className="flex-1 max-w-xs border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center p-6 cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition">
+                    <input type="file" accept="image/*" onChange={handleSizeChartUpload} className="hidden" />
+                    <Upload className="w-6 h-6 text-gray-400 mb-2" />
+                    <span className="text-sm font-medium text-gray-600">{formData.sizeChart ? 'Replace' : 'Upload'} Size Chart</span>
                   </label>
                 </div>
               </div>
@@ -593,11 +662,8 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
           {/* Features & Specs Tab */}
           {activeTab === 'details' && (
             <div className="space-y-6">
-              {/* Features */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Product Features <span className="text-red-500">*</span>
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Features</h3>
                 <div className="space-y-2">
                   {formData.features.map((feature, index) => (
                     <div key={index} className="flex gap-2">
@@ -605,94 +671,30 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
                         type="text"
                         value={feature}
                         onChange={(e) => handleFeatureChange(index, e.target.value)}
-                        placeholder={`Feature ${index + 1} (e.g., Moisture-wicking fabric)`}
+                        placeholder={`Feature ${index + 1}`}
                         className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
-                      {formData.features.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveFeature(index)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
-                      )}
+                       <button type="button" title="Remove feature" onClick={() => handleRemoveFeature(index)} className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"><Trash2 className="w-5 h-5" /></button>
                     </div>
                   ))}
-                  <button
-                    type="button"
-                    onClick={handleAddFeature}
-                    className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium mt-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Feature
-                  </button>
+                  <button type="button" onClick={handleAddFeature} className="flex items-center gap-2 text-blue-600 hover:text-blue-700 text-sm font-medium mt-2"><Plus className="w-4 h-4" />Add Feature</button>
                 </div>
               </div>
-
-              {/* Specifications */}
               <div className="pt-6 border-t border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Product Specifications</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Specifications</h3>
                 <div className="space-y-3">
                   {Object.entries(formData.specifications).map(([key, value]) => (
                     <div key={key} className="flex gap-2 items-center bg-gray-50 p-3 rounded-lg border border-gray-200">
-                      <div className="flex-1 grid grid-cols-2 gap-2">
-                        <span className="font-medium text-gray-700 text-sm">{key}</span>
-                        <span className="text-gray-600 text-sm">{value}</span>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveSpecification(key)}
-                        className="p-1 text-red-600 hover:bg-red-50 rounded transition"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex-1 grid grid-cols-2 gap-2"><span className="font-medium text-gray-700 text-sm">{key}</span><span className="text-gray-600 text-sm">{value}</span></div>
+                       <button type="button" title="Remove specification" onClick={() => handleRemoveSpecification(key)} className="p-1 text-red-600 hover:bg-red-50 rounded transition"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   ))}
-
                   <div className="flex gap-2 mt-4">
-                    <input
-                      type="text"
-                      value={newSpecKey}
-                      onChange={(e) => setNewSpecKey(e.target.value)}
-                      placeholder="e.g., Material"
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    />
-                    <input
-                      type="text"
-                      value={newSpecValue}
-                      onChange={(e) => setNewSpecValue(e.target.value)}
-                      placeholder="e.g., 100% Cotton"
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddSpecification}
-                      disabled={!newSpecKey || !newSpecValue}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </button>
+                    <input type="text" value={newSpecKey} onChange={(e) => setNewSpecKey(e.target.value)} placeholder="Key" className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm" />
+                    <input type="text" value={newSpecValue} onChange={(e) => setNewSpecValue(e.target.value)} placeholder="Value" className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-sm" />
+                     <button type="button" title="Add specification" onClick={handleAddSpecification} className="px-4 py-2 bg-blue-600 text-white rounded-lg"><Plus className="w-5 h-5" /></button>
                   </div>
                 </div>
-              </div>
-
-              {/* Embroidery */}
-              <div className="pt-6 border-t border-gray-200">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.allowsEmbroidery}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, allowsEmbroidery: e.target.checked }))
-                    }
-                    className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <div>
-                    <span className="text-sm font-medium text-gray-700">Allows Custom Embroidery</span>
-                    <p className="text-xs text-gray-500">Customers can add custom text/logo embroidery to this product</p>
-                  </div>
-                </label>
               </div>
             </div>
           )}
@@ -700,99 +702,92 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
           {/* Sizes & Colors Tab */}
           {activeTab === 'variants' && (
             <div className="space-y-6">
-              {/* Available Sizes */}
               <div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  <Shirt className="w-5 h-5 inline mr-2" />
-                  Available Sizes
-                </h3>
-                <p className="text-sm text-gray-500 mb-4">Select all sizes this product is available in</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2"><Shirt className="w-5 h-5 inline mr-2" />Available Sizes</h3>
                 <div className="flex flex-wrap gap-2">
                   {COMMON_SIZES.map((size) => (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => toggleSize(size)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium border-2 transition ${formData.availableSizes.includes(size)
-                        ? 'border-blue-600 bg-blue-50 text-blue-700'
-                        : 'border-gray-200 bg-white text-gray-600 hover:border-gray-400'
-                        }`}
-                    >
-                      {size}
-                    </button>
+                    <button key={size} type="button" onClick={() => toggleSize(size)} className={`px-4 py-2 rounded-lg text-sm font-medium border-2 transition ${formData.availableSizes.includes(size) ? 'border-blue-600 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}>{size}</button>
                   ))}
                 </div>
-                {formData.availableSizes.length > 0 && (
-                  <p className="text-xs text-gray-500 mt-2">
-                    Selected: {formData.availableSizes.join(', ')}
-                  </p>
-                )}
               </div>
-
-              {/* Available Colors */}
               <div className="pt-6 border-t border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  <Palette className="w-5 h-5 inline mr-2" />
-                  Available Colors
-                </h3>
-                <p className="text-sm text-gray-500 mb-4">Select or add colors this product is available in</p>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2"><Palette className="w-5 h-5 inline mr-2" />Available Colors</h3>
                 <div className="flex flex-wrap gap-3 mb-4">
                   {COMMON_COLORS.map((color) => (
-                    <button
-                      key={color.name}
-                      type="button"
-                      onClick={() => toggleColor(color.name)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border-2 transition ${formData.availableColors.includes(color.name)
-                        ? 'border-blue-600 bg-blue-50'
-                        : 'border-gray-200 bg-white hover:border-gray-400'
-                        }`}
-                    >
-                      <span
-                        className={`w-5 h-5 rounded-full border ${color.name === 'White' ? 'border-gray-300' : 'border-transparent'}`}
-                        style={{ backgroundColor: color.hex }}
-                      ></span>
+                    <button key={color.name} type="button" onClick={() => toggleColor(color.name)} className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border-2 transition ${formData.availableColors.includes(color.name) ? 'border-blue-600 bg-blue-50' : 'border-gray-200 bg-white'}`}>
+                      <span className="w-5 h-5 rounded-full border border-gray-300" style={{ backgroundColor: color.hex }}></span>
                       <span className="text-gray-700">{color.name}</span>
                     </button>
                   ))}
                 </div>
-                {/* Custom Color */}
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={customColor}
-                    onChange={(e) => setCustomColor(e.target.value)}
-                    placeholder="Add custom color name"
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addCustomColor())}
-                  />
-                  <button
-                    type="button"
-                    onClick={addCustomColor}
-                    disabled={!customColor.trim()}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 text-sm font-medium"
-                  >
-                    Add Color
-                  </button>
-                </div>
-                {formData.availableColors.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {formData.availableColors.map((color) => (
-                      <span
-                        key={color}
-                        className="inline-flex items-center gap-1 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium"
-                      >
-                        {color}
-                        <button
-                          type="button"
-                          onClick={() => toggleColor(color)}
-                          className="ml-1 hover:text-red-600"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </span>
-                    ))}
+              </div>
+            </div>
+          )}
+
+          {/* SEO Tab */}
+          {activeTab === 'seo' && (
+            <div className="space-y-6">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
+                <Globe className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-amber-800">SEO metadata helps your product rank better on search engines like Google and appear professionally when shared on social media.</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
+                <input
+                  type="text"
+                  name="metaTitle"
+                  value={formData.metaTitle}
+                  onChange={handleChange}
+                  placeholder="e.g., Buy Breathable Training T-Shirt - Emission Sportswear"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium"
+                />
+                <p className="text-xs text-gray-500 mt-1">{formData.metaTitle.length}/60 characters recommended</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
+                <textarea
+                  name="metaDescription"
+                  rows={3}
+                  value={formData.metaDescription}
+                  onChange={handleChange}
+                  placeholder="Summarize the product for search results..."
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p className="text-xs text-gray-500 mt-1">{formData.metaDescription.length}/160 characters recommended</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Keywords (comma separated)</label>
+                <input
+                  type="text"
+                  name="metaKeywords"
+                  value={formData.metaKeywords}
+                  onChange={handleChange}
+                  placeholder="sportswear, training tshirt, gym wear, emission"
+                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Google Preview */}
+              <div className="pt-6 border-t border-gray-200">
+                <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4">Search Result Preview</h3>
+                <div className="bg-white p-6 rounded-xl border border-gray-200 max-w-xl shadow-sm">
+                  <div className="flex items-center gap-1 text-xs text-gray-500 mb-1">
+                    <span>emissionfit.com</span>
+                    <span className="text-gray-300">›</span>
+                    <span>products</span>
+                    <span className="text-gray-300">›</span>
+                    <span>{formData.slug || 'product-slug'}</span>
                   </div>
-                )}
+                  <h4 className="text-[#1a0dab] text-xl font-medium mb-1 hover:underline cursor-pointer">
+                    {formData.metaTitle || formData.name || 'Product Meta Title'}
+                  </h4>
+                  <p className="text-[#4d5156] text-sm leading-relaxed line-clamp-2">
+                    {formData.metaDescription || `Order ${formData.name || 'this product'} online at Emission. High quality premium apparel solutions...`}
+                  </p>
+                </div>
               </div>
             </div>
           )}
@@ -802,15 +797,15 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
             <button
               type="submit"
               disabled={saving || uploading}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-medium transition disabled:opacity-50 shadow-sm"
             >
-              {saving ? 'Saving Product...' : product ? 'Update Product' : 'Create Product'}
+              {saving ? 'Saving...' : product ? 'Update Product' : 'Create Product'}
             </button>
             <button
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium disabled:opacity-50"
+              className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
             >
               Cancel
             </button>

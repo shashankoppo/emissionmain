@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Check, Package, ShoppingCart, Heart, Star, Minus, Plus, ChevronDown, ChevronUp, Ruler } from 'lucide-react';
+import { Check, Package, ShoppingCart, Heart, Star, Minus, Plus, ChevronDown, ChevronUp, Ruler, X } from 'lucide-react';
 import { PageType } from '../types';
 import api, { productAPI, Product } from '../lib/api';
 import Button from '../components/UI/Button';
@@ -70,7 +70,8 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart, wish
         setSelectedColor(data.availableColors[0]);
       }
 
-      const allProducts = await productAPI.getAll();
+      const allResult = await productAPI.getAll();
+      const allProducts = Array.isArray(allResult) ? allResult : allResult.data;
       const related = allProducts
         .filter((p) => p.category === data.category && p.id !== data.id)
         .slice(0, 4);
@@ -124,17 +125,49 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart, wish
     <div className="pt-24 min-h-screen bg-white pb-32 lg:pb-0">
       {product && (
         <SEO
-          title={`${product.name} - Premium ${product.category}`}
-          description={product.description || product.shortDescription}
+          title={product.metaTitle || `${product.name} - Premium ${product.category} | EMISSION`}
+          description={product.metaDescription || product.description || product.shortDescription}
           image={product.image}
-          keywords={`${product.name}, ${product.category}, ${product.subcategory}, Emission sportswear, Emission medical wear`}
+          keywords={product.metaKeywords || `${product.name}, ${product.category}, ${product.subcategory}, Emission sportswear, Emission medical wear`}
         />
       )}
-      <SizeChart
-        isOpen={isSizeChartOpen}
-        onClose={() => setIsSizeChartOpen(false)}
-        category={product.category}
-      />
+      
+      {/* Dynamic Size Chart Modal */}
+      {isSizeChartOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-[32px] w-full max-w-4xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Ruler className="w-5 h-5 text-black" />
+                <h2 className="text-xl font-black uppercase tracking-tight">Size Guide</h2>
+              </div>
+              <button 
+                onClick={() => setIsSizeChartOpen(false)}
+                title="Close size guide"
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-8 max-h-[80vh] overflow-y-auto">
+              {product.sizeChart ? (
+                <div className="flex flex-col items-center">
+                  <img 
+                    src={product.sizeChart} 
+                    alt={`${product.name} Size Chart`} 
+                    className="max-w-full h-auto rounded-xl shadow-lg border border-gray-100"
+                  />
+                  <p className="mt-6 text-sm text-gray-500 font-medium text-center italic">
+                    * Dimensions are in centimeters unless specified otherwise.
+                  </p>
+                </div>
+              ) : (
+                <SizeChart category={product.category} isOpen={true} onClose={() => {}} />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Breadcrumb */}
@@ -335,7 +368,7 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart, wish
                 </button>
                 <div className={`overflow-hidden transition-all duration-300 ${openAccordion === 'features' ? 'max-h-96 pb-4' : 'max-h-0'}`}>
                   <ul className="space-y-2">
-                    {product.features.map((f, i) => (
+                    {product.features && product.features.map((f, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
                         <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
                         {f}
@@ -356,7 +389,7 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart, wish
                 </button>
                 <div className={`overflow-hidden transition-all duration-300 ${openAccordion === 'specs' ? 'max-h-96 pb-4' : 'max-h-0'}`}>
                   <dl className="space-y-2 text-sm">
-                    {Object.entries(product.specifications).map(([k, v]) => (
+                    {product.specifications && Object.entries(product.specifications).map(([k, v]) => (
                       <div key={k} className="flex justify-between border-b border-dashed border-gray-100 pb-1">
                         <dt className="text-gray-500">{k}</dt>
                         <dd className="font-medium text-gray-900">{v}</dd>

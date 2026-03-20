@@ -8,10 +8,28 @@ const prisma = new PrismaClient();
 // Get all products (public)
 router.get('/', async (req, res) => {
   try {
-    const products = await prisma.product.findMany({
-      orderBy: { createdAt: 'desc' }
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const skip = (page - 1) * limit;
+
+    const [products, total] = await Promise.all([
+      prisma.product.findMany({
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.product.count()
+    ]);
+
+    res.json({
+      data: products,
+      pagination: {
+        total,
+        pages: Math.ceil(total / limit),
+        page,
+        limit
+      }
     });
-    res.json(products);
   } catch (error) {
     console.error('Failed to fetch products:', error);
     res.status(500).json({ error: 'Failed to fetch products' });
@@ -58,7 +76,11 @@ router.post('/', authMiddleware, async (req, res) => {
       availableColors,
       allowsEmbroidery,
       gstPercentage,
-      shippingIncluded
+      shippingIncluded,
+      sizeChart,
+      metaTitle,
+      metaDescription,
+      metaKeywords
     } = req.body;
 
     // Validation
@@ -101,6 +123,10 @@ router.post('/', authMiddleware, async (req, res) => {
         allowsEmbroidery: allowsEmbroidery !== undefined ? allowsEmbroidery : false,
         gstPercentage: gstPercentage ? parseFloat(gstPercentage) : 18,
         shippingIncluded: shippingIncluded !== undefined ? shippingIncluded : true,
+        sizeChart: sizeChart || null,
+        metaTitle: metaTitle || null,
+        metaDescription: metaDescription || null,
+        metaKeywords: metaKeywords || null,
       }
     });
 
@@ -137,7 +163,11 @@ router.put('/:id', authMiddleware, async (req, res) => {
       availableColors,
       allowsEmbroidery,
       gstPercentage,
-      shippingIncluded
+      shippingIncluded,
+      sizeChart,
+      metaTitle,
+      metaDescription,
+      metaKeywords
     } = req.body;
 
     // Check if product exists
@@ -183,6 +213,10 @@ router.put('/:id', authMiddleware, async (req, res) => {
         ...(allowsEmbroidery !== undefined && { allowsEmbroidery }),
         ...(gstPercentage !== undefined && { gstPercentage: parseFloat(gstPercentage) }),
         ...(shippingIncluded !== undefined && { shippingIncluded }),
+        ...(sizeChart !== undefined && { sizeChart }),
+        ...(metaTitle !== undefined && { metaTitle }),
+        ...(metaDescription !== undefined && { metaDescription }),
+        ...(metaKeywords !== undefined && { metaKeywords }),
       }
     });
 

@@ -23,17 +23,23 @@ export default function Invoices() {
     const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
     const [sendingEmail, setSendingEmail] = useState<string | null>(null);
     const [emailStatus, setEmailStatus] = useState<{ type: 'success' | 'error', text: string } | null>(null);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalOrders, setTotalOrders] = useState(0);
 
     useEffect(() => {
-        Promise.all([fetchOrders(), fetchTemplate()]).finally(() => {
+        setLoading(true);
+        Promise.all([fetchOrders(page), fetchTemplate()]).finally(() => {
             setLoading(false);
         });
-    }, []);
+    }, [page]);
 
-    const fetchOrders = async () => {
+    const fetchOrders = async (pageNum = 1) => {
         try {
-            const response = await api.get('/orders');
-            setOrders(response.data);
+            const response = await api.get(`/orders?page=${pageNum}&limit=20`);
+            setOrders(response.data.data);
+            setTotalPages(response.data.pagination.pages);
+            setTotalOrders(response.data.pagination.total);
         } catch (error) {
             console.error('Failed to fetch orders:', error);
         }
@@ -246,7 +252,7 @@ export default function Invoices() {
                     </div>
                     <div>
                         <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Global Issued</p>
-                        <h3 className="text-2xl font-black text-gray-900 mt-1">{orders.length}</h3>
+                        <h3 className="text-2xl font-black text-gray-900 mt-1">{totalOrders}</h3>
                     </div>
                 </div>
                 <div className="bg-white rounded-[32px] p-8 border border-gray-100 shadow-sm flex items-center gap-6">
@@ -306,70 +312,96 @@ export default function Invoices() {
                                         <td colSpan={6} className="px-8 py-8"><div className="h-4 bg-gray-50 rounded-full w-full"></div></td>
                                     </tr>
                                 ))
-                            ) : filteredOrders.map((order) => (
-                                <tr key={order.id} className="hover:bg-gray-50/80 transition-colors group">
-                                    <td className="px-8 py-8">
-                                        <div className="flex flex-col">
-                                            <span className="text-sm font-black text-black">#{order.invoiceId || order.id.slice(0, 8).toUpperCase()}</span>
-                                            <span className={`text-[8px] font-black mt-1 px-1.5 py-0.5 rounded-md w-fit uppercase tracking-tighter ${getStatusColor(order.status)}`}>
-                                                {order.status}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td className="px-8 py-8">
-                                        <div className="flex flex-col">
-                                            <span className="text-sm font-black text-gray-900">{order.customerName}</span>
-                                            <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest mt-1">{order.source || 'Website'}</span>
-                                        </div>
-                                    </td>
-                                    <td className="px-8 py-8">
-                                        <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-tighter">
-                                            <Calendar className="w-3.5 h-3.5" />
-                                            {new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                        </div>
-                                    </td>
-                                    <td className="px-8 py-8">
-                                        <span className="text-base font-black text-black tracking-tighter">₹{Number(order.totalAmount).toLocaleString()}</span>
-                                    </td>
-                                    <td className="px-8 py-8 text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <button
-                                                onClick={() => setSelectedOrder(order)}
-                                                title="View Digital Invoice"
-                                                className="p-3 bg-white border border-gray-100 text-gray-900 rounded-xl hover:bg-black hover:text-white transition-all shadow-sm"
-                                            >
-                                                <Eye className="w-4 h-4" />
-                                            </button>
-                                            <button
-                                                onClick={() => sendInvoiceEmail(order.id)}
-                                                disabled={sendingEmail === order.id}
-                                                title="Email Invoice"
-                                                className="p-3 bg-white border border-gray-100 text-gray-900 rounded-xl hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-50"
-                                            >
-                                                {sendingEmail === order.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-                                            </button>
-                                            <button
-                                                onClick={() => printInvoice(order)}
-                                                title="Print Invoice"
-                                                className="p-3 bg-black text-white rounded-xl hover:bg-blue-600 transition-all shadow-lg shadow-black/10"
-                                            >
-                                                <Printer className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                            ) : (
+                                filteredOrders.map((order) => (
+                                    <tr key={order.id} className="hover:bg-gray-50/80 transition-colors group">
+                                        <td className="px-8 py-8">
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-black text-black">#{order.invoiceId || order.id.slice(0, 8).toUpperCase()}</span>
+                                                <span className={`text-[8px] font-black mt-1 px-1.5 py-0.5 rounded-md w-fit uppercase tracking-tighter ${getStatusColor(order.status)}`}>
+                                                    {order.status}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-8">
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-black text-gray-900">{order.customerName}</span>
+                                                <span className="text-[10px] font-black text-gray-300 uppercase tracking-widest mt-1">{order.source || 'Website'}</span>
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-8">
+                                            <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-tighter">
+                                                <Calendar className="w-3.5 h-3.5" />
+                                                {new Date(order.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                            </div>
+                                        </td>
+                                        <td className="px-8 py-8">
+                                            <span className="text-base font-black text-black tracking-tighter">₹{Number(order.totalAmount).toLocaleString()}</span>
+                                        </td>
+                                        <td className="px-8 py-8 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                <button
+                                                    onClick={() => setSelectedOrder(order)}
+                                                    title="View Digital Invoice"
+                                                    className="p-3 bg-white border border-gray-100 text-gray-900 rounded-xl hover:bg-black hover:text-white transition-all shadow-sm"
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => sendInvoiceEmail(order.id)}
+                                                    disabled={sendingEmail === order.id}
+                                                    title="Email Invoice"
+                                                    className="p-3 bg-white border border-gray-100 text-gray-900 rounded-xl hover:bg-black hover:text-white transition-all shadow-sm disabled:opacity-50"
+                                                >
+                                                    {sendingEmail === order.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
+                                                </button>
+                                                <button
+                                                    onClick={() => printInvoice(order)}
+                                                    title="Print Invoice"
+                                                    className="p-3 bg-black text-white rounded-xl hover:bg-blue-600 transition-all shadow-lg shadow-black/10"
+                                                >
+                                                    <Printer className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
+                    {filteredOrders.length === 0 && !loading && (
+                        <div className="py-24 text-center">
+                            <FileText className="w-16 h-16 text-gray-100 mx-auto mb-6" />
+                            <p className="text-sm font-black text-gray-300 uppercase tracking-[0.2em]">No invoices found</p>
+                        </div>
+                    )}
                 </div>
-
-                {filteredOrders.length === 0 && !loading && (
-                    <div className="py-24 text-center">
-                        <FileText className="w-16 h-16 text-gray-100 mx-auto mb-6" />
-                        <p className="text-sm font-black text-gray-300 uppercase tracking-[0.2em]">No invoices found</p>
-                    </div>
-                )}
             </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="mt-8 flex items-center justify-between bg-white px-8 py-6 rounded-[32px] border border-gray-100 shadow-sm">
+                    <p className="text-xs font-black text-gray-400 uppercase tracking-widest">
+                        Showing page {page} of {totalPages} ({totalOrders} total)
+                    </p>
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={page === 1}
+                            className="px-6 py-3 bg-gray-50 text-gray-900 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-black hover:text-white transition disabled:opacity-30 disabled:hover:bg-gray-50 disabled:hover:text-gray-900"
+                        >
+                            Previous
+                        </button>
+                        <button
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            disabled={page === totalPages}
+                            className="px-6 py-3 bg-gray-50 text-gray-900 rounded-xl font-black text-[10px] uppercase tracking-widest hover:bg-black hover:text-white transition disabled:opacity-30 disabled:hover:bg-gray-50 disabled:hover:text-gray-900"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Invoice Detail Modal */}
             {selectedOrder && (
