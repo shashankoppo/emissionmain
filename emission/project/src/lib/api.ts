@@ -51,6 +51,14 @@ export interface Product {
     metaTitle?: string;
     metaDescription?: string;
     metaKeywords?: string;
+    variants?: Array<{
+        id: string;
+        size: string;
+        color: string;
+        sku: string;
+        stock: number;
+        priceAdjustment: number;
+    }>;
 }
 
 export interface Enquiry {
@@ -107,7 +115,8 @@ export const productAPI = {
                 price: parseFloat(p.price) || 0,
                 retailPrice: p.retailPrice ? parseFloat(p.retailPrice) : undefined,
                 wholesalePrice: p.wholesalePrice ? parseFloat(p.wholesalePrice) : undefined,
-                sizeChart: p.sizeChart ? formatImageUrl(p.sizeChart) : undefined
+                sizeChart: p.sizeChart ? formatImageUrl(p.sizeChart) : undefined,
+                variants: p.variants || []
             };
         });
 
@@ -135,7 +144,8 @@ export const productAPI = {
             price: parseFloat(p.price) || 0,
             retailPrice: p.retailPrice ? parseFloat(p.retailPrice) : undefined,
             wholesalePrice: p.wholesalePrice ? parseFloat(p.wholesalePrice) : undefined,
-            sizeChart: p.sizeChart ? formatImageUrl(p.sizeChart) : undefined
+            sizeChart: p.sizeChart ? formatImageUrl(p.sizeChart) : undefined,
+            variants: p.variants || []
         };
     },
 

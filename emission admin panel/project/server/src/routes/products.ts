@@ -16,7 +16,8 @@ router.get('/', async (req, res) => {
       prisma.product.findMany({
         orderBy: { createdAt: 'desc' },
         skip,
-        take: limit
+        take: limit,
+        include: { variants: true }
       }),
       prisma.product.count()
     ]);
@@ -40,7 +41,8 @@ router.get('/', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const product = await prisma.product.findUnique({
-      where: { id: req.params.id }
+      where: { id: req.params.id },
+      include: { variants: true }
     });
 
     if (!product) {
@@ -80,7 +82,8 @@ router.post('/', authMiddleware, async (req, res) => {
       sizeChart,
       metaTitle,
       metaDescription,
-      metaKeywords
+      metaKeywords,
+      variants // Added variants
     } = req.body;
 
     // Validation
@@ -101,33 +104,52 @@ router.post('/', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'A product with this slug already exists' });
     }
 
-    // Create product
-    const product = await prisma.product.create({
-      data: {
-        name,
-        slug,
-        category,
-        subcategory,
-        description: description || '',
-        shortDescription: shortDescription || '',
-        price: parseFloat(price),
-        wholesalePrice: wholesalePrice ? parseFloat(wholesalePrice) : parseFloat(price),
-        retailPrice: retailPrice ? parseFloat(retailPrice) : parseFloat(price),
-        images: images || '[]',
-        features: features || '[]',
-        specifications: specifications || '{}',
-        inStock: inStock !== undefined ? inStock : true,
-        moq: parseInt(moq) || 1,
-        availableSizes: availableSizes || '[]',
-        availableColors: availableColors || '[]',
-        allowsEmbroidery: allowsEmbroidery !== undefined ? allowsEmbroidery : false,
-        gstPercentage: gstPercentage ? parseFloat(gstPercentage) : 18,
-        shippingIncluded: shippingIncluded !== undefined ? shippingIncluded : true,
-        sizeChart: sizeChart || null,
-        metaTitle: metaTitle || null,
-        metaDescription: metaDescription || null,
-        metaKeywords: metaKeywords || null,
+    // Create product and variants in a transaction
+    const product = await prisma.$transaction(async (tx) => {
+      const newProduct = await tx.product.create({
+        data: {
+          name,
+          slug,
+          category,
+          subcategory,
+          description: description || '',
+          shortDescription: shortDescription || '',
+          price: parseFloat(price),
+          wholesalePrice: wholesalePrice ? parseFloat(wholesalePrice) : parseFloat(price),
+          retailPrice: retailPrice ? parseFloat(retailPrice) : parseFloat(price),
+          images: images || '[]',
+          features: features || '[]',
+          specifications: specifications || '{}',
+          inStock: inStock !== undefined ? inStock : true,
+          moq: parseInt(moq) || 1,
+          availableSizes: availableSizes || '[]',
+          availableColors: availableColors || '[]',
+          allowsEmbroidery: allowsEmbroidery !== undefined ? allowsEmbroidery : false,
+          gstPercentage: gstPercentage ? parseFloat(gstPercentage) : 18,
+          shippingIncluded: shippingIncluded !== undefined ? shippingIncluded : true,
+          sizeChart: sizeChart || null,
+          metaTitle: metaTitle || null,
+          metaDescription: metaDescription || null,
+          metaKeywords: metaKeywords || null,
+        }
+      });
+
+      if (variants && Array.isArray(variants)) {
+        await Promise.all(variants.map((v: any) => 
+          tx.productVariant.create({
+            data: {
+              productId: newProduct.id,
+              size: v.size,
+              color: v.color,
+              sku: v.sku,
+              stock: parseInt(v.stock) || 0,
+              priceAdjustment: parseFloat(v.priceAdjustment) || 0
+            }
+          })
+        ));
       }
+
+      return newProduct;
     });
 
     res.status(201).json(product);
@@ -167,7 +189,8 @@ router.put('/:id', authMiddleware, async (req, res) => {
       sizeChart,
       metaTitle,
       metaDescription,
-      metaKeywords
+      metaKeywords,
+      variants // Added variants
     } = req.body;
 
     // Check if product exists
@@ -190,34 +213,59 @@ router.put('/:id', authMiddleware, async (req, res) => {
       }
     }
 
-    // Update product
-    const product = await prisma.product.update({
-      where: { id },
-      data: {
-        ...(name && { name }),
-        ...(slug && { slug }),
-        ...(category && { category }),
-        ...(subcategory && { subcategory }),
-        ...(description !== undefined && { description }),
-        ...(shortDescription !== undefined && { shortDescription }),
-        ...(price !== undefined && { price: parseFloat(price) }),
-        ...(wholesalePrice !== undefined && { wholesalePrice: parseFloat(wholesalePrice) }),
-        ...(retailPrice !== undefined && { retailPrice: retailPrice ? parseFloat(retailPrice) : parseFloat(price || existingProduct.price) }),
-        ...(images && { images }),
-        ...(features && { features }),
-        ...(specifications && { specifications }),
-        ...(inStock !== undefined && { inStock }),
-        ...(moq !== undefined && { moq: parseInt(moq) }),
-        ...(availableSizes !== undefined && { availableSizes }),
-        ...(availableColors !== undefined && { availableColors }),
-        ...(allowsEmbroidery !== undefined && { allowsEmbroidery }),
-        ...(gstPercentage !== undefined && { gstPercentage: parseFloat(gstPercentage) }),
-        ...(shippingIncluded !== undefined && { shippingIncluded }),
-        ...(sizeChart !== undefined && { sizeChart }),
-        ...(metaTitle !== undefined && { metaTitle }),
-        ...(metaDescription !== undefined && { metaDescription }),
-        ...(metaKeywords !== undefined && { metaKeywords }),
+    // Update product and variants in a transaction
+    const product = await prisma.$transaction(async (tx) => {
+      const updatedProduct = await tx.product.update({
+        where: { id },
+        data: {
+          ...(name && { name }),
+          ...(slug && { slug }),
+          ...(category && { category }),
+          ...(subcategory && { subcategory }),
+          ...(description !== undefined && { description }),
+          ...(shortDescription !== undefined && { shortDescription }),
+          ...(price !== undefined && { price: parseFloat(price) }),
+          ...(wholesalePrice !== undefined && { wholesalePrice: parseFloat(wholesalePrice) }),
+          ...(retailPrice !== undefined && { retailPrice: retailPrice ? parseFloat(retailPrice) : parseFloat(price || existingProduct.price) }),
+          ...(images && { images }),
+          ...(features && { features }),
+          ...(specifications && { specifications }),
+          ...(inStock !== undefined && { inStock }),
+          ...(moq !== undefined && { moq: parseInt(moq) }),
+          ...(availableSizes !== undefined && { availableSizes }),
+          ...(availableColors !== undefined && { availableColors }),
+          ...(allowsEmbroidery !== undefined && { allowsEmbroidery }),
+          ...(gstPercentage !== undefined && { gstPercentage: parseFloat(gstPercentage) }),
+          ...(shippingIncluded !== undefined && { shippingIncluded }),
+          ...(sizeChart !== undefined && { sizeChart }),
+          ...(metaTitle !== undefined && { metaTitle }),
+          ...(metaDescription !== undefined && { metaDescription }),
+          ...(metaKeywords !== undefined && { metaKeywords }),
+        }
+      });
+
+      if (variants && Array.isArray(variants)) {
+        // Delete old variants that are not in the new list (or just replace all)
+        // For simplicity and to avoid SKU conflicts during update, we can handle it carefully.
+        // Actually, let's delete all existing variants and recreate them, or sync them.
+        // SYNC approach:
+        await tx.productVariant.deleteMany({ where: { productId: id } });
+        
+        await Promise.all(variants.map((v: any) => 
+          tx.productVariant.create({
+            data: {
+              productId: id,
+              size: v.size,
+              color: v.color,
+              sku: v.sku,
+              stock: parseInt(v.stock) || 0,
+              priceAdjustment: parseFloat(v.priceAdjustment) || 0
+            }
+          })
+        ));
       }
+
+      return updatedProduct;
     });
 
     res.json(product);

@@ -10,6 +10,9 @@ interface Product {
     images: string;
     inStock: boolean;
     category: string;
+    availableSizes: string; // JSON string
+    availableColors: string; // JSON string
+    variants?: any[];
 }
 
 interface CartItem {
@@ -46,8 +49,9 @@ export default function POS() {
 
     const fetchProducts = async () => {
         try {
-            const response = await api.get('/products');
-            setProducts(response.data);
+            const response = await api.get('/products?limit=100');
+            const data = response.data.data || response.data;
+            setProducts(data);
         } catch (error) {
             console.error('Failed to fetch products:', error);
         } finally {
@@ -73,15 +77,29 @@ export default function POS() {
         );
     }, [products, searchQuery]);
 
-    const addToCart = (product: Product) => {
+    const addToCart = (product: Product, size?: string, color?: string) => {
+        if (size && product.variants) {
+            const variant = product.variants.find(v => v.size === size && (v.color === color || !v.color));
+            if (variant && variant.stock <= 0) {
+                alert(`Size ${size} is out of stock!`);
+                return;
+            }
+        }
+
         setCart(prev => {
-            const existing = prev.find(item => item.product.id === product.id);
+            const existing = prev.find(item => 
+                item.product.id === product.id && 
+                item.selectedSize === size && 
+                item.selectedColor === color
+            );
             if (existing) {
                 return prev.map(item =>
-                    item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+                    (item.product.id === product.id && item.selectedSize === size && item.selectedColor === color) 
+                    ? { ...item, quantity: item.quantity + 1 } 
+                    : item
                 );
             }
-            return [...prev, { product, quantity: 1, hasEmbroidery: false }];
+            return [...prev, { product, quantity: 1, selectedSize: size, selectedColor: color, hasEmbroidery: false }];
         });
     };
 
@@ -94,9 +112,9 @@ export default function POS() {
         }));
     };
 
-    const updateQuantity = (productId: string, delta: number) => {
+    const updateQuantity = (productId: string, delta: number, size?: string, color?: string) => {
         setCart(prev => prev.map(item => {
-            if (item.product.id === productId) {
+            if (item.product.id === productId && item.selectedSize === size && item.selectedColor === color) {
                 const newQty = Math.max(1, item.quantity + delta);
                 return { ...item, quantity: newQty };
             }
@@ -104,15 +122,22 @@ export default function POS() {
         }));
     };
 
-    const removeFromCart = (productId: string) => {
-        setCart(prev => prev.filter(item => item.product.id !== productId));
+    const removeFromCart = (productId: string, size?: string, color?: string) => {
+        setCart(prev => prev.filter(item => 
+            !(item.product.id === productId && item.selectedSize === size && item.selectedColor === color)
+        ));
     };
 
     const subtotal = useMemo(() => {
         return cart.reduce((sum, item) => {
             const basePrice = Number(item.product.retailPrice || item.product.price);
+            let extra = 0;
+            if (item.selectedSize && item.product.variants) {
+                const variant = item.product.variants.find((v: any) => v.size === item.selectedSize && (v.color === item.selectedColor || !v.color));
+                if (variant) extra += Number(variant.priceAdjustment || 0);
+            }
             const customizationPrice = item.hasEmbroidery ? embroideryCharge : 0;
-            return sum + (basePrice + customizationPrice) * item.quantity;
+            return sum + (basePrice + extra + customizationPrice) * item.quantity;
         }, 0);
     }, [cart, embroideryCharge]);
 
@@ -222,13 +247,25 @@ export default function POS() {
                 paymentMethod,
                 paymentId,
                 source: 'pos',
-                items: cart.map(item => ({
-                    productId: item.product.id,
-                    name: item.product.name,
-                    quantity: item.quantity,
-                    price: Number(item.product.retailPrice || item.product.price) + (item.hasEmbroidery ? embroideryCharge : 0),
-                    hasEmbroidery: item.hasEmbroidery
-                }))
+                items: cart.map(item => {
+                    const basePrice = Number(item.product.retailPrice || item.product.price);
+                    let extra = 0;
+                    if (item.selectedSize && item.product.variants) {
+                        const v = item.product.variants.find(v => v.size === item.selectedSize && (v.color === item.selectedColor || !v.color));
+                        if (v) extra += Number(v.priceAdjustment || 0);
+                    }
+                    if (item.hasEmbroidery) extra += embroideryCharge;
+                    
+                    return {
+                        productId: item.product.id,
+                        name: item.product.name,
+                        quantity: item.quantity,
+                        price: basePrice + extra,
+                        hasEmbroidery: item.hasEmbroidery,
+                        size: item.selectedSize,
+                        color: item.selectedColor
+                    };
+                })
             };
 
             const response = await api.post('/orders', orderData);
@@ -361,25 +398,44 @@ export default function POS() {
                         Array(8).fill(0).map((_, i) => (
                             <div key={i} className="bg-gray-50 animate-pulse rounded-[32px] h-64"></div>
                         ))
-                    ) : filteredProducts.map(product => {
+                    } : filteredProducts.map(product => {
                         const images = JSON.parse(product.images || '[]');
+                        const sizes = JSON.parse(product.availableSizes || '[]');
+                        const colors = JSON.parse(product.availableColors || '[]');
+                        
                         return (
                             <div
                                 key={product.id}
-                                onClick={() => addToCart(product)}
-                                className="bg-white rounded-[32px] border border-gray-100 p-5 group cursor-pointer hover:shadow-[0_20px_40px_rgba(0,0,0,0.05)] hover:-translate-y-1 transition-all duration-300"
+                                className="bg-white rounded-[32px] border border-gray-100 p-5 group transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.05)]"
                             >
                                 <div className="aspect-[4/5] bg-gray-50 rounded-2xl overflow-hidden mb-4 relative">
                                     <img src={images[0] || 'https://via.placeholder.com/300x400'} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
-                                    <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all">
-                                        <div className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center shadow-lg">
-                                            <Plus className="w-5 h-5" />
-                                        </div>
-                                    </div>
                                 </div>
                                 <h3 className="text-sm font-black text-gray-900 uppercase tracking-tight truncate mb-1">{product.name}</h3>
-                                <p className="text-lg font-black text-blue-600 tracking-tighter">₹{(Number(product.retailPrice || product.price)).toLocaleString()}</p>
+                                <p className="text-lg font-black text-blue-600 tracking-tighter mb-4">₹{(Number(product.retailPrice || product.price)).toLocaleString()}</p>
+                                
+                                {sizes.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mb-3">
+                                        {sizes.map((s: string) => (
+                                            <button
+                                                key={s}
+                                                onClick={() => addToCart(product, s, colors[0])}
+                                                className="px-2 py-1 text-[10px] font-black bg-gray-50 hover:bg-black hover:text-white rounded transition"
+                                            >
+                                                {s}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                                
+                                {sizes.length === 0 && (
+                                    <button
+                                        onClick={() => addToCart(product)}
+                                        className="w-full bg-black text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-widest"
+                                    >
+                                        Add to Cart
+                                    </button>
+                                )}
                             </div>
                         );
                     })}
@@ -431,11 +487,15 @@ export default function POS() {
                             </div>
                             <div className="flex-1 min-w-0 py-1">
                                 <h4 className="text-xs font-black uppercase tracking-tight truncate text-gray-900 mb-1">{item.product.name}</h4>
+                                <div className="flex items-center gap-2 mb-1">
+                                    {item.selectedSize && <span className="text-[10px] bg-black text-white px-1.5 py-0.5 rounded uppercase font-black">{item.selectedSize}</span>}
+                                    {item.selectedColor && <span className="text-[10px] border border-gray-200 px-1.5 py-0.5 rounded capitalize font-bold">{item.selectedColor}</span>}
+                                </div>
                                 <div className="flex items-center gap-4">
                                     <div className="flex items-center bg-gray-50 rounded-lg">
-                                        <button onClick={() => updateQuantity(item.product.id, -1)} title="Decrease Quantity" className="p-1 px-2 hover:bg-gray-200 transition-colors"><Minus className="w-3 h-3" /></button>
+                                        <button onClick={() => updateQuantity(item.product.id, -1, item.selectedSize, item.selectedColor)} title="Decrease Quantity" className="p-1 px-2 hover:bg-gray-200 transition-colors"><Minus className="w-3 h-3" /></button>
                                         <span className="text-[10px] font-black w-6 text-center">{item.quantity}</span>
-                                        <button onClick={() => addToCart(item.product)} title="Increase Quantity" className="p-1 px-2 hover:bg-gray-200 transition-colors"><Plus className="w-3 h-3" /></button>
+                                        <button onClick={() => addToCart(item.product, item.selectedSize, item.selectedColor)} title="Increase Quantity" className="p-1 px-2 hover:bg-gray-200 transition-colors"><Plus className="w-3 h-3" /></button>
                                     </div>
                                     <p className="text-xs font-black text-gray-900 tracking-tight">₹{(Number(item.product.retailPrice || item.product.price) * item.quantity).toLocaleString()}</p>
                                 </div>
@@ -449,7 +509,7 @@ export default function POS() {
                                     </button>
                                 </div>
                             </div>
-                            <button onClick={() => removeFromCart(item.product.id)} title="Remove from Cart" className="p-2 h-fit text-gray-300 hover:text-red-500 transition-colors">
+                            <button onClick={() => removeFromCart(item.product.id, item.selectedSize, item.selectedColor)} title="Remove from Cart" className="p-2 h-fit text-gray-300 hover:text-red-500 transition-colors">
                                 <Trash2 className="w-4 h-4" />
                             </button>
                         </div>

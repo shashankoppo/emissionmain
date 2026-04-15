@@ -90,6 +90,29 @@ router.post('/', async (req, res) => {
       }
     });
 
+    // Reduce stock for each item
+    try {
+      const parsedItems = Array.isArray(items) ? items : JSON.parse(items || '[]');
+      await Promise.all(parsedItems.map(async (item: any) => {
+        if (item.productId && item.size) {
+          await prisma.productVariant.updateMany({
+            where: {
+              productId: item.productId,
+              size: item.size,
+              color: item.color || '',
+            },
+            data: {
+              stock: {
+                decrement: parseInt(item.quantity.toString()) || 0
+              }
+            }
+          });
+        }
+      }));
+    } catch (stockErr) {
+      console.error('Failed to update stock:', stockErr);
+    }
+
     // Send order success email
     // Use try-catch to prevent email failure from breaking the order response
     try {

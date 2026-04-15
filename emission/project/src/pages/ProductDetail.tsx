@@ -87,10 +87,8 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart, wish
   };
 
   const handleAddToCart = () => {
-    const hasSizes = product && product.availableSizes && product.availableSizes.length > 0;
-
     if (onAddToCart && product) {
-      if (hasSizes && !selectedSize) {
+      if (!selectedSize) {
         alert('Please select a size first');
         return;
       }
@@ -103,6 +101,24 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart, wish
   const toggleAccordion = (id: string) => {
     setOpenAccordion(openAccordion === id ? null : id);
   };
+
+  const getEffectivePrice = () => {
+    if (!product) return 0;
+    const basePrice = Number(product.retailPrice || product.price);
+    let extra = 0;
+    if (selectedSize && product.variants) {
+      const variant = product.variants.find(v => v.size === selectedSize);
+      if (variant) {
+        extra += (Number(variant.priceAdjustment) || 0);
+      }
+    }
+    if (embroidery) {
+      extra += embroideryPrice;
+    }
+    return basePrice + extra;
+  };
+
+  const currentPrice = getEffectivePrice();
 
   if (loading) {
     return (
@@ -228,7 +244,7 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart, wish
             {/* Price */}
             <div className="flex items-baseline gap-3 mb-6">
               <span className="text-3xl font-bold text-black">
-                ₹{(product.retailPrice || product.price).toLocaleString('en-IN')}
+                ₹{currentPrice.toLocaleString('en-IN')}
               </span>
               {product.retailPrice && product.retailPrice < product.price && (
                 <span className="text-lg text-gray-400 line-through">₹{product.price.toLocaleString('en-IN')}</span>
@@ -273,7 +289,8 @@ export default function ProductDetail({ productId, onNavigate, onAddToCart, wish
                   </button>
                 </div>
                 <SizeSelector
-                  sizes={product.availableSizes}
+                  sizes={['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL', '5XL']}
+                  availableSizes={product?.variants?.filter(v => v.stock > 0).map(v => v.size) || []}
                   selectedSize={selectedSize}
                   onSizeSelect={setSelectedSize}
                 />

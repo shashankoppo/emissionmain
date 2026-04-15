@@ -27,6 +27,16 @@ interface Product {
   metaTitle: string;
   metaDescription: string;
   metaKeywords: string;
+  variants?: ProductVariant[];
+}
+
+interface ProductVariant {
+  id?: string;
+  size: string;
+  color: string;
+  sku: string;
+  stock: number;
+  priceAdjustment: number;
 }
 
 interface ProductFormProps {
@@ -82,7 +92,10 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
     metaTitle: '',
     metaDescription: '',
     metaKeywords: '',
+    variants: [],
   });
+
+  const [variants, setVariants] = useState<ProductVariant[]>([]);
 
   const [newSpecKey, setNewSpecKey] = useState('');
   const [newSpecValue, setNewSpecValue] = useState('');
@@ -108,9 +121,42 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
         metaTitle: product.metaTitle || '',
         metaDescription: product.metaDescription || '',
         metaKeywords: product.metaKeywords || '',
+        variants: product.variants || [],
       });
+      setVariants(product.variants || []);
     }
   }, [product]);
+
+  // Handle generating variants when sizes or colors change
+  useEffect(() => {
+    const newVariants: ProductVariant[] = [];
+    formData.availableSizes.forEach(size => {
+      // If no colors selected, create one with empty color
+      const colors = formData.availableColors.length > 0 ? formData.availableColors : [''];
+      
+      colors.forEach(color => {
+        const existing = variants.find(v => v.size === size && v.color === color);
+        if (existing) {
+          newVariants.push(existing);
+        } else {
+          newVariants.push({
+            size,
+            color,
+            sku: `${formData.slug || 'prod'}-${size}-${color}`.toUpperCase(),
+            stock: 0,
+            priceAdjustment: 0
+          });
+        }
+      });
+    });
+    setVariants(newVariants);
+  }, [formData.availableSizes, formData.availableColors, formData.slug]);
+
+  const updateVariant = (index: number, field: keyof ProductVariant, value: any) => {
+    const updated = [...variants];
+    updated[index] = { ...updated[index], [field]: value };
+    setVariants(updated);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -287,6 +333,7 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
         specifications: JSON.stringify(formData.specifications),
         availableSizes: JSON.stringify(formData.availableSizes),
         availableColors: JSON.stringify(formData.availableColors),
+        variants: variants, // Send variants as array
       };
 
       if (product?.id) {
@@ -721,6 +768,58 @@ export default function ProductForm({ product, onClose }: ProductFormProps) {
                   ))}
                 </div>
               </div>
+
+              {/* Variant Stock Management */}
+              {variants.length > 0 && (
+                <div className="pt-6 border-t border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Stock & SKU Management</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-gray-50 border-b border-gray-200 text-gray-600 uppercase text-[10px] font-black tracking-widest">
+                          <th className="px-4 py-3 text-left">Variant</th>
+                          <th className="px-4 py-3 text-left">SKU <span className="text-red-500">*</span></th>
+                          <th className="px-4 py-3 text-left">Stock Qty</th>
+                          <th className="px-4 py-3 text-left">Price Adj. (₹)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {variants.map((v, idx) => (
+                          <tr key={idx}>
+                            <td className="px-4 py-3 font-bold text-gray-900">
+                              {v.size} {v.color ? `/ ${v.color}` : ''}
+                            </td>
+                            <td className="px-4 py-3">
+                              <input
+                                type="text"
+                                value={v.sku}
+                                onChange={(e) => updateVariant(idx, 'sku', e.target.value)}
+                                className="w-full px-2 py-1.5 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 outline-none"
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <input
+                                type="number"
+                                value={v.stock}
+                                onChange={(e) => updateVariant(idx, 'stock', parseInt(e.target.value) || 0)}
+                                className="w-20 px-2 py-1.5 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 outline-none"
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <input
+                                type="number"
+                                value={v.priceAdjustment}
+                                onChange={(e) => updateVariant(idx, 'priceAdjustment', parseFloat(e.target.value) || 0)}
+                                className="w-24 px-2 py-1.5 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 outline-none"
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
