@@ -5,8 +5,26 @@ import { sendEmail } from '../services/email.js';
 const router = Router();
 router.get('/', authMiddleware, async (req, res) => {
     try {
-        const enquiries = await prisma.enquiry.findMany({ orderBy: { createdAt: 'desc' } });
-        res.json(enquiries);
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+        const [enquiries, total] = await Promise.all([
+            prisma.enquiry.findMany({
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: limit
+            }),
+            prisma.enquiry.count()
+        ]);
+        res.json({
+            data: enquiries,
+            pagination: {
+                total,
+                pages: Math.ceil(total / limit),
+                page,
+                limit
+            }
+        });
     }
     catch (error) {
         res.status(500).json({ error: 'Failed to fetch enquiries' });

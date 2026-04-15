@@ -26,7 +26,7 @@ const products = [
         specifications: JSON.stringify({
             'Material': '100% Polyester',
             'GSM': '180-220',
-            'Sizes': 'XS to 5XL',
+            'Sizes': 'XXS to 5XL',
             'MOQ': '50 pieces',
             'Customization': 'Logo, Colors, Design'
         }),
@@ -86,7 +86,7 @@ const products = [
         specifications: JSON.stringify({
             'Material': '100% Polyester',
             'GSM': '140-160',
-            'Sizes': 'XS to 3XL',
+            'Sizes': 'XXS to 3XL',
             'MOQ': '25 pieces',
             'Customization': 'Numbers, names, logos'
         }),
@@ -146,7 +146,7 @@ const products = [
         specifications: JSON.stringify({
             'Material': 'Poly-cotton blend',
             'GSM': '180-200',
-            'Sizes': 'XS to 4XL',
+            'Sizes': 'XXS to 4XL',
             'MOQ': '100 sets',
             'Customization': 'Colors and embroidery'
         }),
@@ -325,23 +325,71 @@ async function main() {
     console.log('⚙️ Seeding settings...\n');
     const defaultSettings = [
         { key: 'EMBROIDERY_PRICE', value: '250' },
-        { key: 'SMTP_HOST', value: '' },
-        { key: 'SMTP_PORT', value: '587' },
-        { key: 'SMTP_USER', value: '' },
-        { key: 'SMTP_PASS', value: '' },
-        { key: 'SMTP_FROM', value: '' },
+        { key: 'smtp_host', value: 'smtp.hostinger.com' },
+        { key: 'smtp_port', value: '465' },
+        { key: 'smtp_user', value: 'care@emissionfit.com' },
+        { key: 'smtp_pass', value: 'Mohit@121212' },
+        { key: 'smtp_from', value: 'care@emissionfit.com' },
+        { key: 'SITE_TITLE', value: 'Emission - Premium Sportswear & Medical Wear' },
+        { key: 'SITE_DESCRIPTION', value: 'Premium OEM manufacturer of sportswear and medical wear engineered with precision. Born in Jabalpur, India.' },
     ];
     for (const setting of defaultSettings) {
         try {
-            await prisma.setting.upsert({
-                where: { key: setting.key },
-                update: { value: setting.value },
-                create: { key: setting.key, value: setting.value },
-            });
-            console.log(`✅ Setting: ${setting.key}`);
+            const existing = await prisma.setting.findUnique({ where: { key: setting.key } });
+            if (!existing || !existing.value) {
+                await prisma.setting.upsert({
+                    where: { key: setting.key },
+                    update: { value: setting.value },
+                    create: { key: setting.key, value: setting.value },
+                });
+                console.log(`✅ Setting: ${setting.key}`);
+            }
+            else {
+                console.log(`ℹ️ Setting ${setting.key} already exists, skipping.`);
+            }
         }
         catch (error) {
             console.error(`❌ Failed to seed setting ${setting.key}:`, error);
+        }
+    }
+    // Seed Mail Templates
+    console.log('📧 Seeding mail templates...\n');
+    const AppEmailModel = prisma.appEmail || prisma.emailTemplate || prisma.mailTemplate;
+    if (AppEmailModel) {
+        const templates = [
+            {
+                type: 'order_success',
+                subject: 'Your Emission Order is Confirmed! 🎉',
+                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:24px">Thank you, {{customerName}}! 🎉</h1><p style="color:#555">Your order has been confirmed and is being processed.</p><div style="background:#f9fafb;border-radius:8px;padding:16px;margin:20px 0"><p style="margin:0"><strong>Order ID:</strong> {{orderId}}</p><p style="margin:8px 0 0"><strong>Amount:</strong> ₹{{amount}}</p></div><p style="color:#555">We will notify you once your order ships. Thank you for choosing <strong>Emission</strong>.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:12px">Technical Platform by ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
+            },
+            {
+                type: 'order_rejected',
+                subject: 'Order Update from Emission',
+                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:24px">Order Update</h1><p style="color:#555">Dear {{customerName}}, we regret to inform you that your order <strong>#{{orderId}}</strong> has been cancelled or rejected.</p><p style="color:#555">If you believe this is an error, please contact our support team at care@emissionfit.com.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:12px">Technical Platform by ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
+            },
+            {
+                type: 'welcome_email',
+                subject: 'Welcome to Emission — Your Account is Ready!',
+                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:24px">Welcome, {{customerName}}! 👋</h1><p style="color:#555">Your account has been created on <strong>Emission</strong>, the leading OEM manufacturer of sportswear and medical wear from Jabalpur, India.</p><p style="color:#555">You can now browse and order our products, track your shipments, and manage your account easily.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:12px">Technical Platform by ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
+            },
+            {
+                type: 'new_enquiry_admin',
+                subject: 'New Enquiry Received — Emission Admin',
+                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:20px">New Enquiry Received</h1><div style="background:#f9fafb;border-radius:8px;padding:16px;margin:20px 0"><p style="margin:0"><strong>Name:</strong> {{name}}</p><p style="margin:8px 0 0"><strong>Email:</strong> {{email}}</p><p style="margin:8px 0 0"><strong>Message:</strong> {{message}}</p></div><p style="color:#999;font-size:12px">Emission Admin Panel — ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
+            },
+            {
+                type: 'payment_success',
+                subject: 'Payment Received — Emission',
+                body: `<div style="font-family:sans-serif;max-width:600px;margin:auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e5e7eb"><h1 style="color:#111;font-size:24px">Payment Received! ✅</h1><p style="color:#555">We have successfully received your payment.</p><div style="background:#f9fafb;border-radius:8px;padding:16px;margin:20px 0"><p style="margin:0"><strong>Order ID:</strong> #{{orderId}}</p><p style="margin:8px 0 0"><strong>Amount Paid:</strong> ₹{{amount}}</p></div><p style="color:#555">Your order is now being processed. Thank you for shopping with <strong>Emission</strong>.</p><hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/><p style="color:#999;font-size:12px">Technical Platform by ELSxGlobal Divission of Evolucentsphere Private Limited</p></div>`,
+            }
+        ];
+        for (const t of templates) {
+            await AppEmailModel.upsert({
+                where: { type: t.type },
+                update: { subject: t.subject, body: t.body, active: true },
+                create: { type: t.type, subject: t.subject, body: t.body, active: true }
+            });
+            console.log(`✅ Template: ${t.type}`);
         }
     }
     // Seed default featured collections (Masterpieces)

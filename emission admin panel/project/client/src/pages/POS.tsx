@@ -398,7 +398,7 @@ export default function POS() {
                         Array(8).fill(0).map((_, i) => (
                             <div key={i} className="bg-gray-50 animate-pulse rounded-[32px] h-64"></div>
                         ))
-                    } : filteredProducts.map(product => {
+                    ) : filteredProducts.map(product => {
                         const images = JSON.parse(product.images || '[]');
                         const sizes = JSON.parse(product.availableSizes || '[]');
                         const colors = JSON.parse(product.availableColors || '[]');

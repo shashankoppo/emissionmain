@@ -83,7 +83,7 @@ const newProducts = [
         specifications: JSON.stringify({
             'Material': '100% Cotton pique',
             'GSM': '180-200',
-            'Sizes': 'XS to 4XL',
+            'Sizes': 'XXS to 4XL',
             'MOQ': '50 pieces',
             'Customization': 'Logo, colors'
         }),

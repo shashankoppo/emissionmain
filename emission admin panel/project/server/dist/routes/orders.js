@@ -38,13 +38,31 @@ async function enrichItems(rawItems) {
 }
 router.get('/', authMiddleware, async (req, res) => {
     try {
-        const orders = await prisma.order.findMany({ orderBy: { createdAt: 'desc' } });
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+        const [orders, total] = await Promise.all([
+            prisma.order.findMany({
+                orderBy: { createdAt: 'desc' },
+                skip,
+                take: limit
+            }),
+            prisma.order.count()
+        ]);
         // Enrich each order's items with product names
         const enriched = await Promise.all(orders.map(async (order) => {
             const items = await enrichItems(order.items);
             return { ...order, items: JSON.stringify(items), parsedItems: items };
         }));
-        res.json(enriched);
+        res.json({
+            data: enriched,
+            pagination: {
+                total,
+                pages: Math.ceil(total / limit),
+                page,
+                limit
+            }
+        });
     }
     catch (error) {
         res.status(500).json({ error: 'Failed to fetch orders' });
@@ -68,17 +86,41 @@ router.post('/', async (req, res) => {
                 source: source || 'website'
             }
         });
-
+        // Reduce stock for each item
+        try {
+            const parsedItems = Array.isArray(items) ? items : JSON.parse(items || '[]');
+            await Promise.all(parsedItems.map(async (item) => {
+                if (item.productId && item.size) {
+                    await prisma.productVariant.updateMany({
+                        where: {
+                            productId: item.productId,
+                            size: item.size,
+                            color: item.color || '',
+                        },
+                        data: {
+                            stock: {
+                                decrement: parseInt(item.quantity.toString()) || 0
+                            }
+                        }
+                    });
+                }
+            }));
+        }
+        catch (stockErr) {
+            console.error('Failed to update stock:', stockErr);
+        }
+        // Send order success email
+        // Use try-catch to prevent email failure from breaking the order response
         try {
             await sendEmail(order.customerEmail, 'order_success', {
                 customerName: order.customerName,
                 orderId: order.id,
                 amount: order.totalAmount.toString(),
             });
-        } catch (mailErr) {
+        }
+        catch (mailErr) {
             console.error('Background order email failed:', mailErr);
         }
-
         res.json(order);
     }
     catch (error) {
