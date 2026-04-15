@@ -34,9 +34,13 @@ EXPOSE 3001
 CMD sh -c "mkdir -p /app/data && \
     if [ -f /app/server/prisma/dev.db ] && [ ! -f /app/data/dev.db ]; then \
     echo 'Migrating database to new volume...'; \
-    mv /app/server/prisma/dev.db /app/data/dev.db; \
+    cp /app/server/prisma/dev.db /app/data/dev.db; \
     fi && \
-    echo 'Syncing Database...' && \
-    npx prisma db push --accept-data-loss && \
+    if [ -f /app/data/dev.db ]; then \
+    echo 'Backing up existing database...'; \
+    cp /app/data/dev.db /app/data/dev.db.bak; \
+    fi && \
+    echo 'Syncing Database Tables Safely...' && \
+    npx prisma db push && \
     echo 'Starting Production Server...' && \
     node dist/index.js"
